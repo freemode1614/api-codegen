@@ -1,14 +1,17 @@
 {
-  "name": "ts-starter",
+  "name": "@moccona/code-gen",
   "version": "0.0.0",
-  "description": "",
+  "description": "Code generator utils base on typescript compiler",
   "type": "module",
   "scripts": {
     "dev": "cross-env NODE_ENV=development tsup --watch",
     "build": "cross-env NODE_ENV=production tsup"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": [
+    "code-gen",
+    "utils"
+  ],
+  "author": "freemode",
   "license": "MIT",
   "exports": {
     "./package.json": "./package.json",
@@ -22,6 +25,9 @@
       "import": "./npm/index.js",
       "require": "./npm/index.cjs"
     }
+  },
+  "dependencies": {
+    "typescript": "^5"
   },
   "devDependencies": {
     "@changesets/cli": "^2.27.8",
