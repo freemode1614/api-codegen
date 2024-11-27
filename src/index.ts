@@ -2,7 +2,6 @@
 /**
  * function
  */
-// eslint-disable-next-line unicorn/prevent-abbreviations
 export function func() {
   return ""
 }
