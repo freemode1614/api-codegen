@@ -1,18 +1,18 @@
-import Base from "@/base/Base";
+import Base from "./Base";
 
-interface TagItem {
+export interface TagItem {
   tag?: string;
   name?: string;
   comment: string;
 }
 
-interface TagItemOnlyComment {
+export interface TagItemOnlyComment {
   tag: never;
   name: never;
   comment: string;
 }
 
-type MaybeTagItem = TagItem | TagItemOnlyComment;
+export type MaybeTagItem = TagItem | TagItemOnlyComment;
 
 export default class Comment implements Base {
   #comments: MaybeTagItem[] = [];
