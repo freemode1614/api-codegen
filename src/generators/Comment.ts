@@ -17,9 +17,12 @@ export type MaybeTagItem = TagItem | TagItemOnlyComment;
 export default class Comment implements Base {
   #comments: MaybeTagItem[] = [];
 
-  from(tags: MaybeTagItem[]): this {
+  protected constructor(tags: MaybeTagItem[]) {
     this.#comments = tags;
-    return this;
+  }
+
+  static of(tags: MaybeTagItem[]) {
+    return new Comment(tags);
   }
 
   add(tag: MaybeTagItem): this {
@@ -51,7 +54,7 @@ export default class Comment implements Base {
     return strs.join("\n");
   }
 
-  to(): string {
+  to() {
     return this.#toString();
   }
 }

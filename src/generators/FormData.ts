@@ -3,9 +3,12 @@ import Base from "./Base";
 export default class FormData implements Base {
   #formDataFields: string[] = [];
 
-  public from(formData: string[]) {
+  protected constructor(formData: string[]) {
     this.#formDataFields = formData;
-    return this;
+  }
+
+  static of(formData: string[]) {
+    return new FormData(formData);
   }
 
   #toString() {
@@ -17,7 +20,7 @@ export default class FormData implements Base {
     return literal.join("\n");
   }
 
-  public to(): string {
+  public to() {
     return this.#toString();
   }
 }

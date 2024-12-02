@@ -15,9 +15,12 @@ export interface MaybeType {
 export default class Type implements Base {
   protected type: MaybeType | undefined;
 
-  from(type: MaybeType): Base {
+  protected constructor(type: MaybeType) {
     this.type = type;
-    return this;
+  }
+
+  static of(type: MaybeType): Base {
+    return new Type(type);
   }
 
   protected toTypeLiteral(types: TypeMember[]) {
@@ -35,10 +38,10 @@ export default class Type implements Base {
   protected toDeclaration() {
     if (!this.type) return "";
     const { name, export: export_, types } = this.type;
-    return [export_ ? "export" : "", "type =", name, this.toTypeLiteral(types)].join(" ");
+    return [export_ ? "export" : "", "type", name, "=", this.toTypeLiteral(types)].join(" ");
   }
 
-  to(): string {
+  to() {
     return this.toDeclaration();
   }
 }

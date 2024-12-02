@@ -1,13 +1,11 @@
 import { describe, expect, test } from "vitest";
 
-import Comment from "../src/base/Comment";
+import Comment from "../src/generators/Comment";
 
 describe("Comment", () => {
   test("Comment.to() sucessfully", () => {
     expect(() => {
-      const c = new Comment();
-      const result = c
-        .from([
+      const result = Comment.of([
           {
             comment: "For test purpose",
           },
