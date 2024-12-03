@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 
-import Interface from "../src/generators/FormData";
+import Interface from "@/generators/FormData";
 
 describe("Comment", () => {
   test("Comment.to() sucessfully", () => {

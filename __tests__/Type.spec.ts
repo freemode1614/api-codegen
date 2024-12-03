@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 
-import Type from "../src/generators/Type";
+import Type from "@/generators/Type";
 
 describe("Comment", () => {
   test("Comment.to() sucessfully", () => {

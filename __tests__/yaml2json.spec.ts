@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 
-import yaml2json from "../src/utils/yaml2json";
+import yaml2json from "@/utils/yaml2json";
 
 describe(yaml2json.displayName, () => {
   test("Parse sucessfully", () => {

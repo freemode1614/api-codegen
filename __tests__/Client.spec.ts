@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 
-import Client from "../src/client/Client";
+import Client from "@/client/Client";
 
 describe("Comment", () => {
   test("Comment.to() sucessfully", () => {

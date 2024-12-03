@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 
-import Interface from "../src/generators/Interface";
+import Interface from "@/generators/Interface";
 
 describe("Comment", () => {
   test("Comment.to() sucessfully", () => {
