@@ -1,42 +1,49 @@
-import Base from "./Base";
-
-export interface TypeMember {
-  required?: boolean;
-  name: string;
-  type: string | TypeMember[];
-}
+import Base from "@/generators/Base";
 
 export interface MaybeType {
+  required?: boolean;
   name: string;
-  types: TypeMember[];
+  types?: string | MaybeType[];
+  typeArgs?: [MaybeType, ...string[]]
   export?: boolean;
 }
 
 export default class Type implements Base {
-  protected type: MaybeType | undefined;
+  protected type!: MaybeType;
 
   protected constructor(type: MaybeType) {
     this.type = type;
   }
 
-  static of(type: MaybeType): Base {
+  static of(type: MaybeType) {
     return new Type(type);
   }
 
-  protected toTypeLiteral(types: TypeMember[]) {
-    const literal = ["{"];
+  public toTypeArguments() {
+    //
+  }
 
-    types.forEach(({ name, type, required }) => {
-      literal.push(`  ${name}${!required ? "?" : ""}: ${typeof type === "string" ? type : this.toTypeLiteral(type)}`);
-    });
+  public toTypeLiteral(types_?: MaybeType["types"]) {
+    const types = types_ ?? this.type.types;
+    const typeArgs = this.type.typeArgs;
 
-    literal.push("}");
+    if (typeof types === "string") {
+      //
+    } else if (typeof types !== "undefined") {
+      const literal = ["{"];
+      types.forEach(({ name, types, required }) => {
+        literal.push(`  ${name}${!required ? "?" : ""}: ${typeof types === "string" ? types : this.toTypeLiteral(types)}`);
+      });
 
-    return literal.join("\n");
+      literal.push("}");
+
+      return literal.join("\n");
+    }
+
+    return ""
   }
 
   protected toDeclaration() {
-    if (!this.type) return "";
     const { name, export: export_, types } = this.type;
     return [export_ ? "export" : "", "type", name, "=", this.toTypeLiteral(types)].join(" ");
   }
