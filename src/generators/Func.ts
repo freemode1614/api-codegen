@@ -4,10 +4,10 @@ import Type, { type MaybeType } from "@/generators/Type";
 
 export interface MaybeFunc {
   name: string;
-  arguments: string | MaybeType[];
   export?: boolean;
-  returnType?: string | MaybeType[];
   comments?: MaybeTagItem[];
+  arguments: MaybeType["type"];
+  returnType?: MaybeType["type"];
 }
 
 export default class Func implements Base {
@@ -26,13 +26,9 @@ export default class Func implements Base {
     const literals = [
       comments && comments.length > 0 ? Comment.of(comments).to() : "",
       (export_ ? "export " : "") +
-      `function ${name}(req: ${typeof arguments_ === "string"
-        ? arguments_
-        : Type.of({
-          name: "",
-          types: arguments_,
-        }).toTypeLiteral()
-      }) {`,
+        `function ${name}(req: ${Type.toTypeLiteral(
+          arguments_,
+        )})${returnType ? ":" + Type.toTypeLiteral(returnType) : ""} {`,
       `}`,
     ];
     return literals.join("\n");

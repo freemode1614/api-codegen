@@ -8,7 +8,7 @@ describe("Comment", () => {
       const result = Type.of({
         name: "MyType",
         export: true,
-        types: [
+        type: [
           {
             name: "myName",
             required: true,

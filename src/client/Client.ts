@@ -1,4 +1,4 @@
-import Base from "../generators/Base";
+import Base from "@/generators/Base";
 
 export interface ClientInfo {
   name: string;

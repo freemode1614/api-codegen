@@ -1,4 +1,4 @@
-import Base from "./Base";
+import Base from "@/generators/Base";
 
 export default class FormData implements Base {
   #formDataFields: string[] = [];

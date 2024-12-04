@@ -2,13 +2,13 @@ import { describe, expect, test } from "vitest";
 
 import Interface from "@/generators/Interface";
 
-describe("Comment", () => {
-  test("Comment.to() sucessfully", () => {
+describe("Interface", () => {
+  test("Interface.to() sucessfully", () => {
     expect(() => {
       const result = Interface.of({
-        name: "MyType",
+        name: "MyInterface",
         export: true,
-        types: [
+        type: [
           {
             name: "myName",
             required: true,
@@ -17,7 +17,10 @@ describe("Comment", () => {
           {
             name: "myAge",
             required: true,
-            type: "number",
+            type: {
+              type: "Omit",
+              typeArgs: ["Age", 'key1', 'key2']
+            },
           },
           {
             name: "myAddress",

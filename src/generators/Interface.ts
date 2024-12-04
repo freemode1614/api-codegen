@@ -1,13 +1,13 @@
-import Type, { type MaybeType, type TypeMember } from "./Type";
-
-export type InterfaceMember = TypeMember;
-export type MaybeInterface = MaybeType;
+import Type, { MaybeType } from "@/generators/Type";
 
 export default class Interface extends Type {
+  static override of(type: MaybeType) {
+    return new Interface(type);
+  }
+
   // Override
-  protected toDeclaration() {
-    if (!this.type) return "";
-    const { name, export: export_, types } = this.type;
-    return [export_ ? "export" : "", "interface", name, this.toTypeLiteral(types)].join(" ");
+  protected override toTypeDeclaration() {
+    const { name, export: export_, type: types } = this.type;
+    return [export_ ? "export" : "", "interface", name, Type.toTypeLiteral(types)].join(" ");
   }
 }
