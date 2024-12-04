@@ -1,7 +1,5 @@
-import Base from "@/generators/Base";
 
 export interface ClientInfo {
-  name: string;
   url: string;
   method: string;
   timeout?: number;
@@ -10,38 +8,21 @@ export interface ClientInfo {
   data?: unknown;
 }
 
-export default class Client implements Base {
-  #client: ClientInfo | undefined;
+// eslint-disable-next-line @typescript-eslint/no-extraneous-class
+export default class Client {
+  static #clientName = 'axios';
 
-  protected constructor(client: ClientInfo) {
-    this.#client = client;
-  }
-
-  static of(client: ClientInfo) {
-    return new Client(client);
-  }
-
-  #toString() {
-    if (!this.#client) return "";
-    const { name, url, method, timeout } = this.#client;
+  static toFunction(
+    client: ClientInfo
+  ) {
+    const { url, method, timeout } = client;
     const literal = [
-      `${name}({`,
+      `${this.#clientName}({`,
       `  url: "${url}"`,
       `  method: "${method}"`,
       timeout ? `  timeout: ${String(timeout)}` : ``,
       `});`,
     ].filter(Boolean);
     return literal.join("\n");
-  }
-
-  /**
-   *
-   * name({ url, method, headers, params, data })
-   *
-   * @returns
-   *
-   */
-  to(): string {
-    return this.#toString();
   }
 }
