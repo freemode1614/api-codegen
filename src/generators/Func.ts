@@ -1,12 +1,12 @@
 import Base from "@/generators/Base";
 import Comment, { MaybeTagItem } from "@/generators/Comment";
-import Type, { type TypeMember } from "@/generators/Type";
+import Type, { type MaybeType } from "@/generators/Type";
 
 export interface MaybeFunc {
   name: string;
-  arguments: string | TypeMember[];
+  arguments: string | MaybeType[];
   export?: boolean;
-  returnType?: string | TypeMember[];
+  returnType?: string | MaybeType[];
   comments?: MaybeTagItem[];
 }
 
@@ -26,14 +26,13 @@ export default class Func implements Base {
     const literals = [
       comments && comments.length > 0 ? Comment.of(comments).to() : "",
       (export_ ? "export " : "") +
-        `function ${name}(req: ${
-          typeof arguments_ === "string"
-            ? arguments_
-            : Type.of({
-                name: "",
-                types: arguments_,
-              }).toTypeLiteral()
-        }) {`,
+      `function ${name}(req: ${typeof arguments_ === "string"
+        ? arguments_
+        : Type.of({
+          name: "",
+          types: arguments_,
+        }).toTypeLiteral()
+      }) {`,
       `}`,
     ];
     return literals.join("\n");
