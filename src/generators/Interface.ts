@@ -1,4 +1,5 @@
-import Type, { MaybeType } from "@/generators/Type";
+import Type from "@/generators/Type";
+import { MaybeType } from "@/types/type";
 
 export default class Interface extends Type {
   static override of(type: MaybeType) {

@@ -1,0 +1,35 @@
+/**
+ *    |1 | |   2  |  |     3       |
+ * -> Omit<SomeType, "Key1" | "Key2">
+ */
+export interface GenericityTypeItem {
+  /* 1 */
+  type: string;
+  typeArgs: [
+    /* 2 */
+    string | GenericityTypeItem,
+    /* 3 */
+    ...string[],
+  ];
+}
+
+/**
+ *          string       GenericityTypeItem                        NormalTypeItems
+ *            |            |                                         |
+ *           \|/          \|/                                       \|/
+ * -> { name: string; age: Omit<SomeType, "Key1" | "Key2">; address: { code: string; location: string } }
+ */
+export type NormalTypeItem = {
+  name?: string;
+  required?: boolean;
+  type: string | GenericityTypeItem | NormalTypeItems;
+};
+
+export type NormalTypeItems = NormalTypeItem[];
+
+export interface NormalType extends Omit<NormalTypeItem, "required"> {
+  export?: boolean;
+}
+
+export type MaybeType = NormalType;
+
