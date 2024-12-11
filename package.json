@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "cross-env NODE_ENV=development tsup --watch",
     "build": "cross-env NODE_ENV=production tsup",
-    "test": "cross-env NODE_ENV=test vitest --watch false"
+    "test": "cross-env NODE_ENV=test vitest --watch false",
+    "test:codegen": "cross-env NODE_ENV=test vitest --watch false -t codegen"
   },
   "keywords": [
     "utils",

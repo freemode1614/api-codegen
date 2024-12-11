@@ -7,10 +7,10 @@ export enum OpenApiVersion {
   "v3",
   "v3_1",
 }
-export const isV2ReferenceObject = (schema: any): schema is OpenAPIV2.ReferenceObject => !!schema.$ref;
+export const isV2ReferenceObject = (schema: any): schema is OpenAPIV2.ReferenceObject => !!schema?.$ref;
 
-export const isV3ReferenceObject = (schema: any): schema is OpenAPIV3.ReferenceObject => !!schema.$ref;
+export const isV3ReferenceObject = (schema: any): schema is OpenAPIV3.ReferenceObject => !!schema?.$ref;
 
-export const isV3_1ReferenceObject = (schema: any): schema is OpenAPIV3_1.ReferenceObject => !!schema.$ref;
+export const isV3_1ReferenceObject = (schema: any): schema is OpenAPIV3_1.ReferenceObject => !!schema?.$ref;
 
-export const isV3ArrySchemaObject = (schema: any): schema is OpenAPIV3.ArraySchemaObject => !!schema.items;
+export const isV3ArrySchemaObject = (schema: any): schema is OpenAPIV3.ArraySchemaObject => !!schema?.items;

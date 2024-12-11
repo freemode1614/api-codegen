@@ -1,3 +1,4 @@
+import { createScopedLogger } from "@moccona/logger";
 import { OpenAPIV3 } from "openapi-types";
 
 import Comment from "@/generators/Comment";
@@ -10,6 +11,8 @@ import format2type from "@/utils/format2type";
 import { capitalize } from "@/utils/pathToName";
 import reference2name from "@/utils/reference2name";
 import refShorten from "@/utils/refShorten";
+
+const logger = createScopedLogger("OpenAPIV3");
 
 export default class OpenApiV3 implements Adaptor {
   protected apis: ApiObject[] = [];
@@ -111,7 +114,7 @@ export default class OpenApiV3 implements Adaptor {
         typeArgs: [isV3ReferenceObject(items) ? reference2name(items.$ref) : this.expandSchemaObject(items)],
       };
     } else {
-      const { type, format, properties } = schema_;
+      const { type, format, properties, allOf, oneOf, anyOf, additionalProperties } = schema_;
 
       if (type === "object" && !properties) {
         return {
@@ -186,7 +189,10 @@ export default class OpenApiV3 implements Adaptor {
 
       if (schema) {
         Object.keys(OpenAPIV3.HttpMethods).forEach((method) => {
-          const apiMethodObject = schema[method as keyof typeof schema] as OpenAPIV3.OperationObject | undefined;
+          //@ts-expect-error Make it all lowercase
+          const apiMethodObject = schema[(method as keyof typeof schema).toLowerCase()] as
+            | OpenAPIV3.OperationObject
+            | undefined;
 
           if (apiMethodObject) {
             const methodSchema = apiMethodObject;
@@ -227,7 +233,7 @@ export default class OpenApiV3 implements Adaptor {
             if (requestBody) {
               const type = isV3ReferenceObject(requestBody)
                 ? reference2name(requestBody.$ref)
-                : this.expandSchemaObject(requestBody.content["application/json"].schema!);
+                : this.expandSchemaObject(Object.values(requestBody.content)[0].schema!);
 
               apiObject.parameters = [
                 {
@@ -245,7 +251,10 @@ export default class OpenApiV3 implements Adaptor {
             if (mediaType) {
               apiObject.response = isV3ReferenceObject(mediaType)
                 ? reference2name(mediaType.$ref)
-                : this.expandSchemaObject(mediaType.content!.schema);
+                : this.expandSchemaObject(
+                    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+                    (mediaType.content!["*/*"] || mediaType.content!["application/json"]).schema!,
+                  );
             } else {
               apiObject.response = "";
             }
@@ -267,7 +276,9 @@ export default class OpenApiV3 implements Adaptor {
     this.doc = doc;
   }
 
-  public parse(): string {
-    throw new Error("Method not implemented.");
+  public parse() {
+    this.analysisApis();
+    logger.debug(this.apis, this.enums);
+    return "";
   }
 }

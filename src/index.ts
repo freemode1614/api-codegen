@@ -4,16 +4,15 @@ import OpenApiV2 from "@/adapters/openapi/OpenApiV2";
 import OpenApiV3 from "@/adapters/openapi/OpenApiV3";
 import OpenApiV3_1 from "@/adapters/openapi/OpenApiV3_1";
 import logger from "@/logger";
+import { OpenApiVersion } from "@/types/openapi";
 import getApiDoc, { getOpenApiDocVersion } from "@/utils/getApiDoc";
-
-import { OpenApiVersion } from "./types/openapi";
 
 export interface ClientGenOptions {
   doc: string;
   baseURL?: string;
 }
 
-export default async function clientGen(options: ClientGenOptions) {
+export default async function codeGen(options: ClientGenOptions) {
   if (!options.doc) {
     logger.error(`Missing openapi doc url`);
     process.exit(1);
