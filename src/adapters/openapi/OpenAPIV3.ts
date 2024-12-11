@@ -116,6 +116,11 @@ export default class OpenApiV3 implements Adaptor {
     } else {
       const { type, format, properties, allOf, oneOf, anyOf, additionalProperties } = schema_;
 
+      if (oneOf) {
+        // TODO: Handle oneOf, anyOf, allOf
+        return oneOf.map((schema) => this.expandSchemaObject(schema));
+      }
+
       if (type === "object" && !properties) {
         return {
           type: "Record",

@@ -28,9 +28,9 @@ export default class Func implements Generator {
     const literals = [
       comments && comments.length > 0 ? Comment.of(comments).to() : "",
       (export_ ? "export " : "") +
-      `function ${name}(req: ${Type.toTypeLiteral(
-        arguments_,
-      )})${returnType ? ":" + Type.toTypeLiteral(returnType) : ""} {`,
+        `function ${name}(req: ${Type.toTypeLiteral(
+          arguments_,
+        )})${returnType ? ":" + Type.toTypeLiteral(returnType) : ""} {`,
       `}`,
     ];
     return literals.join("\n");
