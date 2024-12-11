@@ -1,6 +1,7 @@
-import Base from "@/generators/Base";
+import Generator from "@/providers/Generator";
 
-export default class FormData implements Base {
+
+export default class FormData implements Generator{
   #formDataFields: string[] = [];
 
   protected constructor(formData: string[]) {

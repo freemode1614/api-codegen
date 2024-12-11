@@ -1,7 +1,7 @@
-import Base from "@/generators/Base";
+import Generator from "@/providers/Generator";
 import { MaybeType, NormalTypeItem } from "@/types/type";
 
-export default class Type implements Base {
+export default class Type implements Generator {
   protected type!: MaybeType;
 
   protected constructor(type: MaybeType) {

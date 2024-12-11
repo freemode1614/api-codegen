@@ -1,4 +1,4 @@
-import Adaptor from "@/adapters/Adaptor";
+import Adaptor from "@/providers/Adaptor";
 
 export default class OpenApiV2 implements Adaptor {
   parse(): string {

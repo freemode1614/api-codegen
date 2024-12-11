@@ -1,7 +1,7 @@
-import Base from "@/generators/Base";
+import Generator from "@/providers/Generator";
 import { MaybeTagItem } from "@/types/tag";
 
-export default class Comment implements Base {
+export default class Comment implements Generator {
   #comments: MaybeTagItem[] = [];
 
   protected constructor(tags: MaybeTagItem[]) {

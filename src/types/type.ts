@@ -20,8 +20,10 @@ export interface GenericityTypeItem {
  * -> { name: string; age: Omit<SomeType, "Key1" | "Key2">; address: { code: string; location: string } }
  */
 export type NormalTypeItem = {
-  name?: string;
+  in: string;
+  name: string;
   required?: boolean;
+  deprecated?: boolean;
   type: string | GenericityTypeItem | NormalTypeItems;
 };
 
@@ -32,4 +34,3 @@ export interface NormalType extends Omit<NormalTypeItem, "required"> {
 }
 
 export type MaybeType = NormalType;
-

@@ -1,6 +1,6 @@
-import Base from "@/generators/Base";
 import Comment from "@/generators/Comment";
 import Type from "@/generators/Type";
+import Generator from "@/providers/Generator";
 import { MaybeTagItem } from "@/types/tag";
 import { MaybeType } from "@/types/type";
 
@@ -12,7 +12,7 @@ export interface MaybeFunc {
   returnType?: MaybeType["type"];
 }
 
-export default class Func implements Base {
+export default class Func implements Generator {
   #fun!: MaybeFunc;
 
   protected constructor(fun: MaybeFunc) {
