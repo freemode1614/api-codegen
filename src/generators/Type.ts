@@ -1,5 +1,5 @@
 import Generator from "@/providers/Generator";
-import { MaybeType, NormalTypeItem } from "@/types/type";
+import { isUnionType, MaybeType, NormalTypeItem } from "@/types/type";
 
 export default class Type implements Generator {
   protected type!: MaybeType;
@@ -28,14 +28,19 @@ export default class Type implements Generator {
       return literal.join("\n");
     }
 
-    const { type, typeArgs } = typeDefine;
-    const [type_, ...keys] = typeArgs;
-    return `${type}<${this.toTypeLiteral(type_)}${keys.length > 0 ? `, ${keys.map((key) => `"${key}"`).join("|")}` : ""}>`;
+    if (isUnionType(typeDefine)) {
+      const { typeArgs } = typeDefine;
+      return typeArgs.map((type) => this.toTypeLiteral(type)).join("|");
+    } else {
+      const { type, typeArgs } = typeDefine;
+      const [type_, ...keys] = typeArgs;
+      return `${type}<${this.toTypeLiteral(type_)}${keys.length > 0 ? `, ${keys.map((key) => `"${key}"`).join("|")}` : ""}>`;
+    }
   }
 
   protected toTypeDeclaration() {
-    const { name, export: export_, type: typeDefine } = this.type;
-    return [export_ ? "export" : "", "type", name, "=", Type.toTypeLiteral(typeDefine)].join(" ");
+    const { name, type: typeDefine } = this.type;
+    return ["export", "type", name, "=", Type.toTypeLiteral(typeDefine)].join(" ");
   }
 
   to() {

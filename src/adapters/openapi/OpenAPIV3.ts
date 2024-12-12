@@ -6,19 +6,16 @@ import Adaptor from "@/providers/Adaptor";
 import type { ApiObject } from "@/types/api";
 import { isV3ArrySchemaObject, isV3ReferenceObject } from "@/types/openapi";
 import type { MaybeTagItem } from "@/types/tag";
-import { NormalTypeItem, NormalTypeItems } from "@/types/type";
+import { GenericityTypeItem, NormalTypeItem, NormalTypeItems, UnionTypeItem } from "@/types/type";
+import { merge } from "@/utils/deepMerge";
 import format2type from "@/utils/format2type";
 import { capitalize } from "@/utils/pathToName";
 import reference2name from "@/utils/reference2name";
-import refShorten from "@/utils/refShorten";
 
 const logger = createScopedLogger("OpenAPIV3");
 
 export default class OpenApiV3 implements Adaptor {
-  protected apis: ApiObject[] = [];
   protected enums: Record<string, OpenAPIV3.SchemaObject["enum"]> = {};
-
-  static refShorten = (ref: string) => refShorten(ref);
 
   public get banner() {
     const { info } = this.doc;
@@ -68,7 +65,7 @@ export default class OpenApiV3 implements Adaptor {
     schemas: Record<string, OpenAPIV3.SchemaObject>,
     mediaSchemas: Record<string, OpenAPIV3.RequestBodyObject | OpenAPIV3.ResponseObject | OpenAPIV3.ReferenceObject>,
   ) {
-    const resolveReference = (ref: string) => schemas[OpenApiV3.refShorten(ref)];
+    const resolveReference = (ref: string) => schemas[reference2name(ref)];
 
     const otherSchemasWithNoReference = {};
 
@@ -104,7 +101,7 @@ export default class OpenApiV3 implements Adaptor {
   }
 
   protected expandSchemaObject(schema: OpenAPIV3.ReferenceObject | OpenAPIV3.SchemaObject): NormalTypeItem["type"] {
-    const schema_ = isV3ReferenceObject(schema) ? this.schemas[schema.$ref] : schema;
+    const schema_ = isV3ReferenceObject(schema) ? this.schemas[reference2name(schema.$ref)] : schema;
 
     if (isV3ArrySchemaObject(schema_)) {
       const { items } = schema_;
@@ -112,13 +109,21 @@ export default class OpenApiV3 implements Adaptor {
       return {
         type: "Array",
         typeArgs: [isV3ReferenceObject(items) ? reference2name(items.$ref) : this.expandSchemaObject(items)],
-      };
+      } as GenericityTypeItem;
     } else {
-      const { type, format, properties, allOf, oneOf, anyOf, additionalProperties } = schema_;
+      const { type, format, properties, allOf, oneOf, anyOf } = schema_;
 
-      if (oneOf) {
-        // TODO: Handle oneOf, anyOf, allOf
-        return oneOf.map((schema) => this.expandSchemaObject(schema));
+      if (oneOf || anyOf) {
+        return {
+          typeArgs: (oneOf ?? anyOf ?? allOf)!.map((s) => this.expandSchemaObject(s)),
+        } as UnionTypeItem;
+      }
+
+      if (allOf) {
+        const mergedSchema = allOf
+          .map((s) => (isV3ReferenceObject(s) ? this.schemas[reference2name(s.$ref)] : s))
+          .reduce((acc, s) => merge(acc, s), {});
+        return this.expandSchemaObject(mergedSchema);
       }
 
       if (type === "object" && !properties) {
@@ -189,7 +194,7 @@ export default class OpenApiV3 implements Adaptor {
       return [];
     }
 
-    Object.entries(paths).reduce<ApiObject[]>((acc, [path, schema]) => {
+    return Object.entries(paths).reduce<ApiObject[]>((acc, [path, schema]) => {
       const apiObjects: ApiObject[] = [];
 
       if (schema) {
@@ -269,10 +274,8 @@ export default class OpenApiV3 implements Adaptor {
         });
       }
 
-      return acc;
+      return [...acc, ...apiObjects];
     }, []);
-
-    return [];
   }
 
   protected readonly doc!: OpenAPIV3.Document;
@@ -282,8 +285,8 @@ export default class OpenApiV3 implements Adaptor {
   }
 
   public parse() {
-    this.analysisApis();
-    logger.debug(this.apis, this.enums);
+    const apis = this.analysisApis();
+    logger.debug(apis, this.enums);
     return "";
   }
 }

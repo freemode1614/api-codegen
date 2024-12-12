@@ -14,6 +14,15 @@ export interface GenericityTypeItem {
 }
 
 /**
+ *
+ * A | B | C
+ *
+ */
+export type UnionTypeItem = {
+  typeArgs: (string | GenericityTypeItem | NormalTypeItems)[];
+};
+
+/**
  *          string       GenericityTypeItem                        NormalTypeItems
  *            |            |                                         |
  *           \|/          \|/                                       \|/
@@ -24,7 +33,7 @@ export type NormalTypeItem = {
   name: string;
   required?: boolean;
   deprecated?: boolean;
-  type: string | GenericityTypeItem | NormalTypeItems;
+  type: string | GenericityTypeItem | NormalTypeItems | UnionTypeItem;
 };
 
 export type NormalTypeItems = NormalTypeItem[];
@@ -34,3 +43,6 @@ export interface NormalType extends Omit<NormalTypeItem, "required"> {
 }
 
 export type MaybeType = NormalType;
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
+export const isUnionType = (t: any): t is UnionTypeItem => !!t?.type;
