@@ -1,6 +1,7 @@
 import { createScopedLogger } from "@moccona/logger";
 import { OpenAPIV3 } from "openapi-types";
 
+import { Client } from "@/client/Client";
 import Comment from "@/generators/Comment";
 import Adaptor from "@/providers/Adaptor";
 import type { ApiObject } from "@/types/api";
@@ -16,6 +17,7 @@ const logger = createScopedLogger("OpenAPIV3");
 
 export default class OpenApiV3 implements Adaptor {
   protected enums: Record<string, OpenAPIV3.SchemaObject["enum"]> = {};
+  private client: Client;
 
   public get banner() {
     const { info } = this.doc;
@@ -280,13 +282,14 @@ export default class OpenApiV3 implements Adaptor {
 
   protected readonly doc!: OpenAPIV3.Document;
 
-  constructor(doc: OpenAPIV3.Document) {
+  constructor(doc: OpenAPIV3.Document, client: Client) {
     this.doc = doc;
+    this.client = client;
   }
 
   public parse() {
     const apis = this.analysisApis();
-    logger.debug(apis, this.enums);
+    logger.debug(apis);
     return "";
   }
 }

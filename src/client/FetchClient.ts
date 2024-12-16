@@ -1,3 +1,5 @@
-import Client from "@/client/Client";
+import { Client } from "@/client/Client";
 
-export default class FetchClient extends Client {}
+export default class FetchClient extends Client {
+  
+}

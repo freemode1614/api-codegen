@@ -1,3 +1,5 @@
+import Comment from "@/generators/Comment";
+import { MaybeTagItem } from "@/types/tag";
 
 export interface ClientInfo {
   url: string;
@@ -8,13 +10,15 @@ export interface ClientInfo {
   data?: unknown;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-extraneous-class
-export default class Client {
-  static #clientName = 'axios';
+export abstract class Client {
+  protected code = "";
+  static #clientName = "axios";
 
-  static toFunction(
-    client: ClientInfo
-  ) {
+  static toBanner(banner: MaybeTagItem[]) {
+    return Comment.of(banner).to();
+  }
+
+  static toFunction(client: ClientInfo) {
     const { url, method, timeout } = client;
     const literal = [
       `${this.#clientName}({`,

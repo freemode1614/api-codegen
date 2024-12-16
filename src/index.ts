@@ -3,13 +3,17 @@ import { OpenAPIV3 } from "openapi-types";
 import OpenApiV2 from "@/adapters/openapi/OpenApiV2";
 import OpenApiV3 from "@/adapters/openapi/OpenApiV3";
 import OpenApiV3_1 from "@/adapters/openapi/OpenApiV3_1";
+import AxiosClient from "@/client/AxiosClient";
+import FetchClient from "@/client/FetchClient";
 import logger from "@/logger";
+import { ClientTypes } from "@/types/client";
 import { OpenApiVersion } from "@/types/openapi";
 import getApiDoc, { getOpenApiDocVersion } from "@/utils/getApiDoc";
 
 export interface ClientGenOptions {
   doc: string;
   baseURL?: string;
+  client?: ClientTypes;
 }
 
 export default async function codeGen(options: ClientGenOptions) {
@@ -20,6 +24,15 @@ export default async function codeGen(options: ClientGenOptions) {
 
   const doc = await getApiDoc(options.doc);
   const version = getOpenApiDocVersion(doc);
+
+  const client = (() => {
+    switch (options.client) {
+      case ClientTypes.Axios:
+        return new AxiosClient();
+      default:
+        return new FetchClient();
+    }
+  })();
 
   switch (version) {
     case OpenApiVersion.v2:

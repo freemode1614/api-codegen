@@ -1,7 +1,7 @@
-import Client from "@/client/Client";
+import { Client } from "@/client/Client";
 
 export default class AxiosClient extends Client {
-  static #clientName = "axiosInstance"
+  static #clientName = "axiosIns";
   /**
    * Create axios instance for each client file.
    */
