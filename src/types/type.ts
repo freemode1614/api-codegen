@@ -57,5 +57,48 @@ export interface NormalType extends Omit<NormalTypeItem, "required"> {
 
 export type MaybeType = NormalType;
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
-export const isUnionType = (t: any): t is UnionTypeItem => !!t?.type;
+export type TypeParameter = {
+  name: string;
+};
+
+export type TypeKeyword = TypeParameter;
+
+export type PropertySignature = {
+  name: string;
+  type: string | TypeLiteral | TypeReference;
+};
+
+export type TypeLiteral = {
+  members: PropertySignature[];
+};
+
+export type IntersectionType = {
+  name: symbol;
+  types: (TypeParameter | TypeLiteral | ExpressionWithTypeArguments)[];
+};
+
+export type UnionType = {
+  name: symbol;
+  types: (TypeParameter | TypeLiteral | ExpressionWithTypeArguments)[];
+};
+
+export type TypeReference = {
+  typeName: string;
+  typeArguments?: (TypeParameter | TypeLiteral | ExpressionWithTypeArguments | UnionType | IntersectionType)[];
+};
+
+export type ExpressionWithTypeArguments = {
+  expression: string;
+  typeArguments: TypeReference["typeArguments"];
+};
+
+export type ArrayType = {
+  elementType: string | TypeKeyword | TypeLiteral | TypeReference | IntersectionType | UnionType;
+};
+
+export type TypeAlias = {
+  name: string;
+  modifier?: string[];
+  typeParameters?: (TypeParameter | PropertySignature)[];
+  type?: TypeLiteral | TypeReference;
+};

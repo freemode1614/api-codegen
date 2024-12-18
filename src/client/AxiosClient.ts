@@ -1,11 +1,12 @@
-import { Client } from "@/client/Client";
+import { Client, ClientInfo } from "@/client/Client";
 
 export default class AxiosClient extends Client {
-  static #clientName = "axiosIns";
-  /**
-   * Create axios instance for each client file.
-   */
-  static createAxiosInstance() {
-    return `export const ${this.#clientName} = axios.create({})`;
+  code = "";
+  clientName = "axios";
+  clientInfos: ClientInfo[] = [];
+
+  constructor(clientInfos: ClientInfo[]) {
+    super();
+    this.clientInfos = clientInfos;
   }
 }
