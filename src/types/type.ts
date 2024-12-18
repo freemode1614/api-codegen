@@ -4,7 +4,7 @@
  */
 export interface GenericityTypeItem {
   /* 1 */
-  type: string;
+  type: string | symbol;
   typeArgs: [
     /* 2 */
     string | GenericityTypeItem | NormalTypeItems,
@@ -13,12 +13,25 @@ export interface GenericityTypeItem {
   ];
 }
 
+export const unionType = Symbol("union");
+
 /**
  *
  * A | B | C
  *
  */
 export type UnionTypeItem = {
+  typeArgs: (string | GenericityTypeItem | NormalTypeItems)[];
+};
+
+export const intersectionType = Symbol("intersection");
+
+/**
+ *
+ * A & B & C
+ *
+ */
+export type IntersectionTypeItem = {
   typeArgs: (string | GenericityTypeItem | NormalTypeItems)[];
 };
 

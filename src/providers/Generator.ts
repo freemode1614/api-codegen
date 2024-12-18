@@ -1,3 +1,3 @@
-export default abstract class Generator{
+export default abstract class Generator {
   abstract to(): string;
 }

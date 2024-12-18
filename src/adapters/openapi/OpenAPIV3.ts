@@ -7,8 +7,15 @@ import Adaptor from "@/providers/Adaptor";
 import type { ApiObject } from "@/types/api";
 import { isV3ArrySchemaObject, isV3ReferenceObject } from "@/types/openapi";
 import type { MaybeTagItem } from "@/types/tag";
-import { GenericityTypeItem, NormalTypeItem, NormalTypeItems, UnionTypeItem } from "@/types/type";
-import { merge } from "@/utils/deepMerge";
+import {
+  GenericityTypeItem,
+  intersectionType,
+  IntersectionTypeItem,
+  NormalTypeItem,
+  NormalTypeItems,
+  unionType,
+  UnionTypeItem,
+} from "@/types/type";
 import format2type from "@/utils/format2type";
 import { capitalize } from "@/utils/pathToName";
 import reference2name from "@/utils/reference2name";
@@ -117,15 +124,18 @@ export default class OpenApiV3 implements Adaptor {
 
       if (oneOf || anyOf) {
         return {
+          type: unionType,
           typeArgs: (oneOf ?? anyOf ?? allOf)!.map((s) => this.expandSchemaObject(s)),
         } as UnionTypeItem;
       }
 
       if (allOf) {
-        const mergedSchema = allOf
-          .map((s) => (isV3ReferenceObject(s) ? this.schemas[reference2name(s.$ref)] : s))
-          .reduce((acc, s) => merge(acc, s), {});
-        return this.expandSchemaObject(mergedSchema);
+        return {
+          type: intersectionType,
+          typeArgs: allOf.map((schema) =>
+            isV3ReferenceObject(schema) ? reference2name(schema.$ref) : this.expandSchemaObject(schema),
+          ),
+        } as IntersectionTypeItem;
       }
 
       if (type === "object" && !properties) {
