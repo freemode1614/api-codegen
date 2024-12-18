@@ -1,6 +1,13 @@
 import Generator from "@/providers/Generator";
-import type { GenericityTypeItem, MaybeType, NormalTypeItem, TypeLiteral, UnionType } from "@/types/type";
-import { intersectionType, unionType } from "@/types/type";
+import type {
+  GenericityTypeItem,
+  MaybeType,
+  NormalTypeItem,
+  TypeLiteral,
+  TypeReference,
+  UnionType,
+} from "@/types/type";
+import { intersectionType, isTypeReference, unionType } from "@/types/type";
 
 export default class Type implements Generator {
   protected type!: MaybeType;
@@ -13,8 +20,34 @@ export default class Type implements Generator {
     return new Type(type);
   }
 
+  #toTypeReference(typeReference: TypeReference) {
+    const { typeName, typeArguments } = typeReference;
+
+    if (!typeArguments) {
+      return typeName;
+    }
+
+    return `${typeName}<${typeArguments.map((argument) => {}).join(" ,")}>`;
+  }
+
   #toTypeLiteral_(typeLiteral: TypeLiteral) {
-    //
+    const { members } = typeLiteral;
+
+    return [
+      "{",
+      members.map((member) => {
+        const { name, type } = member;
+
+        if (typeof type === "string") {
+          return `${name}: ${type}`;
+        }
+
+        if (isTypeReference(type)) {
+          return `${name}: ${this.#toTypeReference(type)}`;
+        }
+      }),
+      "}",
+    ];
   }
 
   #toUnionType(type: UnionType) {
@@ -23,7 +56,7 @@ export default class Type implements Generator {
       return "";
     }
 
-    return types.map((type) => { });
+    return types.map((type) => {});
   }
 
   public static toTypeLiteral(typeDefine: NormalTypeItem["type"]): string {
