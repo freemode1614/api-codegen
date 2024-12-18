@@ -1,11 +1,11 @@
 import { describe, expect, test } from "vitest";
 
-import Comment from "@/generators/Comment";
+import Comment from "@/generators/Generator";
 
 describe("Comment", () => {
   test("Comment.to() sucessfully", () => {
     expect(() => {
-      const result = Comment.of([
+      const result = new Comment().comment([
         {
           comment: "For test purpose",
         },
@@ -19,13 +19,7 @@ describe("Comment", () => {
           name: "obj.name",
           comment: "Placeholder",
         },
-      ])
-        .add({
-          name: "obj.age",
-          tag: "param",
-          comment: "Age placeholder",
-        })
-        .to();
+      ]);
 
       console.log(result);
     }).not.throw();

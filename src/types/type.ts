@@ -82,41 +82,40 @@ export type TypeLiteral = {
 
 export type IntersectionType = {
   name: symbol;
-  types: (TypeParameter | TypeLiteral | ExpressionWithTypeArguments)[];
+  types: (TypeParameter | TypeLiteral | TypeReference)[];
 };
+
+export const isIntersectionType = (t: unknown): t is IntersectionType =>
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument
+  !!((t as any).name && (t as any).name === intersectionType && Object.keys(t as any).length === 2);
 
 export type UnionType = {
   name: symbol;
-  types: (TypeParameter | TypeLiteral | ExpressionWithTypeArguments)[];
+  types: (TypeParameter | TypeLiteral | TypeReference)[];
 };
 
-export const isUnionType = (t: unknown): t is PropertySignature =>
+export const isUnionType = (t: unknown): t is UnionType =>
   // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument
-  !!((t as any).name && (t as any).type && Object.keys(t as any).length === 2);
+  !!((t as any).name && (t as any).name === unionType && Object.keys(t as any).length === 2);
 
 export type TypeReference = {
   typeName: string;
-  typeArguments?: (TypeParameter | TypeLiteral | ExpressionWithTypeArguments | UnionType | IntersectionType)[];
+  typeArguments?: (TypeParameter | TypeLiteral | TypeReference | UnionType | IntersectionType)[];
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
 export const isTypeReference = (t: unknown): t is TypeReference => !!(t as any).typeName;
 
-export type ExpressionWithTypeArguments = {
-  expression: string;
-  typeArguments: TypeReference["typeArguments"];
+export type ArrayType = {
+  elementType: string | TypeParameter | TypeLiteral | TypeReference | IntersectionType | UnionType;
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
-export const isExpressionWithTypeArguments = (t: unknown): t is ExpressionWithTypeArguments => !!(t as any).expression;
-
-export type ArrayType = {
-  elementType: string | TypeKeyword | TypeLiteral | TypeReference | IntersectionType | UnionType;
-};
+export const isArrayType = (t: unknown): t is ArrayType => !!(t as any).elementType;
 
 export type TypeAlias = {
   name: string;
   modifier?: string[];
-  typeParameters?: (TypeParameter | PropertySignature)[];
-  type?: TypeLiteral | TypeReference;
+  typeParameters?: ArrayType["elementType"][];
+  type?: ArrayType["elementType"];
 };

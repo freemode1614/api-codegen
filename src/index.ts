@@ -39,7 +39,7 @@ export default async function codeGen(options: ClientGenOptions) {
       new OpenApiV2().parse();
       break;
     case OpenApiVersion.v3:
-      new OpenApiV3(doc as OpenAPIV3.Document).parse();
+      new OpenApiV3(doc as OpenAPIV3.Document, client).parse();
       break;
     case OpenApiVersion.v3_1:
       new OpenApiV3_1().parse();
