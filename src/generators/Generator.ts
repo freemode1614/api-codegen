@@ -40,7 +40,7 @@ export default class CodeGen implements Generator {
     return strs.join("\n");
   }
 
-  toType(type: ArrayType["elementType"]): string {
+  public toType(type: ArrayType["elementType"]): string {
     if (typeof type === "string") {
       return type;
     }
@@ -67,10 +67,10 @@ export default class CodeGen implements Generator {
 
     const { members } = type;
 
-    return ["{", members.map(this.toType), "}"].join("\n");
+    return ["{", members.map((t) => `${t.name}${t.require ? "" : "?"}: ${this.toType(t.type)}`), "}"].join("\n");
   }
 
-  toTypeReference(typeReference: TypeReference) {
+  public toTypeReference(typeReference: TypeReference) {
     const { typeName, typeArguments } = typeReference;
 
     if (!typeArguments) {
@@ -80,16 +80,16 @@ export default class CodeGen implements Generator {
     return `${typeName}<${typeArguments.map(this.toType).join(" ,")}>`;
   }
 
-  toUnionType(type: UnionType) {
+  public toUnionType(type: UnionType) {
     const { types, name } = type;
     if (name !== unionType) {
       return "";
     }
 
-    return types.map((type) => this.toType(type)).join("|");
+    return types.map(this.toType).join("|");
   }
 
-  toIntersectionType(type: IntersectionType) {
+  public toIntersectionType(type: IntersectionType) {
     const { types, name } = type;
     if (name !== intersectionType) {
       return "";
@@ -98,19 +98,19 @@ export default class CodeGen implements Generator {
     return types.map((type) => this.toType(type)).join("&");
   }
 
-  toArrayType(type: ArrayType) {
+  public toArrayType(type: ArrayType) {
     const { elementType } = type;
     return `(${this.toType(elementType)})[]`;
   }
 
   public typeDeclaration(typeAlias: TypeAlias): string {
     const { name, modifier = [], type } = typeAlias;
-    return `${modifier.join(" ")} ${name} = ${this.toType(type!)}`;
+    return `${modifier.join(" ")} type ${name} = ${this.toType(type!)}`;
   }
 
   public interfaceDeclaration(typeAlias: TypeAlias): string {
     const { name, modifier = [], type } = typeAlias;
-    return `${modifier.join(" ")} ${name} = ${this.toType(type!)}`;
+    return `${modifier.join(" ")} interface ${name} = ${this.toType(type!)}`;
   }
 
   public enum(): string {

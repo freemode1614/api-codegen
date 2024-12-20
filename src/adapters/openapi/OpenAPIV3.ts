@@ -1,20 +1,20 @@
 import { createScopedLogger } from "@moccona/logger";
 import { OpenAPIV3 } from "openapi-types";
 
-import { Client } from "@/client/Client";
-import Comment from "@/generators/Comment";
 import Adaptor from "@/providers/Adaptor";
+import Client from "@/providers/Client";
 import type { ApiObject } from "@/types/api";
 import { isV3ArrySchemaObject, isV3ReferenceObject } from "@/types/openapi";
 import type { MaybeTagItem } from "@/types/tag";
 import {
-  GenericityTypeItem,
+  ArrayType,
+  IntersectionType,
   intersectionType,
-  IntersectionTypeItem,
-  NormalTypeItem,
-  NormalTypeItems,
+  PropertySignature,
+  TypeAlias,
+  TypeReference,
+  UnionType,
   unionType,
-  UnionTypeItem,
 } from "@/types/type";
 import format2type from "@/utils/format2type";
 import { capitalize } from "@/utils/pathToName";
@@ -30,13 +30,13 @@ export default class OpenApiV3 implements Adaptor {
     const { info } = this.doc;
     const { version, title, description } = info;
 
-    return Comment.of([
+    return this.client.comment([
       {
         comment: version,
       },
       { comment: title },
       { comment: description ?? "" },
-    ]).to();
+    ]);
   }
 
   public get schemas() {
@@ -109,68 +109,70 @@ export default class OpenApiV3 implements Adaptor {
     }, otherSchemasWithNoReference);
   }
 
-  protected expandSchemaObject(schema: OpenAPIV3.ReferenceObject | OpenAPIV3.SchemaObject): NormalTypeItem["type"] {
+  protected expandSchemaObject(schema: OpenAPIV3.ReferenceObject | OpenAPIV3.SchemaObject): ArrayType["elementType"] {
     const schema_ = isV3ReferenceObject(schema) ? this.schemas[reference2name(schema.$ref)] : schema;
 
     if (isV3ArrySchemaObject(schema_)) {
       const { items } = schema_;
 
       return {
-        type: "Array",
-        typeArgs: [isV3ReferenceObject(items) ? reference2name(items.$ref) : this.expandSchemaObject(items)],
-      } as GenericityTypeItem;
+        typeName: "Array",
+        typeArguments: [isV3ReferenceObject(items) ? reference2name(items.$ref) : this.expandSchemaObject(items)],
+      } as TypeReference;
     } else {
       const { type, format, properties, allOf, oneOf, anyOf } = schema_;
 
       if (oneOf || anyOf) {
         return {
           type: unionType,
-          typeArgs: (oneOf ?? anyOf ?? allOf)!.map((s) => this.expandSchemaObject(s)),
-        } as UnionTypeItem;
+          types: (oneOf ?? anyOf ?? allOf)!.map((s) => this.expandSchemaObject(s)),
+        } as unknown as UnionType;
       }
 
       if (allOf) {
         return {
           type: intersectionType,
-          typeArgs: allOf.map((schema) =>
+          types: allOf.map((schema) =>
             isV3ReferenceObject(schema) ? reference2name(schema.$ref) : this.expandSchemaObject(schema),
           ),
-        } as IntersectionTypeItem;
+        } as unknown as IntersectionType;
       }
 
       if (type === "object" && !properties) {
         return {
-          type: "Record",
-          typeArgs: ["string", "unknown"],
+          typeName: "Record",
+          typeArguments: ["string", "unknown"],
         };
       }
 
       if (type === "object" && properties && Object.keys(properties).length > 0) {
-        return Object.keys(properties).reduce<NormalTypeItems>((acc, propKey) => {
-          const propSchema = properties[propKey];
+        return {
+          members: Object.keys(properties).reduce<PropertySignature[]>((acc, propKey) => {
+            const propSchema = properties[propKey];
 
-          if (isV3ReferenceObject(propSchema)) {
-            acc.push({
-              name: propKey,
-              type: reference2name(propSchema.$ref),
-            });
-          } else {
-            if (propSchema.enum) {
-              this.enums[capitalize(propKey)] = propSchema.enum;
+            if (isV3ReferenceObject(propSchema)) {
               acc.push({
                 name: propKey,
-                type: capitalize(propKey),
+                type: reference2name(propSchema.$ref),
               });
             } else {
-              acc.push({
-                name: propKey,
-                type: this.expandSchemaObject(propSchema),
-              });
+              if (propSchema.enum) {
+                this.enums[capitalize(propKey)] = propSchema.enum;
+                acc.push({
+                  name: propKey,
+                  type: capitalize(propKey),
+                });
+              } else {
+                acc.push({
+                  name: propKey,
+                  type: this.expandSchemaObject(propSchema),
+                });
+              }
             }
-          }
 
-          return acc;
-        }, []);
+            return acc;
+          }, []),
+        };
       }
 
       // @ts-expect-error format and type are good.
@@ -180,8 +182,8 @@ export default class OpenApiV3 implements Adaptor {
 
   protected expandParameterSchema(
     parameters: (OpenAPIV3.ReferenceObject | OpenAPIV3.ParameterObject)[],
-  ): NormalTypeItems {
-    const items: NormalTypeItems = [];
+  ): PropertySignature[] {
+    const items: PropertySignature[] = [];
 
     parameters.forEach((parameter) => {
       parameter = isV3ReferenceObject(parameter) ? this.parameters[parameter.$ref] : parameter;
@@ -189,8 +191,8 @@ export default class OpenApiV3 implements Adaptor {
       if (schema) {
         items.push({
           name,
-          required,
-          deprecated,
+          require: !!required,
+          deprecated: !!deprecated,
           type: this.expandSchemaObject(schema),
         });
       }
@@ -300,6 +302,21 @@ export default class OpenApiV3 implements Adaptor {
   public parse() {
     const apis = this.analysisApis();
     logger.debug(apis);
-    return "";
+
+    const code = [
+      this.banner,
+      Object.keys(this.schemas).map((typeName) => {
+        const schema = this.schemas[typeName];
+        const typeAlias: TypeAlias = {
+          name: typeName,
+          modifier: ["export"],
+          type: this.expandSchemaObject(schema),
+        };
+
+        return this.client.typeDeclaration(typeAlias);
+      }),
+    ].join("\n\n");
+
+    return code;
   }
 }

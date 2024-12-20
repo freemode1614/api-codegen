@@ -1,61 +1,6 @@
-/**
- *    |1 | |   2  |  |     3       |
- * -> Omit<SomeType, "Key1" | "Key2">
- */
-export interface GenericityTypeItem {
-  /* 1 */
-  type: string | symbol;
-  typeArgs: [
-    /* 2 */
-    string | GenericityTypeItem | NormalTypeItems,
-    /* 3 */
-    ...string[],
-  ];
-}
-
 export const unionType = Symbol("union");
 
-/**
- *
- * A | B | C
- *
- */
-export type UnionTypeItem = {
-  typeArgs: (string | GenericityTypeItem | NormalTypeItems)[];
-};
-
 export const intersectionType = Symbol("intersection");
-
-/**
- *
- * A & B & C
- *
- */
-export type IntersectionTypeItem = {
-  typeArgs: (string | GenericityTypeItem | NormalTypeItems)[];
-};
-
-/**
- *          string       GenericityTypeItem                        NormalTypeItems
- *            |            |                                         |
- *           \|/          \|/                                       \|/
- * -> { name: string; age: Omit<SomeType, "Key1" | "Key2">; address: { code: string; location: string } }
- */
-export type NormalTypeItem = {
-  // in: string;
-  name: string;
-  required?: boolean;
-  deprecated?: boolean;
-  type: string | GenericityTypeItem | NormalTypeItems | UnionTypeItem;
-};
-
-export type NormalTypeItems = NormalTypeItem[];
-
-export interface NormalType extends Omit<NormalTypeItem, "required"> {
-  modifier?: string[];
-}
-
-export type MaybeType = NormalType;
 
 export type TypeParameter = {
   name: string;
@@ -69,7 +14,9 @@ export type TypeKeyword = TypeParameter;
 
 export type PropertySignature = {
   name: string;
-  type: string | TypeLiteral | TypeReference;
+  require?: boolean;
+  deprecated?: boolean;
+  type: ArrayType["elementType"];
 };
 
 export const isPropertySignature = (t: unknown): t is PropertySignature =>
@@ -91,7 +38,7 @@ export const isIntersectionType = (t: unknown): t is IntersectionType =>
 
 export type UnionType = {
   name: symbol;
-  types: (TypeParameter | TypeLiteral | TypeReference)[];
+  types: ArrayType["elementType"][];
 };
 
 export const isUnionType = (t: unknown): t is UnionType =>
@@ -100,7 +47,7 @@ export const isUnionType = (t: unknown): t is UnionType =>
 
 export type TypeReference = {
   typeName: string;
-  typeArguments?: (TypeParameter | TypeLiteral | TypeReference | UnionType | IntersectionType)[];
+  typeArguments?: ArrayType["elementType"][];
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
