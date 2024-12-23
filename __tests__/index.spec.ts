@@ -1,8 +1,10 @@
-import { expect, test } from "vitest";
+import { OpenAPI } from "openapi-types";
+import { test } from "vitest";
 
-import codegen from "@/index";
+import { codeGenByConfig } from "@/index";
 
-test("codegen", async () => {
-  await codegen({ doc: "https://172.31.2.165:8002/static/openapi.json" });
-  exp;
+import doc1 from "../examples/3.0/json/petstore.json";
+
+test("codegen", () => {
+  codeGenByConfig(doc1 as OpenAPI.Document);
 });

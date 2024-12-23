@@ -16,6 +16,7 @@ export type PropertySignature = {
   name: string;
   require?: boolean;
   deprecated?: boolean;
+  in?: string;
   type: ArrayType["elementType"];
 };
 
@@ -26,6 +27,10 @@ export const isPropertySignature = (t: unknown): t is PropertySignature =>
 export type TypeLiteral = {
   members: PropertySignature[];
 };
+
+export const isTypeLiteral = (t: unknown): t is TypeLiteral =>
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument
+  !!((t as any).members && Object.keys(t as any).length === 1);
 
 export type IntersectionType = {
   name: symbol;
@@ -54,7 +59,7 @@ export type TypeReference = {
 export const isTypeReference = (t: unknown): t is TypeReference => !!(t as any).typeName;
 
 export type ArrayType = {
-  elementType: string | TypeParameter | TypeLiteral | TypeReference | IntersectionType | UnionType;
+  elementType: string | TypeParameter | TypeLiteral | TypeReference | IntersectionType | UnionType | ArrayType;
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
@@ -65,4 +70,10 @@ export type TypeAlias = {
   modifier?: string[];
   typeParameters?: ArrayType["elementType"][];
   type?: ArrayType["elementType"];
+};
+
+export type Enum = {
+  name: string;
+  modifier?: string[];
+  members: (Omit<PropertySignature, "require" | "deprecated"> & { type?: string })[];
 };

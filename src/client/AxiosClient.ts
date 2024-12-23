@@ -6,4 +6,8 @@ export default class AxiosClient extends Generator implements Client {
   code = "";
   clientName = "axios";
   clientInfos: ClientInfo[] = [];
+
+  templates(apis: ClientInfo[]): string {
+    return "";
+  }
 }

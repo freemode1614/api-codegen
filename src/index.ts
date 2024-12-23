@@ -1,4 +1,4 @@
-import { OpenAPIV3 } from "openapi-types";
+import { OpenAPI, OpenAPIV3 } from "openapi-types";
 
 import OpenApiV2 from "@/adapters/openapi/OpenApiV2";
 import OpenApiV3 from "@/adapters/openapi/OpenApiV3";
@@ -15,6 +15,24 @@ export interface ClientGenOptions {
   baseURL?: string;
   client?: ClientTypes;
 }
+
+export const codeGenByConfig = (doc: OpenAPI.Document) => {
+  const version = getOpenApiDocVersion(doc);
+  const client = new FetchClient();
+  switch (version) {
+    case OpenApiVersion.v2:
+      new OpenApiV2().parse();
+      break;
+    case OpenApiVersion.v3:
+      new OpenApiV3(doc as OpenAPIV3.Document, client).parse();
+      break;
+    case OpenApiVersion.v3_1:
+      new OpenApiV3_1().parse();
+      break;
+    default:
+      break;
+  }
+};
 
 export default async function codeGen(options: ClientGenOptions) {
   if (!options.doc) {
