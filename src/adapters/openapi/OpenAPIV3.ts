@@ -229,7 +229,7 @@ export default class OpenApiV3 implements Adaptor {
           in: in_,
           require: !!required,
           deprecated: !!deprecated,
-          type: this.expandSchemaObject(schema, ""),
+          type: this.expandSchemaObject(schema, name),
         });
       }
     });
