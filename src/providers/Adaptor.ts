@@ -1,3 +1,3 @@
 export default abstract class Adaptor {
-  abstract parse(): string;
+  abstract parse(): Promise<string>;
 }

@@ -18,6 +18,7 @@ export type PropertySignature = {
   deprecated?: boolean;
   in?: string;
   type: ArrayType["elementType"];
+  format?: string;
 };
 
 export const isPropertySignature = (t: unknown): t is PropertySignature =>

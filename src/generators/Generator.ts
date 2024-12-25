@@ -44,15 +44,15 @@ export default class CodeGen implements Generator {
   public toCode(type: ArrayType["elementType"]) {
     if (!type) return "";
     if (typeof type === "string") {
-      return type;
+      return type.toLowerCase();
     }
 
     if (isTypeParameter(type)) {
-      return type.name;
+      return type.name.toLowerCase();
     }
 
     if (isTypeReference(type)) {
-      return type.typeName;
+      return type.typeName.toLowerCase();
     }
 
     if (isUnionType(type) || isIntersectionType(type) || isArrayType(type)) {
@@ -60,6 +60,9 @@ export default class CodeGen implements Generator {
     }
 
     const { members } = type;
+    if (members.length === 0) {
+      return "";
+    }
     return ["{", members.map((t) => t.name), "}"].join("\n");
   }
 
@@ -90,10 +93,14 @@ export default class CodeGen implements Generator {
     }
 
     const { members } = type;
-
+    if (members.length === 0) {
+      return "";
+    }
     return [
       "{",
-      members.map((t) => `${t.name}${t.require === false ? "?" : ""}: ${this.toTypeDeclaration(t.type)}`),
+      members.map(
+        (t) => `${t.name}${t.require === true || t.in === "header" ? "" : "?"}: ${this.toTypeDeclaration(t.type)}`,
+      ),
       "}",
     ].join("\n");
   }

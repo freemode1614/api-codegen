@@ -23,6 +23,7 @@ import {
 } from "@/types/type";
 // Utilities
 import format2type from "@/utils/format2type";
+import { formatCode } from "@/utils/formatCode";
 import isSameEnum from "@/utils/isSameEnum";
 import pathToName, { capitalize } from "@/utils/pathToName";
 import reference2name from "@/utils/reference2name";
@@ -136,12 +137,16 @@ export default class OpenApiV3 implements Adaptor {
 
     if (isV3ArrySchemaObject(schema_)) {
       const { items } = schema_;
-
+      if (isV3ReferenceObject(items)) {
+        return {
+          elementType: reference2name(items.$ref),
+        } as ArrayType;
+      }
       return {
-        elementType: isV3ReferenceObject(items) ? reference2name(items.$ref) : this.expandSchemaObject(items, ""),
+        elementType: this.expandSchemaObject(items, ""),
       } as ArrayType;
     } else {
-      const { type, format, properties, allOf, oneOf, anyOf } = schema_;
+      const { type, format, properties, allOf, oneOf, anyOf, enum: enums_, required } = schema_;
 
       if (oneOf || anyOf) {
         return {
@@ -166,7 +171,7 @@ export default class OpenApiV3 implements Adaptor {
         };
       }
 
-      if (type === "object" && properties && Object.keys(properties).length > 0) {
+      if (properties && Object.keys(properties).length > 0) {
         return {
           members: Object.keys(properties).reduce<PropertySignature[]>((acc, propKey) => {
             const propSchema = properties[propKey];
@@ -200,6 +205,8 @@ export default class OpenApiV3 implements Adaptor {
               } else {
                 acc.push({
                   name: propKey,
+                  format: propSchema.format,
+                  require: required?.includes(propKey),
                   type: this.expandSchemaObject(propSchema, propKey),
                 });
               }
@@ -208,6 +215,13 @@ export default class OpenApiV3 implements Adaptor {
             return acc;
           }, []),
         };
+      }
+
+      if (enums_) {
+        return {
+          name: unionType,
+          types: (enums_ as (string | number)[]).map((v) => `"${v}"`),
+        } as UnionType;
       }
 
       // @ts-expect-error format and type are good.
@@ -250,13 +264,10 @@ export default class OpenApiV3 implements Adaptor {
 
   protected analyzeApis() {
     const { paths } = this.doc;
-
     if (Object.keys(paths).length === 0) {
       return [];
     }
-
     const schemas = this.schemas;
-
     for (const schemaKey in schemas) {
       const schema = schemas[schemaKey];
       if (schema.properties) {
@@ -271,90 +282,123 @@ export default class OpenApiV3 implements Adaptor {
           }
         }
       }
-
-      return Object.entries(paths).reduce<ClientInfo[]>((acc, [path, schema]) => {
-        const apiObjects: ClientInfo[] = [];
-
-        if (schema) {
-          Object.keys(OpenAPIV3.HttpMethods).forEach((method) => {
-            //@ts-expect-error Make it all lowercase
-            const apiMethodObject = schema[(method as keyof typeof schema).toLowerCase()] as
-              | OpenAPIV3.OperationObject
-              | undefined;
-
-            if (apiMethodObject) {
-              const methodSchema = apiMethodObject;
-              const {
-                summary,
-                description,
-                parameters = [],
-                responses = {},
-                deprecated,
-                requestBody,
-                tags = [],
-                operationId,
-              } = methodSchema;
-
-              const comments = [
-                summary && {
-                  comment: summary,
-                },
-                description && {
-                  comment: description,
-                },
-                tags.length > 0 && {
-                  tag: "tag",
-                  comment: tags.join(", "),
-                },
-                deprecated && {
-                  tag: "deprecated",
-                  name: "",
-                  comment: "",
-                },
-              ].filter(Boolean) as MaybeTagItem[];
-
-              const clientApiObject = {
-                comments,
-                method,
-                url: path,
-                name: pathToName(path, method, operationId),
-              } as ClientInfo;
-
-              if (requestBody) {
-                const type = isV3ReferenceObject(requestBody)
-                  ? reference2name(requestBody.$ref)
-                  : this.expandSchemaObject(Object.values(requestBody.content)[0].schema!, "");
-
-                clientApiObject.parameters = type;
-              } else {
-                clientApiObject.parameters = {
-                  members: this.expandParameterSchema(parameters),
-                };
-              }
-              // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-              const mediaType = responses["200"] || responses["201"];
-
-              // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-              if (mediaType) {
-                clientApiObject.response = isV3ReferenceObject(mediaType)
-                  ? reference2name(mediaType.$ref)
-                  : this.expandSchemaObject(
-                      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-                      (mediaType.content!["*/*"] || mediaType.content!["application/json"]).schema!,
-                      "",
-                    );
-              } else {
-                clientApiObject.response = "";
-              }
-
-              apiObjects.push(clientApiObject);
-            }
-          });
-        }
-
-        return [...acc, ...apiObjects];
-      }, []);
     }
+    return Object.entries(paths).reduce<ClientInfo[]>((acc, [path, schema]) => {
+      const apiObjects: ClientInfo[] = [];
+
+      if (schema) {
+        Object.keys(OpenAPIV3.HttpMethods).forEach((method) => {
+          //@ts-expect-error Make it all lowercase
+          const apiMethodObject = schema[(method as keyof typeof schema).toLowerCase()] as
+            | OpenAPIV3.OperationObject
+            | undefined;
+
+          if (apiMethodObject) {
+            const methodSchema = apiMethodObject;
+            const {
+              summary,
+              description,
+              parameters = [],
+              responses = {},
+              deprecated,
+              requestBody,
+              tags = [],
+              operationId,
+            } = methodSchema;
+
+            const comments = [
+              summary && {
+                comment: summary,
+              },
+              description && {
+                comment: description,
+              },
+              tags.length > 0 && {
+                tag: "tag",
+                comment: tags.join(", "),
+              },
+              deprecated && {
+                tag: "deprecated",
+                name: "",
+                comment: "",
+              },
+            ].filter(Boolean) as MaybeTagItem[];
+
+            const clientApiObject = {
+              comments,
+              method,
+              url: path,
+              name: pathToName(path, method, operationId),
+            } as ClientInfo;
+
+            if (requestBody) {
+              if (isV3ReferenceObject(requestBody)) {
+                clientApiObject.parameters = reference2name(requestBody.$ref);
+              } else {
+                const type = Object.values(requestBody.content)[0].schema!;
+                if (isV3ReferenceObject(type)) {
+                  if (parameters.length > 0) {
+                    clientApiObject.parameters = {
+                      members: [
+                        ...this.expandParameterSchema(parameters),
+                        {
+                          name: reference2name(type.$ref).toLowerCase(),
+                          type: reference2name(type.$ref),
+                          in: "body",
+                        },
+                      ],
+                    };
+                  } else {
+                    clientApiObject.parameters = reference2name(type.$ref);
+                  }
+                } else {
+                  if (type.properties) {
+                    Object.assign(
+                      type.properties,
+                      parameters.reduce((acc, p) => {
+                        if (isV3ReferenceObject(p)) return acc;
+                        return {
+                          ...acc,
+                          [p.name]: p.schema ?? { description: p.description, type: "string" },
+                        };
+                      }, {}),
+                    );
+                  }
+                  clientApiObject.parameters = this.expandSchemaObject(type, "");
+                }
+              }
+            } else {
+              clientApiObject.parameters = {
+                members: this.expandParameterSchema(parameters),
+              };
+            }
+            // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+            const mediaType = responses["200"] || responses["201"];
+
+            // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+            if (mediaType) {
+              if (isV3ReferenceObject(mediaType)) {
+                clientApiObject.response = reference2name(mediaType.$ref);
+              } else {
+                // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+                const type = (mediaType.content!["*/*"] || mediaType.content!["application/json"]).schema!;
+                if (isV3ReferenceObject(type)) {
+                  clientApiObject.response = reference2name(type.$ref);
+                } else {
+                  clientApiObject.response = this.expandSchemaObject(type, "");
+                }
+              }
+            } else {
+              clientApiObject.response = "";
+            }
+
+            apiObjects.push(clientApiObject);
+          }
+        });
+      }
+
+      return [...acc, ...apiObjects];
+    }, []);
   }
 
   protected readonly doc!: OpenAPIV3.Document;
@@ -364,7 +408,7 @@ export default class OpenApiV3 implements Adaptor {
     this.client = client;
   }
 
-  public parse() {
+  public async parse() {
     const apis = this.analyzeApis();
     logger.debug(apis);
 
@@ -387,7 +431,7 @@ export default class OpenApiV3 implements Adaptor {
         })
         .join(";\n\n"),
       "\n\n",
-      this.client.templates(apis ?? []),
+      this.client.templates(apis),
     ].join("\n");
 
     writeToFile("output.ts", code)
@@ -398,6 +442,6 @@ export default class OpenApiV3 implements Adaptor {
         console.error(error);
       });
 
-    return code;
+    return await formatCode(code);
   }
 }

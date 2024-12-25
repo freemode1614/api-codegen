@@ -13,6 +13,7 @@ const formatMapping = {
   boolean: "boolean",
   null: "null",
   file: "File",
+  uri: "string",
 };
 
 export default function format2type(type: keyof typeof formatMapping) {

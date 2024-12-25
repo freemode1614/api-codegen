@@ -12,18 +12,19 @@ export default class FetchClient extends Generator implements Client {
     const { url, method, response, parameters } = api;
 
     const inQueryParameters = isTypeLiteral(parameters) && parameters.members.filter((m) => m.in === "query");
-    // const inHeaderParameters = isTypeLiteral(parameters) && parameters.members.filter((m) => m.in === "header");
+    const inHeaderParameters = isTypeLiteral(parameters) && parameters.members.filter((m) => m.in === "header");
 
     const patchURL = inQueryParameters
-      ? url + "?" + inQueryParameters.map((m) => `${m.name}=\${${m.name}}`).join("&")
+      ? url +
+        (inQueryParameters.length > 0
+          ? "?" + inQueryParameters.map((m) => `${m.name}=\${encodeURIComponent(String(${m.name}))}`).join("&")
+          : "")
       : url;
 
-    return /**typescript */ `fetch(\`${patchURL}\`, {
+    return /**typescript */ `fetch(\`${patchURL.replaceAll("{", "${")}\`, {
   method: "${method}",
-  ${body ? "body: " + body : ""}
-  // headers: {
-  //   {{headers}}
-  // },
+  ${body ? "body: " + body + "," : ""}
+  ${inHeaderParameters && inHeaderParameters.length > 0 ? "headers: {" + inHeaderParameters.map((m) => m.name).join(",") + "}" : ""}
 }).then((res) => res.json() as Promise<${response ? this.toTypeDeclaration(response) : "unknown"}>);`;
   }
 
@@ -42,11 +43,14 @@ export async function ${name}(${parameters_ ? parameters_ : ""}${parameters_ ? "
     hasMembersInBody
       ? (parameters as TypeLiteral).members
           .filter((m) => m.in === "body" || m.in === undefined)
-          .map((member) => `fd.append("${member.name}", ${member.name} + "");`)
+          .map(
+            (member) =>
+              `${member.name} && fd.append("${member.name}", ${member.format !== "binary" ? `String(${member.name})` : member.name});`,
+          )
           .join("\n")
       : ""
   }
-  return ${this.#clientTemplate(api, hasMembersInBody ? "fd" : "")};
+  return ${this.#clientTemplate(api, hasMembersInBody ? "fd" : typeof parameters === "string" ? `JSON.stringify(${parameters.toLowerCase()})` : "")};
 }
 `;
   }

@@ -16,18 +16,18 @@ export interface ClientGenOptions {
   client?: ClientTypes;
 }
 
-export const codeGenByConfig = (doc: OpenAPI.Document) => {
+export const codeGenByConfig = async (doc: OpenAPI.Document) => {
   const version = getOpenApiDocVersion(doc);
   const client = new FetchClient();
   switch (version) {
     case OpenApiVersion.v2:
-      new OpenApiV2().parse();
+      await new OpenApiV2().parse();
       break;
     case OpenApiVersion.v3:
-      new OpenApiV3(doc as OpenAPIV3.Document, client).parse();
+      await new OpenApiV3(doc as OpenAPIV3.Document, client).parse();
       break;
     case OpenApiVersion.v3_1:
-      new OpenApiV3_1().parse();
+      await new OpenApiV3_1().parse();
       break;
     default:
       break;
@@ -54,13 +54,13 @@ export default async function codeGen(options: ClientGenOptions) {
 
   switch (version) {
     case OpenApiVersion.v2:
-      new OpenApiV2().parse();
+      await new OpenApiV2().parse();
       break;
     case OpenApiVersion.v3:
-      new OpenApiV3(doc as OpenAPIV3.Document, client).parse();
+      await new OpenApiV3(doc as OpenAPIV3.Document, client).parse();
       break;
     case OpenApiVersion.v3_1:
-      new OpenApiV3_1().parse();
+      await new OpenApiV3_1().parse();
       break;
     default:
       break;
