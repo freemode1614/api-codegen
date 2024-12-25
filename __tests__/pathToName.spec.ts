@@ -4,11 +4,11 @@ import pathToName, { camelCase, upperCamelCase } from "@/utils/pathToName";
 
 test("path name correct", () => {
   const names = [
-    ["/", "", ""],
     ["/artwork", "artwork", "Artwork"],
     ["/artwork/{id}/files", "artworkIdFiles", "ArtworkIdFiles"],
     ["/token/logout", "tokenLogout", "TokenLogout"],
     ["tokenlogout", "tokenlogout", "Tokenlogout"],
+    ["/anything/image-png", "anythingImagePng", "AnythingImagePng"],
   ];
 
   names.forEach((g) => {

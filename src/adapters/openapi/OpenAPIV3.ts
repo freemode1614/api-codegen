@@ -380,12 +380,16 @@ export default class OpenApiV3 implements Adaptor {
               if (isV3ReferenceObject(mediaType)) {
                 clientApiObject.response = reference2name(mediaType.$ref);
               } else {
-                // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-                const type = (mediaType.content!["*/*"] || mediaType.content!["application/json"]).schema!;
-                if (isV3ReferenceObject(type)) {
-                  clientApiObject.response = reference2name(type.$ref);
+                if (mediaType.content) {
+                  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+                  const type = (mediaType.content["*/*"] || mediaType.content["application/json"]).schema!;
+                  if (isV3ReferenceObject(type)) {
+                    clientApiObject.response = reference2name(type.$ref);
+                  } else {
+                    clientApiObject.response = this.expandSchemaObject(type, "");
+                  }
                 } else {
-                  clientApiObject.response = this.expandSchemaObject(type, "");
+                  clientApiObject.response = "";
                 }
               }
             } else {

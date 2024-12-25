@@ -5,9 +5,9 @@ export const capitalize = (text: string) => {
   return `${text.charAt(0).toUpperCase()}${text.slice(1)}`;
 };
 
-export const camelCase = (text: string) => {
+export const camelCase = (text: string): string => {
   return text
-    .split(/[/-_{}]/g)
+    .split(/[/\-_{}]/g)
     .filter(Boolean)
     .map((text, index) => (index === 0 ? text : capitalize(text)))
     .join("");
@@ -15,7 +15,7 @@ export const camelCase = (text: string) => {
 
 export const upperCamelCase = (text: string) => {
   return text
-    .split(/[-_{}]/g)
+    .split(/[/\-_{}]/g)
     .filter(Boolean)
     .map((s) => s.toLowerCase())
     .map(capitalize)

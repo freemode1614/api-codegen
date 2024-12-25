@@ -3,8 +3,8 @@ import { test } from "vitest";
 
 import { codeGenByConfig } from "@/index";
 
-import doc1 from "../examples/3.0/json/callbacks.json";
+import doc1 from "../examples/3.0/json/file-uploads.json";
 
-test("codegen", () => {
-  codeGenByConfig(doc1 as OpenAPI.Document);
+test("codegen", async () => {
+  await codeGenByConfig(doc1 as OpenAPI.Document);
 });
