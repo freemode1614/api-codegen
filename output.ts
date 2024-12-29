@@ -1,65 +1,49 @@
 /**
  * 1.0.0
- * Common parameters
- * https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.3.md#path-item-object
+ * Extreme parameter cases
+ * https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.3.md#parameter-object
  */
-
-export async function anythingIdUsingGet({
-  id,
-  xExtraId,
-}: {
-  id: unknown;
-  xExtraId: string;
-}) {
-  return fetch(`/anything/${id}`, {
-    method: "GET",
-
-    headers: { "x-extra-id": xExtraId },
-  }).then((res) => res.json() as Promise<unknown>);
+enum PetStatus {
+  available = "available",
+  pending = "pending",
+  sold = "sold",
 }
 
-export async function anythingIdUsingPost({
-  limit,
+export type Pet = {
+  id?: number;
+  name?: string;
+  status?: PetStatus;
+};
+
+export async function anythingAllParamTypesIdId2UsingPost({
   id,
-  xExtraId,
+  id2,
+  cookieString,
+  cookieInt,
+  queryParam,
+  queryParam2,
+  xHeaderValue,
+  xHeaderData,
+  pet,
 }: {
-  limit?: number;
-  id: unknown;
-  xExtraId: string;
+  id: number;
+  id2: number;
+  cookieString?: string;
+  cookieInt?: number;
+  queryParam?: string;
+  queryParam2?: string;
+  xHeaderValue: string;
+  xHeaderData: string;
+  pet?: Pet;
 }) {
-  return fetch(`/anything/${id}?limit=$${encodeURIComponent(String(limit))}`, {
-    method: "POST",
-
-    headers: { "x-extra-id": xExtraId },
-  }).then((res) => res.json() as Promise<unknown>);
-}
-
-export async function anythingIdActionUsingGet({
-  id,
-  action,
-}: {
-  id: unknown;
-  action: "lists" | "statistics";
-}) {
-  return fetch(`/anything/${id}/${action}`, {
-    method: "GET",
-  }).then((res) => res.json() as Promise<unknown>);
-}
-
-export async function anythingIdActionIdUsingGet({
-  id,
-  action,
-}: {
-  id: unknown;
-  action: "lists" | "statistics";
-}) {
-  return fetch(`/anything/${id}/${action}/${id}`, {
-    method: "GET",
-  }).then((res) => res.json() as Promise<unknown>);
-}
-
-export async function anythingIdOverrideUsingGet({ id }: { id: string }) {
-  return fetch(`/anything/${id}/override`, {
-    method: "GET",
-  }).then((res) => res.json() as Promise<unknown>);
+  const fd = new FormData();
+  pet && fd.append("pet", String(pet));
+  return fetch(
+    `/anything/all-param-types/${id}/${id2}?queryParam=$${encodeURIComponent(String(queryParam))}&queryParam2=$${encodeURIComponent(String(queryParam2))}`,
+    {
+      method: "POST",
+      body: fd,
+      headers: { "x-header-value": xHeaderValue, "x-header-data": xHeaderData },
+    },
+  ).then((res) => res.json() as Promise<unknown>);
 }
