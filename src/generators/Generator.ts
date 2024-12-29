@@ -15,6 +15,7 @@ import {
   UnionType,
   unionType,
 } from "@/types/type";
+import { camelCase } from "@/utils/pathToName";
 
 export default class CodeGen implements Generator {
   public comment(comments: MaybeTagItem[]): string {
@@ -63,7 +64,7 @@ export default class CodeGen implements Generator {
     if (members.length === 0) {
       return "";
     }
-    return ["{", members.map((t) => t.name), "}"].join("\n");
+    return ["{", members.map((t) => camelCase(t.name)), "}"].join("\n");
   }
 
   public toTypeDeclaration(type: ArrayType["elementType"]): string {
@@ -99,7 +100,8 @@ export default class CodeGen implements Generator {
     return [
       "{",
       members.map(
-        (t) => `${t.name}${t.require === true || t.in === "header" ? "" : "?"}: ${this.toTypeDeclaration(t.type)}`,
+        (t) =>
+          `"${camelCase(t.name)}"${t.require === true || t.in === "header" ? "" : "?"}: ${this.toTypeDeclaration(t.type)}`,
       ),
       "}",
     ].join("\n");

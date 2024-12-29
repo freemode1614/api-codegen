@@ -2,6 +2,7 @@ import Generator from "@/generators/Generator";
 import Client from "@/providers/Client";
 import type { ClientInfo } from "@/types/client";
 import { isTypeLiteral, TypeLiteral } from "@/types/type";
+import { camelCase } from "@/utils/pathToName";
 
 export default class FetchClient extends Generator implements Client {
   code = "";
@@ -17,14 +18,15 @@ export default class FetchClient extends Generator implements Client {
     const patchURL = inQueryParameters
       ? url +
         (inQueryParameters.length > 0
-          ? "?" + inQueryParameters.map((m) => `${m.name}=\${encodeURIComponent(String(${m.name}))}`).join("&")
+          ? "?" +
+            inQueryParameters.map((m) => `${m.name}=\${encodeURIComponent(String(${camelCase(m.name)}))}`).join("&")
           : "")
       : url;
 
     return /**typescript */ `fetch(\`${patchURL.replaceAll("{", "${")}\`, {
   method: "${method}",
   ${body ? "body: " + body + "," : ""}
-  ${inHeaderParameters && inHeaderParameters.length > 0 ? "headers: {" + inHeaderParameters.map((m) => m.name).join(",") + "}" : ""}
+  ${inHeaderParameters && inHeaderParameters.length > 0 ? "headers: {" + inHeaderParameters.map((m) => `"${m.name}": ${camelCase(m.name)}`).join(",") + "}" : ""}
 }).then((res) => res.json() as Promise<${response ? this.toTypeDeclaration(response) : "unknown"}>);`;
   }
 

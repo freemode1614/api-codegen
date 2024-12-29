@@ -1,40 +1,65 @@
 /**
  * 1.0.0
- * File uploading support
- * https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.3.md#considerations-for-file-uploads
+ * Common parameters
+ * https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.3.md#path-item-object
  */
 
-export async function anythingImagePngUsingPost(blob: Blob) {
-  return fetch(`/anything/image-png`, {
-    method: "POST",
-    body: JSON.stringify(blob),
-  }).then((res) => res.json() as Promise<unknown>);
-}
-
-export async function anythingMultipartFormdataUsingPut({ filename }: { filename?: Blob[] }) {
-  const fd = new FormData();
-  filename && fd.append("filename", String(filename));
-  return fetch(`/anything/multipart-formdata`, {
-    method: "PUT",
-    body: fd,
-  }).then((res) => res.json() as Promise<unknown>);
-}
-
-export async function anythingMultipartFormdataUsingPost({
-  orderId,
-  userId,
-  documentFile,
+export async function anythingIdUsingGet({
+  id,
+  xExtraId,
 }: {
-  orderId?: number;
-  userId?: number;
-  documentFile?: Blob;
+  id: unknown;
+  xExtraId: string;
 }) {
-  const fd = new FormData();
-  orderId && fd.append("orderId", String(orderId));
-  userId && fd.append("userId", String(userId));
-  documentFile && fd.append("documentFile", documentFile);
-  return fetch(`/anything/multipart-formdata`, {
+  return fetch(`/anything/${id}`, {
+    method: "GET",
+
+    headers: { "x-extra-id": xExtraId },
+  }).then((res) => res.json() as Promise<unknown>);
+}
+
+export async function anythingIdUsingPost({
+  limit,
+  id,
+  xExtraId,
+}: {
+  limit?: number;
+  id: unknown;
+  xExtraId: string;
+}) {
+  return fetch(`/anything/${id}?limit=$${encodeURIComponent(String(limit))}`, {
     method: "POST",
-    body: fd,
+
+    headers: { "x-extra-id": xExtraId },
+  }).then((res) => res.json() as Promise<unknown>);
+}
+
+export async function anythingIdActionUsingGet({
+  id,
+  action,
+}: {
+  id: unknown;
+  action: "lists" | "statistics";
+}) {
+  return fetch(`/anything/${id}/${action}`, {
+    method: "GET",
+  }).then((res) => res.json() as Promise<unknown>);
+}
+
+export async function anythingIdActionIdUsingGet({
+  id,
+  action,
+}: {
+  id: unknown;
+  action: "lists" | "statistics";
+}) {
+  return fetch(`/anything/${id}/${action}/${id}`, {
+    method: "GET",
+  }).then((res) => res.json() as Promise<unknown>);
+}
+
+export async function anythingIdOverrideUsingGet({ id }: { id: string }) {
+  return fetch(`/anything/${id}/override`, {
+    method: "GET",
   }).then((res) => res.json() as Promise<unknown>);
 }

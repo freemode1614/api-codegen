@@ -25,7 +25,7 @@ import {
 import format2type from "@/utils/format2type";
 import { formatCode } from "@/utils/formatCode";
 import isSameEnum from "@/utils/isSameEnum";
-import pathToName, { capitalize } from "@/utils/pathToName";
+import pathToName, { capitalize, upperCamelCase } from "@/utils/pathToName";
 import reference2name from "@/utils/reference2name";
 import { writeToFile } from "@/utils/writetoFile";
 
@@ -99,6 +99,8 @@ export default class OpenApiV3 implements Adaptor {
     const otherSchemasWithNoReference = {};
 
     return Object.entries(mediaSchemas).reduce<Record<string, OpenAPIV3.SchemaObject>>((acc, [key, schema]) => {
+      key = upperCamelCase(key);
+
       if (isV3ReferenceObject(schema)) {
         return Object.assign(acc, {
           [key]: resolveReference(schema.$ref),
@@ -139,7 +141,7 @@ export default class OpenApiV3 implements Adaptor {
       const { items } = schema_;
       if (isV3ReferenceObject(items)) {
         return {
-          elementType: reference2name(items.$ref),
+          elementType: upperCamelCase(reference2name(items.$ref)),
         } as ArrayType;
       }
       return {
@@ -150,18 +152,20 @@ export default class OpenApiV3 implements Adaptor {
 
       if (oneOf || anyOf) {
         return {
-          type: unionType,
+          name: unionType,
           types: (oneOf ?? anyOf ?? allOf)!.map((s) => this.expandSchemaObject(s, "")),
-        } as unknown as UnionType;
+        } as UnionType;
       }
 
       if (allOf) {
         return {
-          type: intersectionType,
+          name: intersectionType,
           types: allOf.map((schema) =>
-            isV3ReferenceObject(schema) ? reference2name(schema.$ref) : this.expandSchemaObject(schema, ""),
+            isV3ReferenceObject(schema)
+              ? upperCamelCase(reference2name(schema.$ref))
+              : this.expandSchemaObject(schema, ""),
           ),
-        } as unknown as IntersectionType;
+        } as IntersectionType;
       }
 
       if (type === "object" && !properties) {
@@ -179,7 +183,7 @@ export default class OpenApiV3 implements Adaptor {
             if (isV3ReferenceObject(propSchema)) {
               acc.push({
                 name: propKey,
-                type: reference2name(propSchema.$ref),
+                type: upperCamelCase(reference2name(propSchema.$ref)),
               });
             } else {
               if (propSchema.enum) {
@@ -235,7 +239,7 @@ export default class OpenApiV3 implements Adaptor {
     const items: PropertySignature[] = [];
 
     parameters.forEach((parameter) => {
-      parameter = isV3ReferenceObject(parameter) ? this.parameters[parameter.$ref] : parameter;
+      parameter = isV3ReferenceObject(parameter) ? this.parameters[reference2name(parameter.$ref)] : parameter;
       const { name, deprecated, schema, required, in: in_ } = parameter;
       if (schema) {
         items.push({
@@ -287,6 +291,7 @@ export default class OpenApiV3 implements Adaptor {
       const apiObjects: ClientInfo[] = [];
 
       if (schema) {
+        const { parameters: commonParameters = [] } = schema;
         Object.keys(OpenAPIV3.HttpMethods).forEach((method) => {
           //@ts-expect-error Make it all lowercase
           const apiMethodObject = schema[(method as keyof typeof schema).toLowerCase()] as
@@ -305,6 +310,16 @@ export default class OpenApiV3 implements Adaptor {
               tags = [],
               operationId,
             } = methodSchema;
+
+            commonParameters.forEach((p) => {
+              if (
+                !parameters
+                  .map((s) => (isV3ReferenceObject(s) ? reference2name(s.$ref) : s.name))
+                  .includes(isV3ReferenceObject(p) ? reference2name(p.$ref) : p.name)
+              ) {
+                parameters.push(p);
+              }
+            });
 
             const comments = [
               summary && {
@@ -343,13 +358,13 @@ export default class OpenApiV3 implements Adaptor {
                         ...this.expandParameterSchema(parameters),
                         {
                           name: reference2name(type.$ref).toLowerCase(),
-                          type: reference2name(type.$ref),
+                          type: upperCamelCase(reference2name(type.$ref)),
                           in: "body",
                         },
                       ],
                     };
                   } else {
-                    clientApiObject.parameters = reference2name(type.$ref);
+                    clientApiObject.parameters = upperCamelCase(reference2name(type.$ref));
                   }
                 } else {
                   if (type.properties) {
@@ -378,13 +393,13 @@ export default class OpenApiV3 implements Adaptor {
             // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
             if (mediaType) {
               if (isV3ReferenceObject(mediaType)) {
-                clientApiObject.response = reference2name(mediaType.$ref);
+                clientApiObject.response = upperCamelCase(reference2name(mediaType.$ref));
               } else {
                 if (mediaType.content) {
                   // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
                   const type = (mediaType.content["*/*"] || mediaType.content["application/json"]).schema!;
                   if (isV3ReferenceObject(type)) {
-                    clientApiObject.response = reference2name(type.$ref);
+                    clientApiObject.response = upperCamelCase(reference2name(type.$ref));
                   } else {
                     clientApiObject.response = this.expandSchemaObject(type, "");
                   }
@@ -426,7 +441,7 @@ export default class OpenApiV3 implements Adaptor {
         .map((typeName) => {
           const schema = this.schemas[typeName];
           const typeAlias: TypeAlias = {
-            name: typeName,
+            name: upperCamelCase(typeName),
             modifier: ["export"],
             type: this.expandSchemaObject(schema, typeName),
           };
@@ -438,7 +453,7 @@ export default class OpenApiV3 implements Adaptor {
       this.client.templates(apis),
     ].join("\n");
 
-    writeToFile("output.ts", code)
+    writeToFile("output.ts", await formatCode(code))
       .then(() => {
         //
       })
