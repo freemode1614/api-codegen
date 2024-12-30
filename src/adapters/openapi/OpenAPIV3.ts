@@ -405,9 +405,13 @@ export default class OpenApiV3 implements Adaptor {
                 }
               }
             } else {
-              clientApiObject.parameters = {
-                members: this.expandParameterSchema(parameters),
-              };
+              if (parameters.length === 0) {
+                clientApiObject.parameters = "";
+              } else {
+                clientApiObject.parameters = {
+                  members: this.expandParameterSchema(parameters),
+                };
+              }
             }
             // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
             const mediaType = responses["200"] || responses["201"];

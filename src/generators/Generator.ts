@@ -63,7 +63,7 @@ export default class CodeGen implements Generator {
 
     const { members } = type;
     if (members.length === 0) {
-      return "";
+      return "{}";
     }
     return [
       "{",
@@ -100,10 +100,12 @@ export default class CodeGen implements Generator {
     }
 
     const { members } = type;
+
     // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     if (!members || members.length === 0) {
-      return "";
+      return "{}";
     }
+
     return [
       "{",
       members.map(

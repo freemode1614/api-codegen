@@ -40,23 +40,43 @@ export default class FetchClient extends Generator implements Client {
       ? parameters.members.some((m) => m.in === "body" && m.format === "binary")
       : false;
 
-    return `
-export async function ${name}(${parameters_ ? parameters_ : ""}${parameters_ ? ": " + this.toTypeDeclaration(parameters) : ""}) {
-  ${hasBinaryMembersInBody ? "const fd = new FormData();" : ""}
-  ${
-    hasBinaryMembersInBody
-      ? (parameters as TypeLiteral).members
-          .filter((m) => m.in === "body" && m.format === "binary")
-          .map(
-            (member) =>
-              `${camelCase(member.name)} && fd.append("${member.name}", ${member.format !== "binary" ? `String(${camelCase(member.name)})` : member.name});`,
-          )
-          .join("\n")
-      : ""
-  }
-  return ${this.#clientTemplate(api, hasBinaryMembersInBody ? "fd" : typeof parameters === "string" ? `JSON.stringify(${parameters ? parameters.toLowerCase() : "{}"})` : parameters ? `JSON.stringify(${this.toCode(parameters)})` : "")};
-}
-`;
+    if (isTypeLiteral(parameters)) {
+      parameters.members = hasBinaryMembersInBody
+        ? parameters.members
+        : parameters.members.filter((p) => p.in !== "cookie");
+    }
+
+    const returnValue = `return ${this.#clientTemplate(
+      api,
+      hasBinaryMembersInBody
+        ? "fd"
+        : typeof parameters === "string"
+          ? parameters !== ""
+            ? `JSON.stringify(${parameters.toLowerCase()})`
+            : ""
+          : parameters
+            ? `JSON.stringify(${this.toCode(parameters)})`
+            : "",
+    )}`;
+
+    const code = [
+      `export async function`,
+      name,
+      `(${parameters_ ?? ""}${parameters_ ? ": " + this.toTypeDeclaration(parameters) : ""})`,
+      hasBinaryMembersInBody ? "const fd = new FormData();" : "",
+      hasBinaryMembersInBody
+        ? (parameters as TypeLiteral).members
+            .filter((m) => m.in === "body" && m.format === "binary")
+            .map(
+              (member) =>
+                `${camelCase(member.name)} && fd.append("${member.name}", ${member.format !== "binary" ? `String(${camelCase(member.name)})` : member.name});`,
+            )
+            .join("\n")
+        : "",
+      returnValue,
+    ].join("");
+
+    return code;
   }
 
   templates(apis: ClientInfo[]): string {
