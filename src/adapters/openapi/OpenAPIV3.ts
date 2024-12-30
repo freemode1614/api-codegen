@@ -230,11 +230,13 @@ export default class OpenApiV3 implements Adaptor {
                 }
               } else {
                 acc.push({
+                  in: (propSchema as OpenAPIV3.ParameterObject).in,
+                  deprecated: propSchema.deprecated,
                   name: propKey,
                   format: propSchema.format,
                   require: required?.includes(propKey),
                   type: this.expandSchemaObject(propSchema, propKey),
-                });
+                } as PropertySignature);
               }
             }
 
@@ -396,7 +398,20 @@ export default class OpenApiV3 implements Adaptor {
                         if (isV3ReferenceObject(p)) return acc;
                         return {
                           ...acc,
-                          [p.name]: p.schema ?? { description: p.description, type: "string" },
+                          [p.name]: p.schema
+                            ? {
+                                ...p.schema,
+                                in: p.in,
+                                deprecated: p.deprecated,
+                                description: p.description,
+                              }
+                            : {
+                                in: p.in,
+                                deprecated: p.deprecated,
+                                required: p.required,
+                                description: p.description,
+                                type: "string",
+                              },
                         };
                       }, {}),
                     );

@@ -55,14 +55,29 @@ export default class FetchClient extends Generator implements Client {
             ? `JSON.stringify(${parameters.toLowerCase()})`
             : ""
           : parameters
-            ? `JSON.stringify(${this.toCode(parameters)})`
-            : "",
+            ? isTypeLiteral(parameters)
+              ? parameters.members.filter((s) => s.in === "body" || !s.in).length === 0
+                ? ""
+                : `JSON.stringify(${this.toCode({
+                    ...parameters,
+                    members: parameters.members.filter((s) => s.in === "body" || !s.in),
+                  })})`
+              : `JSON.stringify(${this.toCode(parameters)})`
+            : ``,
     )}`;
 
+    // parameters.members.filter((s) => s.in === "body").length === 0
+    //                 ? ""
+    //                 : {
+    //                     ...parameters,
+    //                     members: parameters.members.filter((s) => s.in === "body"),
+    //                   }
+
     const code = [
-      `export async function`,
+      `export async function `,
       name,
       `(${parameters_ ?? ""}${parameters_ ? ": " + this.toTypeDeclaration(parameters) : ""})`,
+      "{",
       hasBinaryMembersInBody ? "const fd = new FormData();" : "",
       hasBinaryMembersInBody
         ? (parameters as TypeLiteral).members
@@ -74,6 +89,7 @@ export default class FetchClient extends Generator implements Client {
             .join("\n")
         : "",
       returnValue,
+      "}",
     ].join("");
 
     return code;
