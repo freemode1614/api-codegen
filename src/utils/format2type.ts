@@ -14,6 +14,8 @@ const formatMapping = {
   null: "null",
   file: "File",
   uri: "string",
+  uuid: "string",
+  json: "string",
 };
 
 export default function format2type(type: keyof typeof formatMapping) {

@@ -19,6 +19,7 @@ export type PropertySignature = {
   in?: string;
   type: ArrayType["elementType"];
   format?: string;
+  dotdotdot?: boolean;
 };
 
 export const isPropertySignature = (t: unknown): t is PropertySignature =>
@@ -35,7 +36,7 @@ export const isTypeLiteral = (t: unknown): t is TypeLiteral =>
 
 export type IntersectionType = {
   name: symbol;
-  types: (TypeParameter | TypeLiteral | TypeReference)[];
+  types: (string | TypeParameter | TypeLiteral | TypeReference)[];
 };
 
 export const isIntersectionType = (t: unknown): t is IntersectionType =>
@@ -64,7 +65,7 @@ export type ArrayType = {
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
-export const isArrayType = (t: unknown): t is ArrayType => !!(t as any).elementType;
+export const isArrayType = (t: unknown): t is ArrayType => !!("elementType" in (t as any));
 
 export type TypeAlias = {
   name: string;

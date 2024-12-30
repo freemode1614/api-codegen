@@ -13,4 +13,5 @@ export const isV3ReferenceObject = (schema: any): schema is OpenAPIV3.ReferenceO
 
 export const isV3_1ReferenceObject = (schema: any): schema is OpenAPIV3_1.ReferenceObject => !!schema?.$ref;
 
-export const isV3ArrySchemaObject = (schema: any): schema is OpenAPIV3.ArraySchemaObject => !!schema?.items;
+export const isV3ArrySchemaObject = (schema: any): schema is OpenAPIV3.ArraySchemaObject =>
+  !!schema?.items || schema.type === "array";

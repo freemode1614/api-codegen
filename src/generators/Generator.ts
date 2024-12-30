@@ -15,6 +15,7 @@ import {
   UnionType,
   unionType,
 } from "@/types/type";
+import normalizeName from "@/utils/normalizeName";
 import { camelCase } from "@/utils/pathToName";
 
 export default class CodeGen implements Generator {
@@ -64,12 +65,17 @@ export default class CodeGen implements Generator {
     if (members.length === 0) {
       return "";
     }
-    return ["{", members.map((t) => camelCase(t.name)), "}"].join("\n");
+    return [
+      "{",
+      members.map((t) => `${t.deprecated ? "\n/** @deprecated */\n" : ""}${camelCase(normalizeName(t.name))}`),
+      "}",
+    ].join("\n");
   }
 
   public toTypeDeclaration(type: ArrayType["elementType"]): string {
-    if (!type) return "unknown";
-    if (typeof type === "string") {
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+    if (type == undefined) return "unknown";
+    if (typeof type === "string" || typeof type === "number") {
       return type;
     }
 
@@ -94,14 +100,15 @@ export default class CodeGen implements Generator {
     }
 
     const { members } = type;
-    if (members.length === 0) {
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+    if (!members || members.length === 0) {
       return "";
     }
     return [
       "{",
       members.map(
         (t) =>
-          `"${camelCase(t.name)}"${t.require === true || t.in === "header" ? "" : "?"}: ${this.toTypeDeclaration(t.type)}`,
+          `"${camelCase(normalizeName(t.name))}"${t.require === true || t.in === "header" ? "" : "?"}: ${this.toTypeDeclaration(t.type)}`,
       ),
       "}",
     ].join("\n");
@@ -142,7 +149,17 @@ export default class CodeGen implements Generator {
 
   public toEnumDeclaration(type: Enum) {
     const { members } = type;
-    return ["{", members.map((t) => (!t.type ? t.name : `${t.name} = "${t.type}"`)), "}"].join("\n");
+    return [
+      "{",
+      members.map((t) => {
+        if (!t.type) {
+          return t.name === "" ? `"" = ""` : t.name;
+        } else {
+          return `${normalizeName(t.name)} = "${t.type}"`;
+        }
+      }),
+      "}",
+    ].join("\n");
   }
 
   public typeDeclaration(typeAlias: TypeAlias): string {

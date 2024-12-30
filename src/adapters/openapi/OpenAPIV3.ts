@@ -1,3 +1,4 @@
+/* eslint-disable unicorn/filename-case */
 /**
  * OpenAPI v3 Schema Parser and Code Generator
  * Converts OpenAPI v3 specifications to TypeScript code
@@ -25,6 +26,7 @@ import {
 import format2type from "@/utils/format2type";
 import { formatCode } from "@/utils/formatCode";
 import isSameEnum from "@/utils/isSameEnum";
+import normalizeName from "@/utils/normalizeName";
 import pathToName, { capitalize, upperCamelCase } from "@/utils/pathToName";
 import reference2name from "@/utils/reference2name";
 import { writeToFile } from "@/utils/writetoFile";
@@ -99,7 +101,7 @@ export default class OpenApiV3 implements Adaptor {
     const otherSchemasWithNoReference = {};
 
     return Object.entries(mediaSchemas).reduce<Record<string, OpenAPIV3.SchemaObject>>((acc, [key, schema]) => {
-      key = upperCamelCase(key);
+      key = upperCamelCase(normalizeName(key));
 
       if (isV3ReferenceObject(schema)) {
         return Object.assign(acc, {
@@ -113,7 +115,13 @@ export default class OpenApiV3 implements Adaptor {
         return acc;
       }
 
-      const mediaTypeSchema = (content["application/json"] ?? content["*/*"]).schema;
+      const mediaTypeSchema = (
+        "application/json" in content
+          ? content["application/json"]
+          : "*/*" in content
+            ? content["*/*"]
+            : Object.values(content)[0]
+      ).schema;
 
       if (!mediaTypeSchema) {
         return acc;
@@ -135,20 +143,24 @@ export default class OpenApiV3 implements Adaptor {
     schema: OpenAPIV3.ReferenceObject | OpenAPIV3.SchemaObject,
     parentName: string,
   ): ArrayType["elementType"] {
-    const schema_ = isV3ReferenceObject(schema) ? this.schemas[reference2name(schema.$ref)] : schema;
-
-    if (isV3ArrySchemaObject(schema_)) {
-      const { items } = schema_;
+    if (isV3ReferenceObject(schema)) return upperCamelCase(reference2name(schema.$ref));
+    if (isV3ArrySchemaObject(schema)) {
+      const { items } = schema;
       if (isV3ReferenceObject(items)) {
         return {
           elementType: upperCamelCase(reference2name(items.$ref)),
         } as ArrayType;
       }
+
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+      const isEmptyItems = items == undefined || Object.keys(items).length === 0;
+
       return {
-        elementType: this.expandSchemaObject(items, ""),
+        elementType: isEmptyItems ? "unknown" : this.expandSchemaObject(items, ""),
       } as ArrayType;
     } else {
-      const { type, format, properties, allOf, oneOf, anyOf, enum: enums_, required } = schema_;
+      const { type, format, allOf, oneOf, anyOf, enum: enums_, required, additionalProperties } = schema;
+      const { properties } = schema;
 
       if (oneOf || anyOf) {
         return {
@@ -173,6 +185,16 @@ export default class OpenApiV3 implements Adaptor {
           typeName: "Record",
           typeArguments: ["string", "unknown"],
         };
+      }
+
+      if (additionalProperties) {
+        const propertiesSchema = isV3ReferenceObject(additionalProperties)
+          ? this.schemas[reference2name(additionalProperties.$ref)]
+          : additionalProperties;
+
+        if (typeof propertiesSchema !== "boolean") {
+          return this.expandSchemaObject(propertiesSchema, "");
+        }
       }
 
       if (properties && Object.keys(properties).length > 0) {
@@ -201,8 +223,8 @@ export default class OpenApiV3 implements Adaptor {
                       name: unionType,
                       types:
                         propSchema.type === "number"
-                          ? (propSchema.enum as (string | number)[])
-                          : (propSchema.enum as (string | number)[]).map((v) => `"${v}"`),
+                          ? ([...new Set(propSchema.enum)] as (string | number)[])
+                          : ([...new Set(propSchema.enum)] as (string | number)[]).map((v) => `"${v}"`),
                     } as UnionType,
                   });
                 }
@@ -281,8 +303,9 @@ export default class OpenApiV3 implements Adaptor {
             const name = capitalize(schemaKey) + capitalize(propKey);
             this.enums[name] = {
               name,
-              members: prop.enum.map((value: string) => ({ name: value, type: value })),
-            };
+              modifier: ["export"],
+              members: [...new Set(prop.enum)].map((value: string) => ({ name: value, type: value })),
+            } as Enum;
           }
         }
       }
@@ -348,26 +371,25 @@ export default class OpenApiV3 implements Adaptor {
 
             if (requestBody) {
               if (isV3ReferenceObject(requestBody)) {
-                clientApiObject.parameters = reference2name(requestBody.$ref);
+                clientApiObject.parameters = upperCamelCase(reference2name(requestBody.$ref));
               } else {
-                const type = Object.values(requestBody.content)[0].schema!;
+                const type = Object.values(requestBody.content)[0].schema;
                 if (isV3ReferenceObject(type)) {
                   if (parameters.length > 0) {
                     clientApiObject.parameters = {
-                      members: [
-                        ...this.expandParameterSchema(parameters),
+                      name: intersectionType,
+                      types: [
+                        upperCamelCase(reference2name(type.$ref)),
                         {
-                          name: reference2name(type.$ref).toLowerCase(),
-                          type: upperCamelCase(reference2name(type.$ref)),
-                          in: "body",
+                          members: this.expandParameterSchema(parameters),
                         },
                       ],
-                    };
+                    } as IntersectionType;
                   } else {
                     clientApiObject.parameters = upperCamelCase(reference2name(type.$ref));
                   }
                 } else {
-                  if (type.properties) {
+                  if (type?.properties) {
                     Object.assign(
                       type.properties,
                       parameters.reduce((acc, p) => {
@@ -379,7 +401,7 @@ export default class OpenApiV3 implements Adaptor {
                       }, {}),
                     );
                   }
-                  clientApiObject.parameters = this.expandSchemaObject(type, "");
+                  clientApiObject.parameters = type ? this.expandSchemaObject(type, "") : "";
                 }
               }
             } else {
@@ -396,12 +418,20 @@ export default class OpenApiV3 implements Adaptor {
                 clientApiObject.response = upperCamelCase(reference2name(mediaType.$ref));
               } else {
                 if (mediaType.content) {
-                  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-                  const type = (mediaType.content["*/*"] || mediaType.content["application/json"]).schema!;
-                  if (isV3ReferenceObject(type)) {
-                    clientApiObject.response = upperCamelCase(reference2name(type.$ref));
-                  } else {
-                    clientApiObject.response = this.expandSchemaObject(type, "");
+                  const type = (
+                    "*/*" in mediaType.content
+                      ? mediaType.content["*/*"]
+                      : "application/json" in mediaType.content
+                        ? mediaType.content["application/json"]
+                        : Object.values(mediaType.content)[0]
+                  ).schema;
+
+                  if (type) {
+                    if (isV3ReferenceObject(type)) {
+                      clientApiObject.response = upperCamelCase(reference2name(type.$ref));
+                    } else {
+                      clientApiObject.response = this.expandSchemaObject(type, "");
+                    }
                   }
                 } else {
                   clientApiObject.response = "";
