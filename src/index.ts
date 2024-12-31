@@ -1,8 +1,8 @@
 import { OpenAPI, OpenAPIV3 } from "openapi-types";
 
-import OpenApiV2 from "@/adapters/openapi/OpenApiV2";
-import OpenApiV3 from "@/adapters/openapi/OpenApiV3";
-import OpenApiV3_1 from "@/adapters/openapi/OpenApiV3_1";
+import OpenApiV2 from "@/adapters/openapi/OpenAPIV2";
+import OpenApiV3 from "@/adapters/openapi/OpenAPIV3";
+import OpenApiV3_1 from "@/adapters/openapi/OpenAPIV3_1";
 import AxiosClient from "@/client/AxiosClient";
 import FetchClient from "@/client/FetchClient";
 import logger from "@/logger";
