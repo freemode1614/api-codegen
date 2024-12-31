@@ -8,7 +8,7 @@ export default class FetchClient extends Generator implements Client {
   clientInfos: ClientInfo[] = [];
 
   fnBody(api: ClientInfo): string {
-    const { parameters, method, body, metadata } = api;
+    const { parameters, method, body, metadata, response } = api;
 
     const args = () => {
       if (!parameters && !body) return "";
@@ -81,6 +81,9 @@ export default class FetchClient extends Generator implements Client {
       `\`${this.toURL(api)}\`,`,
       args(),
       ")",
+      metadata.useJSONResponse && response
+        ? `.then(async (resp) => await resp.json() as ${this.toTypeDeclaration(response)})`
+        : "",
     ];
     return code.join(" ");
   }

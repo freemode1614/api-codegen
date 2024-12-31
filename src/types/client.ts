@@ -18,6 +18,7 @@ export interface ClientInfo {
   timeout?: number;
   metadata: {
     useFormData?: boolean;
+    useJSONResponse?: boolean;
   };
 }
 

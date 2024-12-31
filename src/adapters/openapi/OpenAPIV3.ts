@@ -427,6 +427,11 @@ export default class OpenApiV3 implements Adaptor {
                 clientApiObject.response = upperCamelCase(reference2name(mediaType.$ref));
               } else {
                 if (mediaType.content) {
+                  const shouldParseResponseToJSON =
+                    "application/json" in mediaType.content || "*/*" in mediaType.content;
+
+                  clientApiObject.metadata.useJSONResponse = shouldParseResponseToJSON;
+
                   const type = (
                     "*/*" in mediaType.content
                       ? mediaType.content["*/*"]

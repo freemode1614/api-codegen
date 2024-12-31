@@ -59,7 +59,7 @@ export default class CodeGen implements Generator {
             `;
           }
 
-          return `${f.name} && fd.append("${f.name}", ${f.format === "binary" || f.format === "string" ? f.name : `String(${f.name})`})`;
+          return `fd.append("${f.name}", ${f.format === "binary" || f.format === "string" ? f.name : `String(${camelCase(f.name)})`})`;
         }),
       ].join("\n");
     }
@@ -71,7 +71,7 @@ export default class CodeGen implements Generator {
       }
       return [
         "const fd = new FormData()",
-        ...formDataFields.map((f) => `${f.name} && fd.append("${f.name}", ${f.name})`),
+        ...formDataFields.map((f) => `fd.append("${f.name}", ${camelCase(f.name)})`),
       ].join("\n");
     }
 
