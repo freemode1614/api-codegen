@@ -1,98 +1,92 @@
 import Generator from "@/generators/Generator";
 import Client from "@/providers/Client";
 import type { ClientInfo } from "@/types/client";
-import { isTypeLiteral, TypeLiteral } from "@/types/type";
-import { camelCase } from "@/utils/pathToName";
+import { isTypeLiteral, PropertySignature, TypeLiteral } from "@/types/type";
 export default class FetchClient extends Generator implements Client {
   code = "";
   clientName = "fetch";
   clientInfos: ClientInfo[] = [];
 
-  #clientTemplate(api: ClientInfo, body: string) {
-    const { url, method, response, parameters } = api;
+  fnBody(api: ClientInfo): string {
+    const { parameters, method, body, metadata } = api;
 
-    const inQueryParameters = isTypeLiteral(parameters) && parameters.members.filter((m) => m.in === "query");
-    const inHeaderParameters = isTypeLiteral(parameters) && parameters.members.filter((m) => m.in === "header");
+    const args = () => {
+      if (!parameters && !body) return "";
+      const objectLiterals = {
+        members: [
+          {
+            name: "method",
+            initializer: `"${method.toUpperCase()}"`,
+          },
+        ],
+      } as TypeLiteral;
 
-    const patchURL = inQueryParameters
-      ? url +
-        (inQueryParameters.length > 0
-          ? "?" + inQueryParameters.map((m) => `${m.name}={encodeURIComponent(String(${camelCase(m.name)}))}`).join("&")
-          : "")
-      : url;
+      if (body) {
+        objectLiterals.members.push({
+          name: "body",
+          initializer: metadata.useFormData
+            ? isTypeLiteral(body)
+              ? "fd"
+              : this.toCode(body)
+            : `JSON.stringify(${this.toCode(body)})`,
+        } as PropertySignature);
+      }
 
-    return /**typescript */ `fetch(\`${patchURL.replaceAll("{", "${")}\`, {
-  method: "${method}",${body ? "body: " + body + ",\n" : ""}${inHeaderParameters && inHeaderParameters.length > 0 ? "headers: {" + inHeaderParameters.map((m) => `"${m.name}": JSON.stringify(${camelCase(m.name)})`).join(",") + "},\n" : ""}
-}).then((res) => res.json() as Promise<${response ? this.toTypeDeclaration(response) : "unknown"}>);`;
+      if (isTypeLiteral(parameters)) {
+        const headers = parameters.members.filter((p) => p.in === "header");
+        const bodies = parameters.members.filter((p) => p.in === "body" || !p.in);
+        if (headers.length > 0) {
+          objectLiterals.members.push({
+            name: "headers",
+            initializer: {
+              members: headers.map(
+                (h) =>
+                  ({
+                    name: h.name,
+                    initializer:
+                      h.format !== "string"
+                        ? `encodeURIComponent(JSON.stringify(${h.name}))`
+                        : `encodeURIComponent(${h.name})`,
+                  }) as PropertySignature,
+              ),
+            },
+          } as PropertySignature);
+        }
+
+        if (!body && bodies.length > 0) {
+          objectLiterals.members.push({
+            name: "body",
+            initializer: metadata.useFormData
+              ? "fd"
+              : `JSON.stringify(${this.toCode({
+                  members: bodies.map(
+                    (b) =>
+                      ({
+                        name: b.name,
+                      }) as PropertySignature,
+                  ),
+                })})`,
+          } as PropertySignature);
+        }
+      }
+
+      return this.toCode(objectLiterals);
+    };
+
+    const code = [
+      this.toFormData(api), //
+      "\n",
+      "return",
+      `${this.clientName}(`,
+      `\`${this.toURL(api)}\`,`,
+      args(),
+      ")",
+    ];
+    return code.join(" ");
   }
 
   template(api: ClientInfo): string {
-    const { name, parameters } = api;
-
-    // Remove params in cookies, cookies should be set by browser when same origin.
-    if (isTypeLiteral(parameters)) {
-      parameters.members = parameters.members.filter((p) => p.in !== "cookie");
-    }
-
-    const parameters_ = parameters && this.toCode(parameters);
-
-    const hasBinaryMembersInBody = isTypeLiteral(parameters)
-      ? parameters.members.some((m) => m.in === "body" && m.format === "binary")
-      : false;
-
-    if (isTypeLiteral(parameters)) {
-      parameters.members = hasBinaryMembersInBody
-        ? parameters.members
-        : parameters.members.filter((p) => p.in !== "cookie");
-    }
-
-    const returnValue = `return ${this.#clientTemplate(
-      api,
-      hasBinaryMembersInBody
-        ? "fd"
-        : typeof parameters === "string"
-          ? parameters !== ""
-            ? `JSON.stringify(${parameters.toLowerCase()})`
-            : ""
-          : parameters
-            ? isTypeLiteral(parameters)
-              ? parameters.members.filter((s) => s.in === "body" || !s.in).length === 0
-                ? ""
-                : `JSON.stringify(${this.toCode({
-                    ...parameters,
-                    members: parameters.members.filter((s) => s.in === "body" || !s.in),
-                  })})`
-              : `JSON.stringify(${this.toCode(parameters)})`
-            : ``,
-    )}`;
-
-    // parameters.members.filter((s) => s.in === "body").length === 0
-    //                 ? ""
-    //                 : {
-    //                     ...parameters,
-    //                     members: parameters.members.filter((s) => s.in === "body"),
-    //                   }
-
-    const code = [
-      `export async function `,
-      name,
-      `(${parameters_ ?? ""}${parameters_ ? ": " + this.toTypeDeclaration(parameters) : ""})`,
-      "{",
-      hasBinaryMembersInBody ? "const fd = new FormData();" : "",
-      hasBinaryMembersInBody
-        ? (parameters as TypeLiteral).members
-            .filter((m) => m.in === "body" && m.format === "binary")
-            .map(
-              (member) =>
-                `${camelCase(member.name)} && fd.append("${member.name}", ${member.format !== "binary" ? `String(${camelCase(member.name)})` : member.name});`,
-            )
-            .join("\n")
-        : "",
-      returnValue,
-      "}",
-    ].join("");
-
-    return code;
+    return this.toFunction(api, this);
   }
 
   templates(apis: ClientInfo[]): string {

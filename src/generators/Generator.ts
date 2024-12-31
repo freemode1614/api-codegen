@@ -1,4 +1,6 @@
+import ClientClass from "@/providers/Client";
 import Generator from "@/providers/Generator";
+import { ClientInfo } from "@/types/client";
 import type { MaybeTagItem } from "@/types/tag";
 import {
   ArrayType,
@@ -7,6 +9,7 @@ import {
   intersectionType,
   isArrayType,
   isIntersectionType,
+  isTypeLiteral,
   isTypeParameter,
   isTypeReference,
   isUnionType,
@@ -19,6 +22,101 @@ import normalizeName from "@/utils/normalizeName";
 import { camelCase } from "@/utils/pathToName";
 
 export default class CodeGen implements Generator {
+  public toURL(client: ClientInfo) {
+    let { url } = client;
+    const { parameters } = client;
+    const inQueryParameters = isTypeLiteral(parameters) && parameters.members.filter((m) => m.in === "query");
+    // TODO: parse url
+    url = url.replaceAll("{", "${");
+    const patchURL = inQueryParameters
+      ? url +
+        (inQueryParameters.length > 0
+          ? "?" +
+            inQueryParameters.map((m) => `${m.name}=\${encodeURIComponent(String(${camelCase(m.name)}))}`).join("&")
+          : "")
+      : url;
+    return patchURL;
+  }
+
+  public toFormData(api: ClientInfo): string {
+    const { parameters, body, metadata } = api;
+    if (!metadata.useFormData) return "";
+    if (body && isTypeLiteral(body)) {
+      const formDataFields = body.members.filter((p) => p.in === "form-data");
+      if (formDataFields.length === 0) {
+        return "";
+      }
+
+      return [
+        "const fd = new FormData()",
+        ...formDataFields.map((f) => {
+          // Deal with the multi-files upload
+          if (isArrayType(f.type) && f.type.elementType === "File") {
+            return `
+              for (const file of ${f.name}) {
+                fd.append('${f.name}[]', file, file.name);
+              }
+            `;
+          }
+
+          return `${f.name} && fd.append("${f.name}", ${f.format === "binary" || f.format === "string" ? f.name : `String(${f.name})`})`;
+        }),
+      ].join("\n");
+    }
+
+    if (parameters && isTypeLiteral(parameters)) {
+      const formDataFields = parameters.members.filter((p) => p.in === "form-data");
+      if (formDataFields.length === 0) {
+        return "";
+      }
+      return [
+        "const fd = new FormData()",
+        ...formDataFields.map((f) => `${f.name} && fd.append("${f.name}", ${f.name})`),
+      ].join("\n");
+    }
+
+    return "";
+  }
+
+  public toFunction(api: ClientInfo, client: ClientClass): string {
+    const { name, parameters, body } = api;
+
+    const fnName = name;
+
+    /**
+     * @example
+     *
+     * Output example
+     * 1. { name, age }: { name: string; age: number }
+     * 2. req: { name: string; age: number }
+     * 3: blob: Blob
+     * 4: ""
+     *
+     * @returns
+     */
+    const args = (): string => {
+      if (!parameters && !body) return "";
+      return [
+        parameters ? `${this.toCode(parameters)}: ${this.toTypeDeclaration(parameters)}` : "",
+        body ? `${this.toCode(body)} : ${this.toTypeDeclaration(body)}` : "",
+      ]
+        .filter(Boolean)
+        .join(",");
+    };
+
+    const fn = () => {
+      return [`export async function ${fnName}(${args()}) {`, client.fnBody(api), `}`].join("");
+    };
+
+    const code = [
+      // For debug use
+      `${fnName}.displayName = "${fnName}"`,
+      fn(),
+    ];
+
+    return code.join("\n");
+  }
+
   public comment(comments: MaybeTagItem[]): string {
     const strs = ["/**"];
 
@@ -43,7 +141,7 @@ export default class CodeGen implements Generator {
     return strs.join("\n");
   }
 
-  public toCode(type: ArrayType["elementType"]) {
+  public toCode(type: ArrayType["elementType"]): string {
     if (!type) return "";
     if (typeof type === "string") {
       return type.toLowerCase();
@@ -58,18 +156,30 @@ export default class CodeGen implements Generator {
     }
 
     if (isUnionType(type) || isIntersectionType(type) || isArrayType(type)) {
-      return "never";
+      return "req";
     }
 
     const { members } = type;
     if (members.length === 0) {
       return "{}";
     }
+
     return [
       "{",
-      members.map((t) => `${t.deprecated ? "\n/** @deprecated */\n" : ""}${camelCase(normalizeName(t.name))}`),
+      ...members
+        .map((t) => {
+          const { initializer, name } = t;
+          if (t.in === "cookie") return "";
+          const safeName = camelCase(normalizeName(name));
+          return initializer
+            ? `${safeName}: ${typeof initializer === "string" ? initializer : this.toCode(initializer)},`
+            : `${safeName},`;
+        })
+        .filter(Boolean),
       "}",
-    ].join("\n");
+    ]
+      .filter(Boolean)
+      .join("\n");
   }
 
   public toTypeDeclaration(type: ArrayType["elementType"]): string {
@@ -110,7 +220,7 @@ export default class CodeGen implements Generator {
       "{",
       members.map(
         (t) =>
-          `"${camelCase(normalizeName(t.name))}"${t.require === true || t.in === "header" ? "" : "?"}: ${this.toTypeDeclaration(t.type)}`,
+          `"${camelCase(normalizeName(t.name))}"${t.required === true || t.in === "header" ? "" : "?"}: ${this.toTypeDeclaration(t.type)}`,
       ),
       "}",
     ].join("\n");

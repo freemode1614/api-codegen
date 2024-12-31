@@ -1,7 +1,7 @@
 export interface TagItem {
   tag?: string;
   name?: string;
-  comment: string;
+  comment?: string;
 }
 
 export interface TagItemOnlyComment {

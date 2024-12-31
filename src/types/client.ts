@@ -1,5 +1,5 @@
 import type { MaybeTagItem } from "@/types/tag";
-import type { ArrayType, TypeReference } from "@/types/type";
+import type { ArrayType } from "@/types/type";
 
 export enum ClientTypes {
   Axios,
@@ -7,15 +7,18 @@ export enum ClientTypes {
 }
 
 export interface ClientInfo {
-  comments: MaybeTagItem[];
+  name: string;
   url: string;
+  method: string;
+  comments: MaybeTagItem[];
   parameters?: ArrayType["elementType"];
   response?: ArrayType["elementType"];
-  method: string;
+  body?: ArrayType["elementType"];
+  headers?: ArrayType["elementType"];
   timeout?: number;
-  headers?: TypeReference;
-  data?: unknown;
-  name: string;
+  metadata: {
+    useFormData?: boolean;
+  };
 }
 
 export abstract class Client {

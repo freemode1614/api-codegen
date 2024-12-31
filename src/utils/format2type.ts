@@ -9,7 +9,7 @@ const formatMapping = {
   date: "string",
   "date-time": "string",
   byte: "string",
-  binary: "Blob",
+  binary: "File",
   boolean: "boolean",
   null: "null",
   file: "File",

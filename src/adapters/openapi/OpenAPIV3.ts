@@ -234,7 +234,7 @@ export default class OpenApiV3 implements Adaptor {
                   deprecated: propSchema.deprecated,
                   name: propKey,
                   format: propSchema.format,
-                  require: required?.includes(propKey),
+                  required: (propSchema as OpenAPIV3.ParameterObject).required ?? required?.includes(propKey),
                   type: this.expandSchemaObject(propSchema, propKey),
                 } as PropertySignature);
               }
@@ -269,7 +269,7 @@ export default class OpenApiV3 implements Adaptor {
         items.push({
           name,
           in: in_,
-          require: !!required,
+          required: !!required,
           deprecated: !!deprecated,
           type: this.expandSchemaObject(schema, name),
         });
@@ -369,65 +369,55 @@ export default class OpenApiV3 implements Adaptor {
               method,
               url: path,
               name: pathToName(path, method, operationId),
+              metadata: {},
             } as ClientInfo;
 
             if (requestBody) {
               if (isV3ReferenceObject(requestBody)) {
-                clientApiObject.parameters = upperCamelCase(reference2name(requestBody.$ref));
+                clientApiObject.body = upperCamelCase(reference2name(requestBody.$ref));
               } else {
+                const shouldPutInFormData =
+                  "multipart/form-data" in requestBody.content ||
+                  "application/x-www-form-urlencoded" in requestBody.content;
+
+                clientApiObject.metadata.useFormData = shouldPutInFormData;
+
                 const type = Object.values(requestBody.content)[0].schema;
+
                 if (isV3ReferenceObject(type)) {
-                  if (parameters.length > 0) {
-                    clientApiObject.parameters = {
-                      name: intersectionType,
-                      types: [
-                        upperCamelCase(reference2name(type.$ref)),
-                        {
-                          members: this.expandParameterSchema(parameters),
-                        },
-                      ],
-                    } as IntersectionType;
-                  } else {
-                    clientApiObject.parameters = upperCamelCase(reference2name(type.$ref));
-                  }
+                  clientApiObject.body = upperCamelCase(reference2name(type.$ref));
                 } else {
                   if (type?.properties) {
+                    const required = type.required;
                     Object.assign(
                       type.properties,
-                      parameters.reduce((acc, p) => {
-                        if (isV3ReferenceObject(p)) return acc;
+                      Object.keys(type.properties).reduce((acc, propName) => {
+                        const schema = type.properties![propName];
                         return {
                           ...acc,
-                          [p.name]: p.schema
-                            ? {
-                                ...p.schema,
-                                in: p.in,
-                                deprecated: p.deprecated,
-                                description: p.description,
-                              }
-                            : {
-                                in: p.in,
-                                deprecated: p.deprecated,
-                                required: p.required,
-                                description: p.description,
-                                type: "string",
-                              },
+                          [propName]: {
+                            ...schema,
+                            required: shouldPutInFormData || required?.includes(propName),
+                            in: shouldPutInFormData ? "form-data" : "body",
+                          },
                         };
                       }, {}),
                     );
                   }
-                  clientApiObject.parameters = type ? this.expandSchemaObject(type, "") : "";
+
+                  clientApiObject.body = type ? this.expandSchemaObject(type, "") : "";
                 }
               }
-            } else {
-              if (parameters.length === 0) {
-                clientApiObject.parameters = "";
-              } else {
-                clientApiObject.parameters = {
-                  members: this.expandParameterSchema(parameters),
-                };
-              }
             }
+
+            if (parameters.length === 0) {
+              clientApiObject.parameters = "";
+            } else {
+              clientApiObject.parameters = {
+                members: this.expandParameterSchema(parameters),
+              };
+            }
+
             // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
             const mediaType = responses["200"] || responses["201"];
 

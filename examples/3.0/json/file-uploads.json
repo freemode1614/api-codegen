@@ -15,7 +15,9 @@
       "post": {
         "summary": "`image/png` uploads",
         "description": "Support for a `requestBody` with an `image/png` media type to upload a single image binary.\n\nhttps://swagger.io/docs/specification/describing-request-body/file-upload/",
-        "tags": ["image/png"],
+        "tags": [
+          "image/png"
+        ],
         "requestBody": {
           "content": {
             "image/png": {
@@ -37,7 +39,9 @@
       "post": {
         "summary": "Single file",
         "description": "Support for a `requestBody` with a `multipart/form-data` media type.\n\nhttps://swagger.io/docs/specification/describing-request-body/file-upload/",
-        "tags": ["multipart/form-data"],
+        "tags": [
+          "multipart/form-data"
+        ],
         "requestBody": {
           "content": {
             "multipart/form-data": {
@@ -68,7 +72,9 @@
       "put": {
         "summary": "Multiple files",
         "description": "Support for a `requestBody` with a `multipart/form-data` containing multiple files.\n\nhttps://swagger.io/docs/specification/describing-request-body/file-upload/",
-        "tags": ["multipart/form-data"],
+        "tags": [
+          "multipart/form-data"
+        ],
         "requestBody": {
           "content": {
             "multipart/form-data": {
