@@ -182,7 +182,7 @@ export default class CodeGen implements Generator {
       .join("\n");
   }
 
-  public toTypeDeclaration(type: ArrayType["elementType"]): string {
+  public toTypeDeclaration(type: ArrayType["elementType"], showComments = false): string {
     // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     if (type == undefined) return "unknown";
     if (typeof type === "string" || typeof type === "number") {
@@ -218,10 +218,20 @@ export default class CodeGen implements Generator {
 
     return [
       "{",
-      members.map(
-        (t) =>
-          `"${camelCase(normalizeName(t.name))}"${t.required === true || t.in === "header" ? "" : "?"}: ${this.toTypeDeclaration(t.type)}`,
-      ),
+      members
+        .map((t) => {
+          return [
+            showComments && t.description ? `/** @description ${t.description} */\n` : "",
+            `"${camelCase(normalizeName(t.name))}"`,
+            t.required === true || t.in === "header" ? "" : "?",
+            ":",
+            this.toTypeDeclaration(t.type),
+            ";\n",
+          ]
+            .filter(Boolean)
+            .join("");
+        })
+        .join(""),
       "}",
     ].join("\n");
   }
@@ -274,9 +284,9 @@ export default class CodeGen implements Generator {
     ].join("\n");
   }
 
-  public typeDeclaration(typeAlias: TypeAlias): string {
+  public typeDeclaration(typeAlias: TypeAlias, showComments = false): string {
     const { name, modifier = [], type } = typeAlias;
-    return `${modifier.join(" ")} type ${name} = ${this.toTypeDeclaration(type!)}`;
+    return `${modifier.join(" ")} type ${name} = ${this.toTypeDeclaration(type!, showComments)}`;
   }
 
   public interfaceDeclaration(typeAlias: TypeAlias): string {

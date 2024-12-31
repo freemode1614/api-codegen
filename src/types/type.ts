@@ -21,6 +21,7 @@ export type PropertySignature = {
   name: string;
   required?: boolean;
   deprecated?: boolean;
+  description?: string;
   in?: string;
   type: ArrayType["elementType"];
   format?: string;

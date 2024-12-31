@@ -236,6 +236,7 @@ export default class OpenApiV3 implements Adaptor {
                   format: propSchema.format,
                   required: (propSchema as OpenAPIV3.ParameterObject).required ?? required?.includes(propKey),
                   type: this.expandSchemaObject(propSchema, propKey),
+                  description: propSchema.description,
                 } as PropertySignature);
               }
             }
@@ -490,7 +491,7 @@ export default class OpenApiV3 implements Adaptor {
             type: this.expandSchemaObject(schema, typeName),
           };
 
-          return this.client.typeDeclaration(typeAlias);
+          return this.client.typeDeclaration(typeAlias, true);
         })
         .join(";\n\n"),
       "\n\n",

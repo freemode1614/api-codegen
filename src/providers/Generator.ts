@@ -19,7 +19,7 @@ export default abstract class Generator {
    * @param typeAlias - The TypeAlias object to generate the type declaration for.
    * @returns The generated type declaration string.
    */
-  abstract typeDeclaration(typeAlias: TypeAlias): string;
+  abstract typeDeclaration(typeAlias: TypeAlias, showComments: boolean): string;
 
   /**
    * Generates an interface declaration string for a given TypeAlias.

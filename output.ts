@@ -5,33 +5,50 @@
  */
 
 export type AnimalHeader = {
+  /** @description Animal unique ID */
   uid: string;
+  /** @description Animal name */
   name: string;
 };
 
 export type AnimalBase = {
+  /** @description Animal unique ID */
   uid: string;
+  /** @description Animal name */
   name: string;
+  /** @description Whether it's an earth animal */
   earthAnimal?: boolean;
+  /** @description Whether it's an earth insect */
   earthInsect?: boolean;
+  /** @description Whether it's an avian */
   avian?: boolean;
+  /** @description Whether it's a canine */
   canine?: boolean;
+  /** @description Whether it's a feline */
   feline?: boolean;
 };
 
 export type AnimalFull = {
+  /** @description Animal unique ID */
   uid: string;
+  /** @description Animal name */
   name: string;
+  /** @description Whether it's an earth animal */
   earthAnimal?: boolean;
+  /** @description Whether it's an earth insect */
   earthInsect?: boolean;
+  /** @description Whether it's an avian */
   avian?: boolean;
+  /** @description Whether it's a canine */
   canine?: boolean;
+  /** @description Whether it's a feline */
   feline?: boolean;
 };
 
 export type AnimalBaseResponse = {
   page?: ResponsePage;
   sort?: ResponseSort;
+  /** @description List of animals matching given criteria */
   animals?: AnimalBase[];
 };
 
@@ -40,28 +57,36 @@ export type AnimalFullResponse = {
 };
 
 export type AstronomicalObjectHeader = {
+  /** @description Astronomical object's unique ID */
   uid: string;
+  /** @description Astronomical object name */
   name: string;
 };
 
 export type AstronomicalObjectBase = {
+  /** @description Astronomical object's unique ID */
   uid: string;
+  /** @description Astronomical object name */
   name: string;
   astronomicalObjectType?: AstronomicalObjectType;
   location?: AstronomicalObjectHeader;
 };
 
 export type AstronomicalObjectFull = {
+  /** @description Astronomical object's unique ID */
   uid: string;
+  /** @description Astronomical object name */
   name: string;
   astronomicalObjectType?: AstronomicalObjectType;
   location?: AstronomicalObjectBase;
+  /** @description Astronomical objects located in this astronomical object, like planets in a star system */
   astronomicalObjects?: AstronomicalObjectBase[];
 };
 
 export type AstronomicalObjectBaseResponse = {
   page?: ResponsePage;
   sort?: ResponseSort;
+  /** @description List of astronomical objects matching given criteria */
   astronomicalObjects?: AstronomicalObjectBase[];
 };
 
@@ -101,78 +126,140 @@ export type AstronomicalObjectType =
 export type BloodType = "B_NEGATIVE" | "O_NEGATIVE" | "T_NEGATIVE";
 
 export type BookHeader = {
+  /** @description Book unique ID */
   uid: string;
+  /** @description Book title */
   title: string;
 };
 
 export type BookBase = {
+  /** @description Book unique ID */
   uid: string;
+  /** @description Book title */
   title: string;
+  /** @description Year the book was published */
   publishedYear?: number;
+  /** @description Month the book was published */
   publishedMonth?: number;
+  /** @description Day the book was published */
   publishedDay?: number;
+  /** @description Number of pages */
   numberOfPages?: number;
+  /** @description Starting stardate of book story */
   stardateFrom?: number;
+  /** @description Ending stardate of book story */
   stardateTo?: number;
+  /** @description Starting year of book story */
   yearFrom?: number;
+  /** @description Ending year of book story */
   yearTo?: number;
+  /** @description Whether it's a novel */
   novel: boolean;
+  /** @description Whether it's a reference book */
   referenceBook: boolean;
+  /** @description Whether it's a biography book */
   biographyBook: boolean;
+  /** @description Whether it's a role playing book */
   rolePlayingBook: boolean;
+  /** @description Whether it's an eBook */
   eBook: boolean;
+  /** @description Whether it's an anthology */
   anthology: boolean;
+  /** @description Whether it's a novelization */
   novelization: boolean;
+  /** @description Whether it's an audiobook, or has been release as an audiobook in addition to other form */
   audiobook: boolean;
+  /** @description If it's an audiobook, whether it's been abridged */
   audiobookAbridged: boolean;
+  /** @description Year the audiobook was published */
   audiobookPublishedYear?: number;
+  /** @description Month the audiobook was published */
   audiobookPublishedMonth?: number;
+  /** @description Day the audiobook was published */
   audiobookPublishedDay?: number;
+  /** @description Audiobook run time, in minutes */
   audiobookRunTime?: number;
+  /** @description Book's production number */
   productionNumber?: string;
 };
 
 export type BookFull = {
+  /** @description Book unique ID */
   uid: string;
+  /** @description Book title */
   title: string;
+  /** @description Year the book was published */
   publishedYear?: number;
+  /** @description Month the book was published */
   publishedMonth?: number;
+  /** @description Day the book was published */
   publishedDay?: number;
+  /** @description Number of pages */
   numberOfPages?: number;
+  /** @description Starting stardate of book story */
   stardateFrom?: number;
+  /** @description Ending stardate of book story */
   stardateTo?: number;
+  /** @description Starting year of book story */
   yearFrom?: number;
+  /** @description Ending year of book story */
   yearTo?: number;
+  /** @description Whether it's a novel */
   novel: boolean;
+  /** @description Whether it's a reference book */
   referenceBook: boolean;
+  /** @description Whether it's a biography book */
   biographyBook: boolean;
+  /** @description Whether it's a role playing book */
   rolePlayingBook: boolean;
+  /** @description Whether it's an e-book */
   eBook: boolean;
+  /** @description Whether it's an anthology */
   anthology: boolean;
+  /** @description Whether it's a novelization */
   novelization: boolean;
+  /** @description Whether it's an audiobook, or has been release as an audiobook in addition to other form */
   audiobook: boolean;
+  /** @description If it's an audiobook, whether it's been abridged */
   audiobookAbridged: boolean;
+  /** @description Year the audiobook was published */
   audiobookPublishedYear?: number;
+  /** @description Month the audiobook was published */
   audiobookPublishedMonth?: number;
+  /** @description Day the audiobook was published */
   audiobookPublishedDay?: number;
+  /** @description Audiobook run time, in minutes */
   audiobookRunTime?: number;
+  /** @description Book production number */
   productionNumber?: string;
+  /** @description Book series this book is included in */
   bookSeries?: BookSeriesBase[];
+  /** @description Authors of the book */
   authors?: StaffBase[];
+  /** @description Artists involved in the book */
   artists?: StaffBase[];
+  /** @description Editors involved in the book */
   editors?: StaffBase[];
+  /** @description Audiobook narrators */
   audiobookNarrators?: StaffBase[];
+  /** @description Book publishers */
   publishers?: CompanyBase[];
+  /** @description Audiobook publishers */
   audiobookPublishers?: CompanyBase[];
+  /** @description Characters appearing the book */
   characters?: CharacterBase[];
+  /** @description References */
   references?: Reference[];
+  /** @description Audiobook references */
   audiobookReferences?: Reference[];
+  /** @description Book collections this book is included in */
   bookCollections?: BookCollectionBase[];
 };
 
 export type BookBaseResponse = {
   page?: ResponsePage;
   sort?: ResponseSort;
+  /** @description List of books matching given criteria */
   books?: BookBase[];
 };
 
@@ -181,47 +268,78 @@ export type BookFullResponse = {
 };
 
 export type BookCollectionHeader = {
+  /** @description Book collection unique ID */
   uid?: string;
+  /** @description Book collection title */
   title?: string;
 };
 
 export type BookCollectionBase = {
+  /** @description Book collection unique ID */
   uid?: string;
+  /** @description Book collection title */
   title?: string;
+  /** @description Year the book collection was published */
   publishedYear?: number;
+  /** @description Month the book collection was published */
   publishedMonth?: number;
+  /** @description Day the book collection was published */
   publishedDay?: number;
+  /** @description Number of pages */
   numberOfPages?: number;
+  /** @description Starting stardate of book collection stories */
   stardateFrom?: number;
+  /** @description Ending stardate of book collection stories */
   stardateTo?: number;
+  /** @description Starting year of book collection stories */
   yearFrom?: number;
+  /** @description Ending year of book collection stories */
   yearTo?: number;
 };
 
 export type BookCollectionFull = {
+  /** @description Book collection unique ID */
   uid?: string;
+  /** @description Book collection title */
   title?: string;
+  /** @description Year the book collection was published */
   publishedYear?: number;
+  /** @description Month the book collection was published */
   publishedMonth?: number;
+  /** @description Day the book collection was published */
   publishedDay?: number;
+  /** @description Number of pages */
   numberOfPages?: number;
+  /** @description Starting stardate of book collection stories */
   stardateFrom?: number;
+  /** @description Ending stardate of book collection stories */
   stardateTo?: number;
+  /** @description Starting year of book collection stories */
   yearFrom?: number;
+  /** @description Ending year of book collection stories */
   yearTo?: number;
+  /** @description Book series this book collection is included in */
   bookSeries?: BookSeriesBase[];
+  /** @description Authors of the book collection */
   authors?: StaffBase[];
+  /** @description Artists involved in the book collection */
   artists?: StaffBase[];
+  /** @description Editors involved in the book collection */
   editors?: StaffBase[];
+  /** @description Book collection publishers */
   publishers?: CompanyBase[];
+  /** @description Characters appearing in the book collection */
   characters?: CharacterBase[];
+  /** @description References */
   references?: Reference[];
+  /** @description Books included in this book collection */
   books?: BookBase[];
 };
 
 export type BookCollectionBaseResponse = {
   page?: ResponsePage;
   sort?: ResponseSort;
+  /** @description List of book collections matching given criteria */
   bookCollections?: BookCollectionBase[];
 };
 
@@ -230,45 +348,74 @@ export type BookCollectionFullResponse = {
 };
 
 export type BookSeriesHeader = {
+  /** @description Book series unique ID */
   uid?: string;
+  /** @description Book series title */
   title?: string;
 };
 
 export type BookSeriesBase = {
+  /** @description Book series unique ID */
   uid: string;
+  /** @description Book series title */
   title: string;
+  /** @description Year from which the book series was published */
   publishedYearFrom?: number;
+  /** @description Month from which the book series was published */
   publishedMonthFrom?: number;
+  /** @description Year to which the book series was published */
   publishedYearTo?: number;
+  /** @description Month to which the book series was published */
   publishedMonthTo?: number;
+  /** @description Number of pages */
   numberOfBooks?: number;
+  /** @description Starting year of book series stories */
   yearFrom?: number;
+  /** @description Ending year of book series stories */
   yearTo?: number;
+  /** @description Whether it's a miniseries */
   miniseries?: boolean;
+  /** @description Whether it's a e-book series */
   eBookSeries?: boolean;
 };
 
 export type BookSeriesFull = {
+  /** @description Book series unique ID */
   uid: string;
+  /** @description Book series title */
   title: string;
+  /** @description Year from which the book series was published */
   publishedYearFrom?: number;
+  /** @description Month from which the book series was published */
   publishedMonthFrom?: number;
+  /** @description Year to which the book series was published */
   publishedYearTo?: number;
+  /** @description Month to which the book series was published */
   publishedMonthTo?: number;
+  /** @description Number of books in book series */
   numberOfBooks?: number;
+  /** @description Starting year of book series stories */
   yearFrom?: number;
+  /** @description Ending year of book series stories */
   yearTo?: number;
+  /** @description Whether it's a miniseries */
   miniseries?: boolean;
+  /** @description Whether it's a e-book series */
   eBookSeries?: boolean;
+  /** @description Book series this book series is included in */
   parentSeries?: BookSeriesBase[];
+  /** @description Child book series included in this book series */
   childSeries?: BookSeriesBase[];
+  /** @description Companies that published this book series */
   publishers?: CompanyBase[];
+  /** @description Books included in this book series */
   books?: BookBase[];
 };
 
 export type BookSeriesBaseResponse = {
   page?: ResponsePage;
   sort?: ResponseSort;
+  /** @description List of book series matching given criteria */
   bookSeries?: BookSeriesBase[];
 };
 
@@ -277,75 +424,128 @@ export type BookSeriesFullResponse = {
 };
 
 export type CharacterHeader = {
+  /** @description Character unique ID */
   uid: string;
+  /** @description Character name */
   name: string;
 };
 
 export type CharacterBase = {
+  /** @description Character unique ID */
   uid: string;
+  /** @description Character name */
   name: string;
   gender?: Gender;
+  /** @description Year the character was born */
   yearOfBirth?: number;
+  /** @description Month the character was born */
   monthOfBirth?: number;
+  /** @description Day the character was born */
   dayOfBirth?: number;
+  /** @description Place of birth */
   placeOfBirth?: string;
+  /** @description Year the character died */
   yearOfDeath?: number;
+  /** @description Month the character died */
   monthOfDeath?: number;
+  /** @description Day the character died */
   dayOfDeath?: number;
+  /** @description Place of death */
   placeOfDeath?: string;
+  /** @description Height in centimeters */
   height?: number;
+  /** @description Weight in kilograms */
   weight?: number;
+  /** @description Whether this character is deceased */
   deceased?: boolean;
   bloodType?: BloodType;
   maritalStatus?: MaritalStatus;
+  /** @description Serial number */
   serialNumber?: string;
+  /** @description Hologram activation date */
   hologramActivationDate?: string;
+  /** @description Hologram status */
   hologramStatus?: string;
+  /** @description Hologram date status */
   hologramDateStatus?: string;
+  /** @description Whether this character is a hologram */
   hologram?: boolean;
+  /** @description Whether this character is a fictional character (from universe point of view) */
   fictionalCharacter?: boolean;
+  /** @description Whether this character is from mirror universe */
   mirror?: boolean;
+  /** @description Whether this character is from alternate reality */
   alternateReality?: boolean;
 };
 
 export type CharacterFull = {
+  /** @description Character unique ID */
   uid: string;
+  /** @description Character name */
   name: string;
   gender?: Gender;
+  /** @description Year the character was born */
   yearOfBirth?: number;
+  /** @description Month the character was born */
   monthOfBirth?: number;
+  /** @description Day the character was born */
   dayOfBirth?: number;
+  /** @description Place of birth */
   placeOfBirth?: string;
+  /** @description Year the character died */
   yearOfDeath?: number;
+  /** @description Month the character died */
   monthOfDeath?: number;
+  /** @description Day the character died */
   dayOfDeath?: number;
+  /** @description Place of death */
   placeOfDeath?: string;
+  /** @description Height in centimeters */
   height?: number;
+  /** @description Weight in kilograms */
   weight?: number;
+  /** @description Whether this character is deceased */
   deceased?: boolean;
   bloodType?: BloodType;
   maritalStatus?: MaritalStatus;
+  /** @description Serial number */
   serialNumber?: string;
+  /** @description Hologram activation date */
   hologramActivationDate?: string;
+  /** @description Hologram status */
   hologramStatus?: string;
+  /** @description Hologram date status */
   hologramDateStatus?: string;
+  /** @description Whether this character is a hologram */
   hologram?: boolean;
+  /** @description Whether this character is a fictional character (from universe point of view) */
   fictionalCharacter?: boolean;
+  /** @description Whether this character is from mirror universe */
   mirror?: boolean;
+  /** @description Whether this character is from alternate reality */
   alternateReality?: boolean;
+  /** @description Performers who played this character */
   performers?: PerformerBase[];
+  /** @description Episodes in which this character appeared */
   episodes?: EpisodeBase[];
+  /** @description Movies in which this character appeared */
   movies?: MovieBase[];
+  /** @description Species this character belongs to */
   characterSpecies?: CharacterSpecies[];
+  /** @description Relations with other characters */
   characterRelations?: CharacterRelation[];
+  /** @description Titles this character holds */
   titles?: TitleBase[];
+  /** @description Occupations of this character */
   occupations?: OccupationBase[];
+  /** @description Organizations this character has affiliation with */
   organizations?: OrganizationBase[];
 };
 
 export type CharacterBaseResponse = {
   page?: ResponsePage;
   sort?: ResponseSort;
+  /** @description List of characters matching given criteria */
   characters?: CharacterBase[];
 };
 
@@ -354,71 +554,118 @@ export type CharacterFullResponse = {
 };
 
 export type CharacterRelation = {
+  /** @description Relation type */
   typeObject?: string;
   source?: CharacterHeader;
   target?: CharacterHeader;
 };
 
 export type CharacterSpecies = {
+  /** @description Entity unique ID */
   uid?: string;
+  /** @description Species name */
   name?: string;
+  /** @description Numerator */
   numerator?: number;
+  /** @description Denominator */
   denominator?: number;
 };
 
 export type ComicsHeader = {
+  /** @description Comics unique ID */
   uid: string;
+  /** @description Comics title */
   title: string;
 };
 
 export type ComicsBase = {
+  /** @description Comics unique ID */
   uid: string;
+  /** @description Comics title */
   title: string;
+  /** @description Year the comics was published */
   publishedYear?: number;
+  /** @description Month the comics was published */
   publishedMonth?: number;
+  /** @description Day the comics was published */
   publishedDay?: number;
+  /** @description Cover publication year */
   coverYear?: number;
+  /** @description Cover publication month */
   coverMonth?: number;
+  /** @description Cover publication day */
   coverDay?: number;
+  /** @description Number of pages */
   numberOfPages?: number;
+  /** @description Starting stardate of comic story */
   stardateFrom?: number;
+  /** @description Ending stardate of comic story */
   stardateTo?: number;
+  /** @description Starting year of comic story */
   yearFrom?: number;
+  /** @description Ending year of comic story */
   yearTo?: number;
+  /** @description Whether it's a photonovel */
   photonovel?: boolean;
+  /** @description Whether it's an adaptation of an episode or a movie */
   adaptation?: boolean;
 };
 
 export type ComicsFull = {
+  /** @description Comics unique ID */
   uid: string;
+  /** @description Comics title */
   title: string;
+  /** @description Year the comics was published */
   publishedYear?: number;
+  /** @description Month the comics was published */
   publishedMonth?: number;
+  /** @description Day the comics was published */
   publishedDay?: number;
+  /** @description Cover publication year */
   coverYear?: number;
+  /** @description Cover publication month */
   coverMonth?: number;
+  /** @description Cover publication day */
   coverDay?: number;
+  /** @description Number of pages */
   numberOfPages?: number;
+  /** @description Starting stardate of comic story */
   stardateFrom?: number;
+  /** @description Ending stardate of comic story */
   stardateTo?: number;
+  /** @description Starting year of comic  story */
   yearFrom?: number;
+  /** @description Ending year of comic story */
   yearTo?: number;
+  /** @description Whether it's a photonovel */
   photonovel?: boolean;
+  /** @description Whether it's an adaptation of an episode or a movie */
   adaptation?: boolean;
+  /** @description Comic series this comics is included in */
   comicSeries?: ComicSeriesBase[];
+  /** @description Writers involved in the comics */
   writers?: StaffBase[];
+  /** @description Artists involved in the comics */
   artists?: StaffBase[];
+  /** @description Editors involved in the comics */
   editors?: StaffBase[];
+  /** @description Other staff involved in the comics */
   staff?: StaffBase[];
+  /** @description Comics publishers */
   publishers?: CompanyBase[];
+  /** @description Characters appearing in the comics */
   characters?: CharacterBase[];
+  /** @description References */
   references?: Reference[];
+  /** @description Comic collections this comics is included in */
   comicCollections?: ComicCollectionBase[];
 };
 
 export type ComicsBaseResponse = {
   page?: ResponsePage;
   sort?: ResponseSort;
+  /** @description List of comics matching given criteria */
   comics?: ComicsBase[];
 };
 
@@ -427,56 +674,96 @@ export type ComicsFullResponse = {
 };
 
 export type ComicCollectionHeader = {
+  /** @description Comic collection unique ID */
   uid: string;
+  /** @description Comic collection title */
   title: string;
 };
 
 export type ComicCollectionBase = {
+  /** @description Comic collection unique ID */
   uid: string;
+  /** @description Comic collection title */
   title: string;
+  /** @description Year the comic collection was published */
   publishedYear?: number;
+  /** @description Month the comic collection was published */
   publishedMonth?: number;
+  /** @description Day the comic collection was published */
   publishedDay?: number;
+  /** @description Cover publication year */
   coverYear?: number;
+  /** @description Cover publication month */
   coverMonth?: number;
+  /** @description Cover publication day */
   coverDay?: number;
+  /** @description Number of pages */
   numberOfPages?: number;
+  /** @description Starting stardate of comic collection stories */
   stardateFrom?: number;
+  /** @description Ending stardate of comic collection stories */
   stardateTo?: number;
+  /** @description Starting year of comic collection stories */
   yearFrom?: number;
+  /** @description Ending year of comic collection stories */
   yearTo?: number;
+  /** @description Whether it's a photonovel collection */
   photonovel?: boolean;
 };
 
 export type ComicCollectionFull = {
+  /** @description Comic collection unique ID */
   uid: string;
+  /** @description Comic collection title */
   title: string;
+  /** @description Year the comic collection was published */
   publishedYear?: number;
+  /** @description Month the comic collection was published */
   publishedMonth?: number;
+  /** @description Day the comic collection was published */
   publishedDay?: number;
+  /** @description Cover publication year */
   coverYear?: number;
+  /** @description Cover publication month */
   coverMonth?: number;
+  /** @description Cover publication day */
   coverDay?: number;
+  /** @description Number of pages */
   numberOfPages?: number;
+  /** @description Starting stardate of comic collection stories */
   stardateFrom?: number;
+  /** @description Ending stardate of comic collection stories */
   stardateTo?: number;
+  /** @description Starting year of comic collection stories */
   yearFrom?: number;
+  /** @description Ending year of comic collection stories */
   yearTo?: number;
+  /** @description Whether it's a photonovel collection */
   photonovel?: boolean;
+  /** @description Comic series this comic collection is included in */
   comicSeries?: ComicSeriesBase[];
+  /** @description Writers involved in the comic collection */
   writers?: StaffBase[];
+  /** @description Artists involved in the comic collection */
   artists?: StaffBase[];
+  /** @description Editors involved in the comic collection */
   editors?: StaffBase[];
+  /** @description Other staff involved in the comic collection */
   staff?: StaffBase[];
+  /** @description Comic collection publishers */
   publishers?: CompanyBase[];
+  /** @description Characters appearing in the comic collection */
   characters?: CharacterBase[];
+  /** @description References */
   references?: Reference[];
+  /** @description Comics included in this comic collection */
   comics?: ComicsBase[];
 };
 
 export type ComicCollectionBaseResponse = {
   page?: ResponsePage;
   sort?: ResponseSort;
+  /** @description List of comic collections matching given criteria */
   comicCollections?: ComicCollectionBase[];
 };
 
@@ -485,53 +772,90 @@ export type ComicCollectionFullResponse = {
 };
 
 export type ComicSeriesHeader = {
+  /** @description Comic series unique ID */
   uid: string;
+  /** @description Comic series title */
   title: string;
 };
 
 export type ComicSeriesBase = {
+  /** @description Comic series unique ID */
   uid: string;
+  /** @description Comic series title */
   title: string;
+  /** @description Year from which the comic series was published */
   publishedYearFrom?: number;
+  /** @description Month from which the comic series was published */
   publishedMonthFrom?: number;
+  /** @description Day from which the comic series was published */
   publishedDayFrom?: number;
+  /** @description Year to which the comic series was published */
   publishedYearTo?: number;
+  /** @description Month to which the comic series was published */
   publishedMonthTo?: number;
+  /** @description Day to which the comic series was published */
   publishedDayTo?: number;
+  /** @description Number of issues */
   numberOfIssues?: number;
+  /** @description Starting stardate of comic series stories */
   stardateFrom?: number;
+  /** @description Ending stardate of comic series stories */
   stardateTo?: number;
+  /** @description Starting year of comic series stories */
   yearFrom?: number;
+  /** @description Ending year of comic series stories */
   yearTo?: number;
+  /** @description Whether it's a miniseries */
   miniseries?: boolean;
+  /** @description Whether it's a photonovel series */
   photonovelSeries?: boolean;
 };
 
 export type ComicSeriesFull = {
+  /** @description Comic series unique ID */
   uid: string;
+  /** @description Comic series title */
   title: string;
+  /** @description Year from which the comic series was published */
   publishedYearFrom?: number;
+  /** @description Month from which the comic series was published */
   publishedMonthFrom?: number;
+  /** @description Day from which the comic series was published */
   publishedDayFrom?: number;
+  /** @description Year to which the comic series was published */
   publishedYearTo?: number;
+  /** @description Month to which the comic series was published */
   publishedMonthTo?: number;
+  /** @description Day to which the comic series was published */
   publishedDayTo?: number;
+  /** @description Number of issues */
   numberOfIssues?: number;
+  /** @description Starting stardate of comic series stories */
   stardateFrom?: number;
+  /** @description Ending stardate of comic series stories */
   stardateTo?: number;
+  /** @description Starting year of comic series stories */
   yearFrom?: number;
+  /** @description Ending year of comic series stories */
   yearTo?: number;
+  /** @description Whether it's a miniseries */
   miniseries?: boolean;
+  /** @description Whether it's a photonovel series */
   photonovelSeries?: boolean;
+  /** @description Comic series this comic series is included in */
   parentSeries?: ComicSeriesBase[];
+  /** @description Child comic series included in this comic series */
   childSeries?: ComicSeriesBase[];
+  /** @description Companies that published this comic series */
   publishers?: CompanyBase[];
+  /** @description Comics included in this comic series */
   comics?: ComicsBase[];
 };
 
 export type ComicSeriesBaseResponse = {
   page?: ResponsePage;
   sort?: ResponseSort;
+  /** @description List of comic series matching given criteria */
   comicSeries?: ComicSeriesBase[];
 };
 
@@ -540,47 +864,78 @@ export type ComicSeriesFullResponse = {
 };
 
 export type ComicStripHeader = {
+  /** @description Comic strip unique ID */
   uid: string;
+  /** @description Comic strip title */
   title: string;
 };
 
 export type ComicStripBase = {
+  /** @description Comic strip unique ID */
   uid: string;
+  /** @description Comic strip title */
   title: string;
+  /** @description Title of the periodical the comic strip was published in */
   periodical?: string;
+  /** @description Year from which the comic strip was published */
   publishedYearFrom?: number;
+  /** @description Month from which the comic strip was published */
   publishedMonthFrom?: number;
+  /** @description Day from which the comic strip was published */
   publishedDayFrom?: number;
+  /** @description Year to which the comic strip was published */
   publishedYearTo?: number;
+  /** @description Month to which the comic strip was published */
   publishedMonthTo?: number;
+  /** @description Day to which the comic strip was published */
   publishedDayTo?: number;
+  /** @description Number of pages */
   numberOfPages?: number;
+  /** @description Starting year of comic strip story */
   yearFrom?: number;
+  /** @description Ending year of comic strip story */
   yearTo?: number;
 };
 
 export type ComicStripFull = {
+  /** @description Comic strip unique ID */
   uid: string;
+  /** @description Comic strip title */
   title: string;
+  /** @description Title of the periodical the comic strip was published in */
   periodical?: string;
+  /** @description Year from which the comic strip was published */
   publishedYearFrom?: number;
+  /** @description Month from which the comic strip was published */
   publishedMonthFrom?: number;
+  /** @description Day from which the comic strip was published */
   publishedDayFrom?: number;
+  /** @description Year to which the comic strip was published */
   publishedYearTo?: number;
+  /** @description Month to which the comic strip was published */
   publishedMonthTo?: number;
+  /** @description Day to which the comic strip was published */
   publishedDayTo?: number;
+  /** @description Number of pages */
   numberOfPages?: number;
+  /** @description Starting year of comic strip stories */
   yearFrom?: number;
+  /** @description Ending year of comic strip stories */
   yearTo?: number;
+  /** @description Comic series this comic strip is included in */
   comicSeries?: ComicSeriesBase[];
+  /** @description Writers involved in the comic strip */
   writers?: StaffBase[];
+  /** @description Artists involved in the comic strip */
   artists?: StaffBase[];
+  /** @description Characters appearing in the comic strip */
   characters?: CharacterBase[];
 };
 
 export type ComicStripBaseResponse = {
   page?: ResponsePage;
   sort?: ResponseSort;
+  /** @description List of comic strips matching given criteria */
   comicStrips?: ComicStripBase[];
 };
 
@@ -589,57 +944,98 @@ export type ComicStripFullResponse = {
 };
 
 export type CompanyBase = {
+  /** @description Company unique ID */
   uid: string;
+  /** @description Company name */
   name: string;
+  /** @description Whether it's a broadcaster */
   broadcaster?: boolean;
+  /** @description Whether it's a collectible company */
   collectibleCompany?: boolean;
+  /** @description Whether it's a conglomerate */
   conglomerate?: boolean;
+  /** @description Whether it's a digital visual effects company */
   digitalVisualEffectsCompany?: boolean;
+  /** @description Whether it's a distributor */
   distributor?: boolean;
+  /** @description Whether it's a game company */
   gameCompany?: boolean;
+  /** @description Whether it's a film equipment company */
   filmEquipmentCompany?: boolean;
+  /** @description Whether it's a make-up effects studio */
   makeUpEffectsStudio?: boolean;
+  /** @description Whether it's a matte painting company */
   mattePaintingCompany?: boolean;
+  /** @description Whether it's a model and miniature effects company */
   modelAndMiniatureEffectsCompany?: boolean;
+  /** @description Whether it's a post-production company */
   postProductionCompany?: boolean;
+  /** @description Whether it's a production company */
   productionCompany?: boolean;
+  /** @description Whether it's a prop company */
   propCompany?: boolean;
+  /** @description Whether it's a record label */
   recordLabel?: boolean;
+  /** @description Whether it's a special effects company */
   specialEffectsCompany?: boolean;
+  /** @description Whether it's a TV and film production company */
   tvAndFilmProductionCompany?: boolean;
+  /** @description Whether it's a video game company */
   videoGameCompany?: boolean;
 };
 
 export type CompanyFull = {
+  /** @description Company unique ID */
   uid: string;
+  /** @description Company name */
   name: string;
+  /** @description Whether it's a broadcaster */
   broadcaster?: boolean;
+  /** @description Whether it's a collectible company */
   collectibleCompany?: boolean;
+  /** @description Whether it's a conglomerate */
   conglomerate?: boolean;
+  /** @description Whether it's a digital visual effects company */
   digitalVisualEffectsCompany?: boolean;
+  /** @description Whether it's a distributor */
   distributor?: boolean;
+  /** @description Whether it's a game company */
   gameCompany?: boolean;
+  /** @description Whether it's a film equipment company */
   filmEquipmentCompany?: boolean;
+  /** @description Whether it's a make-up effects studio */
   makeUpEffectsStudio?: boolean;
+  /** @description Whether it's a matte painting company */
   mattePaintingCompany?: boolean;
+  /** @description Whether it's a model and miniature effects company */
   modelAndMiniatureEffectsCompany?: boolean;
+  /** @description Whether it's a post-production company */
   postProductionCompany?: boolean;
+  /** @description Whether it's a production company */
   productionCompany?: boolean;
+  /** @description Whether it's a prop company */
   propCompany?: boolean;
+  /** @description Whether it's a record label */
   recordLabel?: boolean;
+  /** @description Whether it's a special effects company */
   specialEffectsCompany?: boolean;
+  /** @description Whether it's a TV and film production company */
   tvAndFilmProductionCompany?: boolean;
+  /** @description Whether it's a video game company */
   videoGameCompany?: boolean;
 };
 
 export type CompanyHeader = {
+  /** @description Company unique ID */
   uid: string;
+  /** @description Company title */
   name: string;
 };
 
 export type CompanyBaseResponse = {
   page?: ResponsePage;
   sort?: ResponseSort;
+  /** @description List of companies matching given criteria */
   companies?: CompanyBase[];
 };
 
@@ -648,42 +1044,68 @@ export type CompanyFullResponse = {
 };
 
 export type ConflictBase = {
+  /** @description Conflict unique ID */
   uid: string;
+  /** @description Conflict name */
   name: string;
+  /** @description Starting year of the conflict */
   yearFrom?: number;
+  /** @description Ending year of the conflict */
   yearTo?: number;
+  /** @description Whether it was an Earth conflict */
   earthConflict?: boolean;
+  /** @description Whether this conflict is part of war involving Federation */
   federationWar?: boolean;
+  /** @description Whether this conflict is part of war involving the Klingons */
   klingonWar?: boolean;
+  /** @description Whether this conflict is a Dominion war battle */
   dominionWarBattle?: boolean;
+  /** @description Whether this conflict is from alternate reality */
   alternateReality?: boolean;
 };
 
 export type ConflictFull = {
+  /** @description Conflict unique ID */
   uid: string;
+  /** @description Conflict name */
   name: string;
+  /** @description Starting year of the conflict */
   yearFrom?: number;
+  /** @description Ending year of the conflict */
   yearTo?: number;
+  /** @description Whether it is an Earth conflict */
   earthConflict?: boolean;
+  /** @description Whether this conflict is a part of war involving Federation */
   federationWar?: boolean;
+  /** @description Whether this conflict is a part of war involving the Klingons */
   klingonWar?: boolean;
+  /** @description Whether this conflict is a Dominion war battle */
   dominionWarBattle?: boolean;
+  /** @description Whether this conflict is from alternate reality */
   alternateReality?: boolean;
+  /** @description Locations this conflict occurred at */
   locations?: LocationBase[];
+  /** @description Organization involved in conflict on first side */
   firstSideBelligerents?: OrganizationBase[];
+  /** @description Commanders involved in conflict on first side */
   firstSideCommanders?: CharacterBase[];
+  /** @description Organization involved in conflict on second side */
   secondSideBelligerents?: OrganizationBase[];
+  /** @description Commanders involved in conflict on second side */
   secondSideCommanders?: CharacterBase[];
 };
 
 export type ConflictHeader = {
+  /** @description Conflict unique ID */
   uid: string;
+  /** @description Conflict name */
   name: string;
 };
 
 export type ConflictBaseResponse = {
   page?: ResponsePage;
   sort?: ResponseSort;
+  /** @description List of conflicts matching given criteria */
   conflicts?: ConflictBase[];
 };
 
@@ -692,8 +1114,11 @@ export type ConflictFullResponse = {
 };
 
 export type ContentLanguage = {
+  /** @description Language unique ID */
   uid?: string;
+  /** @description Language name */
   name?: string;
+  /** @description ISO 639-1 code */
   iso6391Code?: string;
 };
 
@@ -726,55 +1151,87 @@ export type ContentRatingSystem =
   | "ITUNES";
 
 export type ContentRating = {
+  /** @description Rating unique ID */
   uid?: string;
   contentRatingSystem?: ContentRatingSystem;
+  /** @description Rating within specified content rating system */
   rating?: string;
 };
 
 export type Country = {
+  /** @description Country unique ID */
   uid?: string;
+  /** @description Country name */
   name?: string;
+  /** @description ISO 3166-1 alpha-2 code */
   iso31661Alpha2Code?: string;
 };
 
 export type ElementHeader = {
+  /** @description Element unique ID */
   uid: string;
+  /** @description Element name */
   name: string;
 };
 
 export type ElementBase = {
+  /** @description Element unique ID */
   uid: string;
+  /** @description Element name */
   name: string;
+  /** @description Element symbol */
   symbolObject?: string;
+  /** @description Element atomic number */
   atomicNumber?: number;
+  /** @description Element atomic weight */
   atomicWeight?: number;
+  /** @description Whether it's a transuranium */
   transuranium?: boolean;
+  /** @description Whether it belongs to Gamma series */
   gammaSeries?: boolean;
+  /** @description Whether it belongs to Hypersonic series */
   hypersonicSeries?: boolean;
+  /** @description Whether it belongs to Mega series */
   megaSeries?: boolean;
+  /** @description Whether it belongs to Omega series */
   omegaSeries?: boolean;
+  /** @description Whether it belongs to Transonic series */
   transonicSeries?: boolean;
+  /** @description Whether it belongs to World series */
   worldSeries?: boolean;
 };
 
 export type ElementFull = {
+  /** @description Element unique ID */
   uid: string;
+  /** @description Element name */
   name: string;
+  /** @description Element symbol */
   symbolObject?: string;
+  /** @description Element atomic number */
   atomicNumber?: number;
+  /** @description Element atomic weight */
   atomicWeight?: number;
+  /** @description Whether it's a transuranium */
   transuranium?: boolean;
+  /** @description Whether it belongs to Gamma series */
   gammaSeries?: boolean;
+  /** @description Whether it belongs to Hypersonic series */
   hypersonicSeries?: boolean;
+  /** @description Whether it belongs to Mega series */
   megaSeries?: boolean;
+  /** @description Whether it belongs to Omega series */
   omegaSeries?: boolean;
+  /** @description Whether it belongs to Transonic series */
   transonicSeries?: boolean;
+  /** @description Whether it belongs to World series */
   worldSeries?: boolean;
 };
 
 export type ElementBaseResponse = {
   page?: ResponsePage;
   sort?: ResponseSort;
+  /** @description List of elements matching given criteria */
   elements?: ElementBase[];
 };
 
@@ -783,61 +1240,102 @@ export type ElementFullResponse = {
 };
 
 export type EpisodeHeader = {
+  /** @description Episode unique ID */
   uid: string;
+  /** @description Episode title */
   title: string;
 };
 
 export type EpisodeBase = {
+  /** @description Episode unique ID */
   uid: string;
+  /** @description Episode title */
   title: string;
+  /** @description Episode title in German */
   titleGerman?: string;
+  /** @description Episode title in Italian */
   titleItalian?: string;
+  /** @description Episode title in Japanese */
   titleJapanese?: string;
   series?: SeriesHeader;
   season?: SeasonHeader;
+  /** @description Season number */
   seasonNumber?: number;
+  /** @description Episode number in season */
   episodeNumber?: number;
+  /** @description Production serial number */
   productionSerialNumber?: string;
+  /** @description Whether it's a feature length episode */
   featureLength?: boolean;
+  /** @description Starting stardate of episode story */
   stardateFrom?: number;
+  /** @description Ending stardate of episode story */
   stardateTo?: number;
+  /** @description Starting year of episode story */
   yearFrom?: number;
+  /** @description Ending year of episode story */
   yearTo?: number;
+  /** @description Date the episode was first aired in the United States */
   usAirDate?: string;
+  /** @description Date the episode script was completed */
   finalScriptDate?: string;
 };
 
 export type EpisodeFull = {
+  /** @description Episode unique ID */
   uid: string;
+  /** @description Episode title */
   title: string;
+  /** @description Episode title in German */
   titleGerman?: string;
+  /** @description Episode title in Italian */
   titleItalian?: string;
+  /** @description Episode title in Japanese */
   titleJapanese?: string;
   series?: SeriesBase;
   season?: SeasonBase;
+  /** @description Season number */
   seasonNumber?: number;
+  /** @description Episode number in season */
   episodeNumber?: number;
+  /** @description Production serial number */
   productionSerialNumber?: string;
+  /** @description Whether it's a feature length episode */
   featureLength?: boolean;
+  /** @description Starting stardate of episode story */
   stardateFrom?: number;
+  /** @description Ending stardate of episode story */
   stardateTo?: number;
+  /** @description Starting year of episode story */
   yearFrom?: number;
+  /** @description Ending year of episode story */
   yearTo?: number;
+  /** @description Date the episode was first aired in the United States */
   usAirDate?: string;
+  /** @description Date the episode script was completed */
   finalScriptDate?: string;
+  /** @description Writers involved in the episode */
   writers?: StaffBase[];
+  /** @description Teleplay authors involved in the episode */
   teleplayAuthors?: StaffBase[];
+  /** @description Story authors involved in the episode */
   storyAuthors?: StaffBase[];
+  /** @description Directors authors involved in the episode */
   directors?: StaffBase[];
+  /** @description Performers appearing in the episode */
   performers?: PerformerBase[];
+  /** @description Stunt performers appearing in the episode */
   stuntPerformers?: PerformerBase[];
+  /** @description Stand-in performers appearing in the episode */
   standInPerformers?: PerformerBase[];
+  /** @description Characters appearing in the episode */
   characters?: CharacterBase[];
 };
 
 export type EpisodeBaseResponse = {
   page?: ResponsePage;
   sort?: ResponseSort;
+  /** @description List of episodes matching given criteria */
   episodes?: EpisodeBase[];
 };
 
@@ -846,48 +1344,77 @@ export type EpisodeFullResponse = {
 };
 
 export type Error = {
+  /** @description Error code */
   code?: string;
+  /** @description Error message */
   message?: string;
 };
 
 export type FoodHeader = {
+  /** @description Food unique ID */
   uid: string;
+  /** @description Food name */
   name: string;
 };
 
 export type FoodBase = {
+  /** @description Food unique ID */
   uid: string;
+  /** @description Food name */
   name: string;
+  /** @description Whether it's of earthly origin */
   earthlyOrigin?: boolean;
+  /** @description Whether it's a dessert */
   dessert?: boolean;
+  /** @description Whether it's a fruit */
   fruit?: boolean;
+  /** @description Whether it's a herb or a spice */
   herbOrSpice?: boolean;
+  /** @description Whether it's a sauce */
   sauce?: boolean;
+  /** @description Whether it's a soup */
   soup?: boolean;
+  /** @description Whether it's a beverage */
   beverage?: boolean;
+  /** @description Whether it's an alcoholic beverage */
   alcoholicBeverage?: boolean;
+  /** @description Whether it's a juice */
   juice?: boolean;
+  /** @description Whether it's a tea */
   tea?: boolean;
 };
 
 export type FoodFull = {
+  /** @description Food unique ID */
   uid: string;
+  /** @description Food name */
   name: string;
+  /** @description Whether it's of earthly origin */
   earthlyOrigin?: boolean;
+  /** @description Whether it's a dessert */
   dessert?: boolean;
+  /** @description Whether it's a fruit */
   fruit?: boolean;
+  /** @description Whether it's an herb or a spice */
   herbOrSpice?: boolean;
+  /** @description Whether it's a sauce */
   sauce?: boolean;
+  /** @description Whether it's a soup */
   soup?: boolean;
+  /** @description Whether it's a beverage */
   beverage?: boolean;
+  /** @description Whether it's an alcoholic beverage */
   alcoholicBeverage?: boolean;
+  /** @description Whether it's a juice */
   juice?: boolean;
+  /** @description Whether it's a tea */
   tea?: boolean;
 };
 
 export type FoodBaseResponse = {
   page?: ResponsePage;
   sort?: ResponseSort;
+  /** @description List of foods matching given criteria */
   foods?: FoodBase[];
 };
 
@@ -898,40 +1425,61 @@ export type FoodFullResponse = {
 export type Gender = "F" | "M";
 
 export type Genre = {
+  /** @description Genre unique ID */
   uid?: string;
+  /** @description Genre name */
   name?: string;
 };
 
 export type LiteratureHeader = {
+  /** @description Literature unique ID */
   uid: string;
+  /** @description Literature title */
   title: string;
 };
 
 export type LiteratureBase = {
+  /** @description Literature unique ID */
   uid: string;
+  /** @description Literature title */
   title: string;
+  /** @description Whether it's of earthly origin */
   earthlyOrigin?: boolean;
+  /** @description Whether it's a Shakespearean work */
   shakespeareanWork?: boolean;
+  /** @description Whether it's a report */
   report?: boolean;
+  /** @description Whether it's a scientific literature */
   scientificLiterature?: boolean;
+  /** @description Whether it's a technical manual */
   technicalManual?: boolean;
+  /** @description Whether it's a religious literature */
   religiousLiterature?: boolean;
 };
 
 export type LiteratureFull = {
+  /** @description Literature unique ID */
   uid: string;
+  /** @description Literature title */
   title: string;
+  /** @description Whether it's of earthly origin */
   earthlyOrigin?: boolean;
+  /** @description Whether it's a Shakespearean work */
   shakespeareanWork?: boolean;
+  /** @description Whether it's a report */
   report?: boolean;
+  /** @description Whether it's a scientific literature */
   scientificLiterature?: boolean;
+  /** @description Whether it's a technical manual */
   technicalManual?: boolean;
+  /** @description Whether it's a religious literature */
   religiousLiterature?: boolean;
 };
 
 export type LiteratureBaseResponse = {
   page?: ResponsePage;
   sort?: ResponseSort;
+  /** @description List of literature matching given criteria */
   literature?: LiteratureBase[];
 };
 
@@ -940,69 +1488,122 @@ export type LiteratureFullResponse = {
 };
 
 export type LocationHeader = {
+  /** @description Location unique ID */
   uid: string;
+  /** @description Location name */
   name: string;
 };
 
 export type LocationBase = {
+  /** @description Location unique ID */
   uid: string;
+  /** @description Location name */
   name: string;
+  /** @description Whether it's an earthly location */
   earthlyLocation?: boolean;
+  /** @description Whether it's a fictional location */
   fictionalLocation?: boolean;
+  /** @description Whether it's a religious location */
   religiousLocation?: boolean;
+  /** @description Whether it's a geographical location */
   geographicalLocation?: boolean;
+  /** @description Whether it's a body of water */
   bodyOfWater?: boolean;
+  /** @description Whether it's a country */
   country?: boolean;
+  /** @description Whether it's a subnational entity */
   subnationalEntity?: boolean;
+  /** @description Whether it's a settlement */
   settlement?: boolean;
+  /** @description Whether it's a US settlement */
   usSettlement?: boolean;
+  /** @description Whether it's a Bajoran settlement */
   bajoranSettlement?: boolean;
+  /** @description Whether it's a colony */
   colony?: boolean;
+  /** @description Whether it's a landform */
   landform?: boolean;
+  /** @description Whether it's a landmark */
   landmark?: boolean;
+  /** @description Whether it's a road */
   road?: boolean;
+  /** @description Whether it's a structure */
   structure?: boolean;
+  /** @description Whether it's a shipyard */
   shipyard?: boolean;
+  /** @description Whether it's a building interior */
   buildingInterior?: boolean;
+  /** @description Whether it's a establishment */
   establishment?: boolean;
+  /** @description Whether it's a medical establishment */
   medicalEstablishment?: boolean;
+  /** @description Whether it's a DS9 establishment */
   ds9Establishment?: boolean;
+  /** @description Whether it's a school */
   school?: boolean;
+  /** @description Whether this location is from mirror universe */
   mirror?: boolean;
+  /** @description Whether this location is from alternate reality */
   alternateReality?: boolean;
 };
 
 export type LocationFull = {
+  /** @description Location unique ID */
   uid: string;
+  /** @description Location name */
   name: string;
+  /** @description Whether it's an earthly location */
   earthlyLocation?: boolean;
+  /** @description Whether it's a fictional location */
   fictionalLocation?: boolean;
+  /** @description Whether it's a religious location */
   religiousLocation?: boolean;
+  /** @description Whether it's a geographical location */
   geographicalLocation?: boolean;
+  /** @description Whether it's a body of water */
   bodyOfWater?: boolean;
+  /** @description Whether it's a country */
   country?: boolean;
+  /** @description Whether it's a subnational entity */
   subnationalEntity?: boolean;
+  /** @description Whether it's a settlement */
   settlement?: boolean;
+  /** @description Whether it's a US settlement */
   usSettlement?: boolean;
+  /** @description Whether it's a Bajoran settlement */
   bajoranSettlement?: boolean;
+  /** @description Whether it's a colony */
   colony?: boolean;
+  /** @description Whether it's a landform */
   landform?: boolean;
+  /** @description Whether it's a landmark */
   landmark?: boolean;
+  /** @description Whether it's a road */
   road?: boolean;
+  /** @description Whether it's a structure */
   structure?: boolean;
+  /** @description Whether it's a shipyard */
   shipyard?: boolean;
+  /** @description Whether it's a building interior */
   buildingInterior?: boolean;
+  /** @description Whether it's a establishment */
   establishment?: boolean;
+  /** @description Whether it's a medical establishment */
   medicalEstablishment?: boolean;
+  /** @description Whether it's a DS9 establishment */
   ds9Establishment?: boolean;
+  /** @description Whether it's a school */
   school?: boolean;
+  /** @description Whether this location is from mirror universe */
   mirror?: boolean;
+  /** @description Whether this location is from alternate reality */
   alternateReality?: boolean;
 };
 
 export type LocationBaseResponse = {
   page?: ResponsePage;
   sort?: ResponseSort;
+  /** @description List of locations matching given criteria */
   locations?: LocationBase[];
 };
 
@@ -1011,42 +1612,68 @@ export type LocationFullResponse = {
 };
 
 export type MagazineHeader = {
+  /** @description Magazine unique ID */
   uid: string;
+  /** @description Magazine title */
   title: string;
 };
 
 export type MagazineBase = {
+  /** @description Magazine unique ID */
   uid: string;
+  /** @description Magazine title */
   title: string;
+  /** @description Year the magazine was published */
   publishedYear?: number;
+  /** @description Month the magazine was published */
   publishedMonth?: number;
+  /** @description Day the magazine was published */
   publishedDay?: number;
+  /** @description Cover publication year */
   coverYear?: number;
+  /** @description Cover publication month */
   coverMonth?: number;
+  /** @description Cover publication day */
   coverDay?: number;
+  /** @description Number of pages */
   numberOfPages?: number;
+  /** @description Magazine issue number */
   issueNumber?: string;
 };
 
 export type MagazineFull = {
+  /** @description Magazine unique ID */
   uid: string;
+  /** @description Magazine title */
   title: string;
+  /** @description Year the magazine was published */
   publishedYear?: number;
+  /** @description Month the magazine was published */
   publishedMonth?: number;
+  /** @description Day the magazine was published */
   publishedDay?: number;
+  /** @description Cover publication year */
   coverYear?: number;
+  /** @description Cover publication month */
   coverMonth?: number;
+  /** @description Cover publication day */
   coverDay?: number;
+  /** @description Number of pages */
   numberOfPages?: number;
+  /** @description Magazine issue number */
   issueNumber?: string;
+  /** @description Magazine series this magazine is included in */
   magazineSeries?: MagazineSeriesBase[];
+  /** @description Editors involved in the magazine */
   editors?: StaffBase[];
+  /** @description Magazine publishers */
   publishers?: CompanyBase[];
 };
 
 export type MagazineBaseResponse = {
   page?: ResponsePage;
   sort?: ResponseSort;
+  /** @description List of magazines matching given criteria */
   magazines?: MagazineBase[];
 };
 
@@ -1055,36 +1682,56 @@ export type MagazineFullResponse = {
 };
 
 export type MagazineSeriesHeader = {
+  /** @description Magazine series unique ID */
   uid: string;
+  /** @description Magazine series title */
   title: string;
 };
 
 export type MagazineSeriesBase = {
+  /** @description Magazine series unique ID */
   uid: string;
+  /** @description Magazine series title */
   title: string;
+  /** @description Year from which the magazine series was published */
   publishedYearFrom?: number;
+  /** @description Month from which the magazine series was published */
   publishedMonthFrom?: number;
+  /** @description Year to which the magazine series was published */
   publishedYearTo?: number;
+  /** @description Month to which the magazine series was published */
   publishedMonthTo?: number;
+  /** @description Number of issues */
   numberOfIssues?: number;
 };
 
 export type MagazineSeriesFull = {
+  /** @description Magazine series unique ID */
   uid: string;
+  /** @description Magazine series title */
   title: string;
+  /** @description Year from which the magazine series was published */
   publishedYearFrom?: number;
+  /** @description Month from which the magazine series was published */
   publishedMonthFrom?: number;
+  /** @description Year to which the magazine series was published */
   publishedYearTo?: number;
+  /** @description Month to which the magazine series was published */
   publishedMonthTo?: number;
+  /** @description Number of issues */
   numberOfIssues?: number;
+  /** @description Companies that published this magazine series */
   publishers?: CompanyBase[];
+  /** @description Editors involved in the magazine series */
   editors?: StaffBase[];
+  /** @description Magazines included in this magazine series */
   magazines?: MagazineBase[];
 };
 
 export type MagazineSeriesBaseResponse = {
   page?: ResponsePage;
   sort?: ResponseSort;
+  /** @description List of magazine series matching given criteria */
   magazineSeries?: MagazineSeriesBase[];
 };
 
@@ -1103,43 +1750,70 @@ export type MaritalStatus =
   | "CAPTAINS_WOMAN";
 
 export type MaterialHeader = {
+  /** @description Material unique ID */
   uid: string;
+  /** @description Material name */
   name: string;
 };
 
 export type MaterialBase = {
+  /** @description Material unique ID */
   uid: string;
+  /** @description Material name */
   name: string;
+  /** @description Whether it's a chemical compound */
   chemicalCompound?: boolean;
+  /** @description Whether it's a biochemical compound */
   biochemicalCompound?: boolean;
+  /** @description Whether it's a drug */
   drug?: boolean;
+  /** @description Whether it's a poisonous substance */
   poisonousSubstance?: boolean;
+  /** @description Whether it's an explosive */
   explosive?: boolean;
+  /** @description Whether it's a gemstone */
   gemstone?: boolean;
+  /** @description Whether it's an alloy or a composite */
   alloyOrComposite?: boolean;
+  /** @description Whether it's a fuel */
   fuel?: boolean;
+  /** @description Whether it's a mineral */
   mineral?: boolean;
+  /** @description Whether it's a precious material */
   preciousMaterial?: boolean;
 };
 
 export type MaterialFull = {
+  /** @description Material unique ID */
   uid: string;
+  /** @description Material name */
   name: string;
+  /** @description Whether it's a chemical compound */
   chemicalCompound?: boolean;
+  /** @description Whether it's a biochemical compound */
   biochemicalCompound?: boolean;
+  /** @description Whether it's a drug */
   drug?: boolean;
+  /** @description Whether it's a poisonous substance */
   poisonousSubstance?: boolean;
+  /** @description Whether it's an explosive */
   explosive?: boolean;
+  /** @description Whether it's a gemstone */
   gemstone?: boolean;
+  /** @description Whether it's an alloy or a composite */
   alloyOrComposite?: boolean;
+  /** @description Whether it's a fuel */
   fuel?: boolean;
+  /** @description Whether it's a mineral */
   mineral?: boolean;
+  /** @description Whether it's a precious material */
   preciousMaterial?: boolean;
 };
 
 export type MaterialBaseResponse = {
   page?: ResponsePage;
   sort?: ResponseSort;
+  /** @description List of materials matching given criteria */
   materials?: MaterialBase[];
 };
 
@@ -1148,25 +1822,34 @@ export type MaterialFullResponse = {
 };
 
 export type MedicalConditionHeader = {
+  /** @description Medical condition unique ID */
   uid: string;
+  /** @description Medical condition name */
   name: string;
 };
 
 export type MedicalConditionBase = {
+  /** @description Medical condition unique ID */
   uid: string;
+  /** @description Medical condition name */
   name: string;
+  /** @description Whether it's a psychological condition */
   psychologicalCondition?: boolean;
 };
 
 export type MedicalConditionFull = {
+  /** @description Medical condition unique ID */
   uid: string;
+  /** @description Medical condition name */
   name: string;
+  /** @description Whether it's a psychological condition */
   psychologicalCondition?: boolean;
 };
 
 export type MedicalConditionBaseResponse = {
   page?: ResponsePage;
   sort?: ResponseSort;
+  /** @description List of medical conditions matching given criteria */
   medicalConditions?: MedicalConditionBase[];
 };
 
@@ -1175,65 +1858,112 @@ export type MedicalConditionFullResponse = {
 };
 
 export type MovieHeader = {
+  /** @description Movie unique ID */
   uid: string;
+  /** @description Movie title */
   title: string;
 };
 
 export type MovieBase = {
+  /** @description Movie unique ID */
   uid: string;
+  /** @description Movie title */
   title: string;
   mainDirector?: StaffHeader;
+  /** @description Movie title in Bulgarian */
   titleBulgarian?: string;
+  /** @description Movie title in Catalan */
   titleCatalan?: string;
+  /** @description Movie title in Chinese traditional */
   titleChineseTraditional?: string;
+  /** @description Movie title in German */
   titleGerman?: string;
+  /** @description Movie title in Italian */
   titleItalian?: string;
+  /** @description Movie title in Japanese */
   titleJapanese?: string;
+  /** @description Movie title in Polish */
   titlePolish?: string;
+  /** @description Movie title in Russian */
   titleRussian?: string;
+  /** @description Movie title in Serbian */
   titleSerbian?: string;
+  /** @description Movie title in Spanish */
   titleSpanish?: string;
+  /** @description Starting stardate of movie story */
   stardateFrom?: number;
+  /** @description Ending stardate of movie story */
   stardateTo?: number;
+  /** @description Starting year of movie story */
   yearFrom?: number;
+  /** @description Ending year of movie story */
   yearTo?: number;
+  /** @description Date the movie was first released in the United States */
   usReleaseDate?: string;
 };
 
 export type MovieFull = {
+  /** @description Movie unique ID */
   uid: string;
+  /** @description Movie title */
   title: string;
   mainDirector?: StaffBase;
+  /** @description Movie title in Bulgarian */
   titleBulgarian?: string;
+  /** @description Movie title in Catalan */
   titleCatalan?: string;
+  /** @description Movie title in Chinese traditional */
   titleChineseTraditional?: string;
+  /** @description Movie title in German */
   titleGerman?: string;
+  /** @description Movie title in Italian */
   titleItalian?: string;
+  /** @description Movie title in Japanese */
   titleJapanese?: string;
+  /** @description Movie title in Polish */
   titlePolish?: string;
+  /** @description Movie title in Russian */
   titleRussian?: string;
+  /** @description Movie title in Serbian */
   titleSerbian?: string;
+  /** @description Movie title in Spanish */
   titleSpanish?: string;
+  /** @description Starting stardate of movie story */
   stardateFrom?: number;
+  /** @description Ending stardate of movie story */
   stardateTo?: number;
+  /** @description Starting year of movie story */
   yearFrom?: number;
+  /** @description Ending year of movie story */
   yearTo?: number;
+  /** @description Date the movie was first released in the United States */
   usReleaseDate?: string;
+  /** @description Writers involved in the movie */
   writers?: StaffBase[];
+  /** @description Screenplay authors involved in the movie */
   screenplayAuthors?: StaffBase[];
+  /** @description Story authors authors involved in the movie */
   storyAuthors?: StaffBase[];
+  /** @description Directors authors involved in the movie */
   directors?: StaffBase[];
+  /** @description Producers authors involved in the movie */
   producers?: StaffBase[];
+  /** @description Other staff involved in the movie */
   staff?: StaffBase[];
+  /** @description Performers appearing in the movie */
   performers?: PerformerBase[];
+  /** @description Stunt performers appearing in the movie */
   stuntPerformers?: PerformerBase[];
+  /** @description Stand-in performers appearing in the movie */
   standInPerformers?: PerformerBase[];
+  /** @description Characters appearing in the movie */
   characters?: CharacterBase[];
 };
 
 export type MovieBaseResponse = {
   page?: ResponsePage;
   sort?: ResponseSort;
+  /** @description List of movies matching given criteria */
   movies?: MovieBase[];
 };
 
@@ -1242,30 +1972,44 @@ export type MovieFullResponse = {
 };
 
 export type OccupationHeader = {
+  /** @description Occupation unique ID */
   uid: string;
+  /** @description Occupation name */
   name: string;
 };
 
 export type OccupationBase = {
+  /** @description Occupation unique ID */
   uid: string;
+  /** @description Occupation name */
   name: string;
+  /** @description Whether it's a legal occupation */
   legalOccupation?: boolean;
+  /** @description Whether it's a medical occupation */
   medicalOccupation?: boolean;
+  /** @description Whether it's a scientific occupation */
   scientificOccupation?: boolean;
 };
 
 export type OccupationFull = {
+  /** @description Occupation unique ID */
   uid: string;
+  /** @description Occupation name */
   name: string;
+  /** @description Whether it's a legal occupation */
   legalOccupation?: boolean;
+  /** @description Whether it's a medical occupation */
   medicalOccupation?: boolean;
+  /** @description Whether it's a scientific occupation */
   scientificOccupation?: boolean;
+  /** @description Characters with this occupation */
   characters?: CharacterBase[];
 };
 
 export type OccupationBaseResponse = {
   page?: ResponsePage;
   sort?: ResponseSort;
+  /** @description List of occupations matching given criteria */
   occupations?: OccupationBase[];
 };
 
@@ -1274,48 +2018,80 @@ export type OccupationFullResponse = {
 };
 
 export type OrganizationHeader = {
+  /** @description Organization unique ID */
   uid: string;
+  /** @description Organization name */
   name: string;
 };
 
 export type OrganizationBase = {
+  /** @description Organization unique ID */
   uid: string;
+  /** @description Organization name */
   name: string;
+  /** @description Whether it's a government */
   government?: boolean;
+  /** @description Whether it's an intergovernmental organization */
   intergovernmentalOrganization?: boolean;
+  /** @description Whether it's a research organization */
   researchOrganization?: boolean;
+  /** @description Whether it's a sport organization */
   sportOrganization?: boolean;
+  /** @description Whether it's a medical organization */
   medicalOrganization?: boolean;
+  /** @description Whether it's a military organization */
   militaryOrganization?: boolean;
+  /** @description Whether it's a military unit */
   militaryUnit?: boolean;
+  /** @description Whether it's a government agency */
   governmentAgency?: boolean;
+  /** @description Whether it's a law enforcement agency */
   lawEnforcementAgency?: boolean;
+  /** @description Whether it's a prison or penal colony */
   prisonOrPenalColony?: boolean;
+  /** @description Whether this organization is from mirror universe */
   mirror?: boolean;
+  /** @description Whether this location is from alternate reality */
   alternateReality?: boolean;
 };
 
 export type OrganizationFull = {
+  /** @description Organization unique ID */
   uid: string;
+  /** @description Organization name */
   name: string;
+  /** @description Whether it's a government */
   government?: boolean;
+  /** @description Whether it's an intergovernmental organization */
   intergovernmentalOrganization?: boolean;
+  /** @description Whether it's a research organization */
   researchOrganization?: boolean;
+  /** @description Whether it's a sport organization */
   sportOrganization?: boolean;
+  /** @description Whether it's a medical organization */
   medicalOrganization?: boolean;
+  /** @description Whether it's a military organization */
   militaryOrganization?: boolean;
+  /** @description Whether it's a military unit */
   militaryUnit?: boolean;
+  /** @description Whether it's a government agency */
   governmentAgency?: boolean;
+  /** @description Whether it's a law enforcement agency */
   lawEnforcementAgency?: boolean;
+  /** @description Whether it's a prison or penal colony */
   prisonOrPenalColony?: boolean;
+  /** @description Whether this organization is from mirror universe */
   mirror?: boolean;
+  /** @description Whether this organization is from alternate reality */
   alternateReality?: boolean;
+  /** @description Characters belonging to this organization */
   characters?: CharacterBase[];
 };
 
 export type OrganizationBaseResponse = {
   page?: ResponsePage;
   sort?: ResponseSort;
+  /** @description List of organizations matching given criteria */
   organizations?: OrganizationBase[];
 };
 
@@ -1324,68 +2100,118 @@ export type OrganizationFullResponse = {
 };
 
 export type PerformerHeader = {
+  /** @description Performer unique ID */
   uid: string;
+  /** @description Performer name */
   name: string;
 };
 
 export type PerformerBase = {
+  /** @description Performer unique ID */
   uid: string;
+  /** @description Performer name */
   name: string;
+  /** @description Performer birth name */
   birthName?: string;
   gender?: Gender;
+  /** @description Date the performer was born */
   dateOfBirth?: string;
+  /** @description Place the performer was born */
   placeOfBirth?: string;
+  /** @description Date the performer died */
   dateOfDeath?: string;
+  /** @description Place the performer died */
   placeOfDeath?: string;
+  /** @description Whether it's an animal performer */
   animalPerformer?: boolean;
+  /** @description Whether it's a performer that appeared in Star Trek: Discovery */
   disPerformer?: boolean;
+  /** @description Whether it's a performer that appeared in Star Trek: Deep Space Nine */
   ds9Performer?: boolean;
+  /** @description Whether it's a performer that appeared in Star Trek: Enterprise */
   entPerformer?: boolean;
+  /** @description Whether it's a performer that appeared in a Star Trek movie */
   filmPerformer?: boolean;
+  /** @description Whether it's a stand-in performer */
   standInPerformer?: boolean;
+  /** @description Whether it's a stunt performer */
   stuntPerformer?: boolean;
+  /** @description Whether it's a performer that appeared in Star Trek: The Animated Series */
   tasPerformer?: boolean;
+  /** @description Whether it's a performer that appeared in Star Trek: The Next Generation */
   tngPerformer?: boolean;
+  /** @description Whether it's a performer that appeared in Star Trek: The Original Series */
   tosPerformer?: boolean;
+  /** @description Whether it's a video game performer */
   videoGamePerformer?: boolean;
+  /** @description Whether it's a voice performer */
   voicePerformer?: boolean;
+  /** @description Whether it's a performer that appeared in Star Trek: Voyager */
   voyPerformer?: boolean;
 };
 
 export type PerformerFull = {
+  /** @description Performer unique ID */
   uid: string;
+  /** @description Performer name */
   name: string;
+  /** @description Performer birth name */
   birthName?: string;
   gender?: Gender;
+  /** @description Date the performer was born */
   dateOfBirth?: string;
+  /** @description Place the performer was born */
   placeOfBirth?: string;
+  /** @description Date the performer died */
   dateOfDeath?: string;
+  /** @description Place the performer died */
   placeOfDeath?: string;
+  /** @description Whether it's an animal performer */
   animalPerformer?: boolean;
+  /** @description Whether it's a performer that appeared in Star Trek: Discovery */
   disPerformer?: boolean;
+  /** @description Whether it's a performer that appeared in Star Trek: Deep Space Nine */
   ds9Performer?: boolean;
+  /** @description Whether it's a performer that appeared in Star Trek: Enterprise */
   entPerformer?: boolean;
+  /** @description Whether it's a performer that appeared in a Star Trek movie */
   filmPerformer?: boolean;
+  /** @description Whether it's a stand-in performer */
   standInPerformer?: boolean;
+  /** @description Whether it's a stunt performer */
   stuntPerformer?: boolean;
+  /** @description Whether it's a performer that appeared in Star Trek: The Animated Series */
   tasPerformer?: boolean;
+  /** @description Whether it's a performer that appeared in Star Trek: The Next Generation */
   tngPerformer?: boolean;
+  /** @description Whether it's a performer that appeared in Star Trek: The Original Series */
   tosPerformer?: boolean;
+  /** @description Whether it's a video game performer */
   videoGamePerformer?: boolean;
+  /** @description Whether it's a voice performer */
   voicePerformer?: boolean;
+  /** @description Whether it's a performer that appeared in Star Trek: Voyager */
   voyPerformer?: boolean;
+  /** @description Episodes in which this person appeared as a performer */
   episodesPerformances?: EpisodeBase[];
+  /** @description Episodes in which this person appeared as a stunt performer */
   episodesStuntPerformances?: EpisodeBase[];
+  /** @description Episodes in which this person appeared as a stand-in performer */
   episodesStandInPerformances?: EpisodeBase[];
+  /** @description Movies in which this person appeared as a performer */
   moviesPerformances?: MovieBase[];
+  /** @description Movies in which this person appeared as a stunt performer */
   moviesStuntPerformances?: MovieBase[];
+  /** @description Movies in which this person appeared as a stand-in performer */
   moviesStandInPerformances?: MovieBase[];
+  /** @description Characters played by this performer */
   characters?: CharacterBase[];
 };
 
 export type PerformerBaseResponse = {
   page?: ResponsePage;
   sort?: ResponseSort;
+  /** @description List of performers matching given criteria */
   performers?: PerformerBase[];
 };
 
@@ -1394,67 +2220,93 @@ export type PerformerFullResponse = {
 };
 
 export type Platform = {
+  /** @description Platform unique ID */
   uid?: string;
+  /** @description Platform name */
   name?: string;
 };
 
 export type ProductionRunUnit = "BOX" | "SET";
 
 export type Reference = {
+  /** @description Reference unique ID */
   uid?: string;
   referenceType?: ReferenceType;
+  /** @description Reference number */
   referenceNumber?: string;
 };
 
 export type ReferenceType = "ASIN" | "ISBN";
 
 export type ResponsePage = {
+  /** @description Zero-based page number */
   pageNumber?: number;
+  /** @description Page size */
   pageSize?: number;
+  /** @description Number of elements in page */
   numberOfElements?: number;
+  /** @description Total elements found */
   totalElements?: number;
+  /** @description Total pages found */
   totalPages?: number;
+  /** @description Whether it is the first page */
   firstPage?: boolean;
+  /** @description Whether it is the last page */
   lastPage?: boolean;
 };
 
 export type ResponseSort = {
+  /** @description List of response sort rules */
   clauses?: ResponseSortClause[];
 };
 
 export type ResponseSortClause = {
+  /** @description Field name results are sorted by */
   name: string;
   direction?: ResponseSortDirection;
+  /** @description Order in which this clause was applied */
   clauseOrder: number;
 };
 
 export type ResponseSortDirection = "ASC" | "DESC";
 
 export type SeasonHeader = {
+  /** @description Season unique ID */
   uid: string;
+  /** @description Season title */
   title: string;
 };
 
 export type SeasonBase = {
+  /** @description Season unique ID */
   uid: string;
+  /** @description Season title */
   title: string;
   series?: SeriesHeader;
+  /** @description Season number in series */
   seasonNumber?: number;
+  /** @description Number of episodes in this season */
   numberOfEpisodes?: number;
 };
 
 export type SeasonFull = {
+  /** @description Season unique ID */
   uid: string;
+  /** @description Season title */
   title: string;
   series?: SeriesBase;
+  /** @description Season number in series */
   seasonNumber?: number;
+  /** @description Number of episodes in this season */
   numberOfEpisodes?: number;
+  /** @description Episodes in this season */
   episodes?: EpisodeBase[];
 };
 
 export type SeasonBaseResponse = {
   page?: ResponsePage;
   sort?: ResponseSort;
+  /** @description List of seasons matching given criteria */
   seasons?: SeasonBase[];
 };
 
@@ -1463,45 +2315,70 @@ export type SeasonFullResponse = {
 };
 
 export type SeriesHeader = {
+  /** @description Series unique ID */
   uid: string;
+  /** @description Series title */
   title: string;
 };
 
 export type SeriesBase = {
+  /** @description Series unique ID */
   uid: string;
+  /** @description Series title */
   title: string;
+  /** @description Series abbreviation */
   abbreviation: string;
+  /** @description Year the series production started */
   productionStartYear?: number;
+  /** @description Year the series production ended */
   productionEndYear?: number;
+  /** @description Date the series originally ran from */
   originalRunStartDate?: string;
+  /** @description Date the series originally ran to */
   originalRunEndDate?: string;
+  /** @description Number of seasons */
   seasonsCount?: number;
+  /** @description Number of episodes */
   episodesCount?: number;
+  /** @description Number of feature length episodes */
   featureLengthEpisodesCount?: number;
   productionCompany?: CompanyHeader;
   originalBroadcaster?: CompanyHeader;
 };
 
 export type SeriesFull = {
+  /** @description Series unique ID */
   uid: string;
+  /** @description Series title */
   title: string;
+  /** @description Series abbreviation */
   abbreviation: string;
+  /** @description Year the series production started */
   productionStartYear?: number;
+  /** @description Year the series production ended */
   productionEndYear?: number;
+  /** @description Date the series originally ran from */
   originalRunStartDate?: string;
+  /** @description Date the series originally ran to */
   originalRunEndDate?: string;
+  /** @description Number of seasons */
   seasonsCount?: number;
+  /** @description Number of episodes */
   episodesCount?: number;
+  /** @description Number of feature length episodes */
   featureLengthEpisodesCount?: number;
   productionCompany?: CompanyBase;
   originalBroadcaster?: CompanyBase;
+  /** @description Episodes in the series */
   episodes?: EpisodeBase[];
+  /** @description Seasons in the series */
   seasons?: SeasonBase[];
 };
 
 export type SeriesBaseResponse = {
   page?: ResponsePage;
   sort?: ResponseSort;
+  /** @description List of series matching given criteria */
   series?: SeriesBase[];
 };
 
@@ -1510,32 +2387,48 @@ export type SeriesFullResponse = {
 };
 
 export type SoundtrackHeader = {
+  /** @description Soundtrack unique ID */
   uid: string;
+  /** @description Soundtrack title */
   title: string;
 };
 
 export type SoundtrackBase = {
+  /** @description Soundtrack unique ID */
   uid: string;
+  /** @description Soundtrack title */
   title: string;
+  /** @description Release date */
   releaseDate?: string;
+  /** @description Length, in seconds */
   length?: number;
 };
 
 export type SoundtrackFull = {
+  /** @description Soundtrack unique ID */
   uid: string;
+  /** @description Soundtrack title */
   title: string;
+  /** @description Release date */
   releaseDate?: string;
+  /** @description Length, in seconds */
   length?: number;
+  /** @description Labels this soundtrack was relesed by */
   labels?: CompanyBase[];
+  /** @description Composers */
   composers?: StaffBase[];
+  /** @description Other musicians that contributed to this soundtrack */
   contributors?: StaffBase[];
+  /** @description Orchestrators */
   orchestrators?: StaffBase[];
+  /** @description References */
   references?: Reference[];
 };
 
 export type SoundtrackBaseResponse = {
   page?: ResponsePage;
   sort?: ResponseSort;
+  /** @description List of soundtracks matching given criteria */
   soundtracks?: SoundtrackBase[];
 };
 
@@ -1544,15 +2437,22 @@ export type SoundtrackFullResponse = {
 };
 
 export type SpacecraftHeader = {
+  /** @description Spacecraft unique ID */
   uid: string;
+  /** @description Spacecraft name */
   name: string;
 };
 
 export type SpacecraftBase = {
+  /** @description Spacecraft unique ID */
   uid: string;
+  /** @description Spacecraft name */
   name: string;
+  /** @description Spacecraft registry */
   registry?: string;
+  /** @description Status of a spacecraft (in prime reality, if spacecraft was in more than one realities) */
   status?: string;
+  /** @description Date the spacecraft status was last known */
   dateStatus?: string;
   spacecraftClass?: SpacecraftClassHeader;
   owner?: OrganizationHeader;
@@ -1560,20 +2460,27 @@ export type SpacecraftBase = {
 };
 
 export type SpacecraftFull = {
+  /** @description Spacecraft unique ID */
   uid: string;
+  /** @description Spacecraft name */
   name: string;
+  /** @description Spacecraft registry */
   registry?: string;
+  /** @description Status of a spacecraft (in prime reality, if spacecraft was in more than one realities) */
   status?: string;
+  /** @description Date the spacecraft status was last known */
   dateStatus?: string;
   spacecraftClass?: SpacecraftClassBase;
   owner?: OrganizationBase;
   operator?: OrganizationBase;
+  /** @description Spacecraft types */
   spacecraftTypes?: SpacecraftType[];
 };
 
 export type SpacecraftBaseResponse = {
   page?: ResponsePage;
   sort?: ResponseSort;
+  /** @description List of spacecrafts matching given criteria */
   spacecrafts?: SpacecraftBase[];
 };
 
@@ -1582,17 +2489,26 @@ export type SpacecraftFullResponse = {
 };
 
 export type SpacecraftClassHeader = {
+  /** @description Spacecraft class unique ID */
   uid: string;
+  /** @description Spacecraft class name */
   name: string;
 };
 
 export type SpacecraftClassBase = {
+  /** @description Spacecraft class unique ID */
   uid: string;
+  /** @description Spacecraft class name */
   name: string;
+  /** @description Number of decks */
   numberOfDecks?: number;
+  /** @description Whether it's a warp-capable spacecraft class */
   warpCapable?: boolean;
+  /** @description Whether this spacecraft class is from alternate reality */
   alternateReality?: boolean;
+  /** @description Starting period when this spacecraft class was in use */
   activeFrom?: string;
+  /** @description Ending period when this spacecraft class was in use */
   activeTo?: string;
   species?: SpeciesHeader;
   owner?: OrganizationHeader;
@@ -1601,24 +2517,34 @@ export type SpacecraftClassBase = {
 };
 
 export type SpacecraftClassFull = {
+  /** @description Spacecraft class unique ID */
   uid: string;
+  /** @description Spacecraft class name */
   name: string;
+  /** @description Number of decks */
   numberOfDecks?: number;
+  /** @description Whether it's a warp-capable spacecraft class */
   warpCapable?: boolean;
+  /** @description Whether this spacecraft class is from alternate reality */
   alternateReality?: boolean;
+  /** @description Starting period when this spacecraft class was in use */
   activeFrom?: string;
+  /** @description Ending period when this spacecraft class was in use */
   activeTo?: string;
   species?: SpeciesHeader;
   owner?: OrganizationBase;
   operator?: OrganizationBase;
   affiliation?: OrganizationBase;
+  /** @description Spacecraft types */
   spacecraftTypes?: SpacecraftType[];
+  /** @description Spacecrafts */
   spacecrafts?: SpacecraftBase[];
 };
 
 export type SpacecraftClassBaseResponse = {
   page?: ResponsePage;
   sort?: ResponseSort;
+  /** @description List of spacecraft classes matching given criteria */
   spacecraftClasses?: SpacecraftClassBase[];
 };
 
@@ -1627,57 +2553,91 @@ export type SpacecraftClassFullResponse = {
 };
 
 export type SpacecraftType = {
+  /** @description Spacecraft type unique ID */
   uid?: string;
+  /** @description Spacecraft type name */
   name?: string;
 };
 
 export type SpeciesHeader = {
+  /** @description Species unique ID */
   uid: string;
+  /** @description Species name */
   name: string;
 };
 
 export type SpeciesBase = {
+  /** @description Species unique ID */
   uid: string;
+  /** @description Species name */
   name: string;
   homeworld?: AstronomicalObjectHeader;
   quadrant?: AstronomicalObjectHeader;
+  /** @description Whether it's an extinct species */
   extinctSpecies?: boolean;
+  /** @description Whether it's a warp-capable species */
   warpCapableSpecies?: boolean;
+  /** @description Whether it's an extra-galactic species */
   extraGalacticSpecies?: boolean;
+  /** @description Whether it's a humanoid species */
   humanoidSpecies?: boolean;
+  /** @description Whether it's a reptilian species */
   reptilianSpecies?: boolean;
+  /** @description Whether it's a non-corporeal species */
   nonCorporealSpecies?: boolean;
+  /** @description Whether it's a shapeshifting species */
   shapeshiftingSpecies?: boolean;
+  /** @description Whether it's a spaceborne species */
   spaceborneSpecies?: boolean;
+  /** @description Whether it's a telepathic species */
   telepathicSpecies?: boolean;
+  /** @description Whether it's a trans-dimensional species */
   transDimensionalSpecies?: boolean;
+  /** @description Whether it's a unnamed species */
   unnamedSpecies?: boolean;
+  /** @description Whether this species is from alternate reality */
   alternateReality?: boolean;
 };
 
 export type SpeciesFull = {
+  /** @description Species unique ID */
   uid: string;
+  /** @description Species name */
   name: string;
   homeworld?: AstronomicalObjectBase;
   quadrant?: AstronomicalObjectBase;
+  /** @description Whether it's an extinct species */
   extinctSpecies?: boolean;
+  /** @description Whether it's a warp-capable species */
   warpCapableSpecies?: boolean;
+  /** @description Whether it's an extra-galactic species */
   extraGalacticSpecies?: boolean;
+  /** @description Whether it's a humanoid species */
   humanoidSpecies?: boolean;
+  /** @description Whether it's a reptilian species */
   reptilianSpecies?: boolean;
+  /** @description Whether it's a non-corporeal species */
   nonCorporealSpecies?: boolean;
+  /** @description Whether it's a shapeshifting species */
   shapeshiftingSpecies?: boolean;
+  /** @description Whether it's a spaceborne species */
   spaceborneSpecies?: boolean;
+  /** @description Whether it's a telepathic species */
   telepathicSpecies?: boolean;
+  /** @description Whether it's a trans-dimensional species */
   transDimensionalSpecies?: boolean;
+  /** @description Whether it's a unnamed species */
   unnamedSpecies?: boolean;
+  /** @description Whether this species is from alternate reality */
   alternateReality?: boolean;
+  /** @description Characters belonging to the species */
   characters?: CharacterBase[];
 };
 
 export type SpeciesBaseResponse = {
   page?: ResponsePage;
   sort?: ResponseSort;
+  /** @description List of species matching given criteria */
   species?: SpeciesBase[];
 };
 
@@ -1686,156 +2646,294 @@ export type SpeciesFullResponse = {
 };
 
 export type StaffHeader = {
+  /** @description Staff unique ID */
   uid: string;
+  /** @description Staff name */
   name: string;
 };
 
 export type StaffBase = {
+  /** @description Staff unique ID */
   uid: string;
+  /** @description Staff name */
   name: string;
+  /** @description Staff birth name */
   birthName?: string;
   gender?: Gender;
+  /** @description Date the staff was born */
   dateOfBirth?: string;
+  /** @description Place the staff was born */
   placeOfBirth?: string;
+  /** @description Date the staff died */
   dateOfDeath?: string;
+  /** @description Place the staff died */
   placeOfDeath?: string;
+  /** @description Whether this person if from art department */
   artDepartment?: boolean;
+  /** @description Whether this person is an art director */
   artDirector?: boolean;
+  /** @description Whether this person is a production designer */
   productionDesigner?: boolean;
+  /** @description Whether this person is from camera and electrical department */
   cameraAndElectricalDepartment?: boolean;
+  /** @description Whether this person is a cinematographer */
   cinematographer?: boolean;
+  /** @description Whether this person is from casting department */
   castingDepartment?: boolean;
+  /** @description Whether this person is from costume department */
   costumeDepartment?: boolean;
+  /** @description Whether this person is a custume designer */
   costumeDesigner?: boolean;
+  /** @description Whether this person is a director */
   director?: boolean;
+  /** @description Whether this person is an assistant or secound unit director director */
   assistantOrSecondUnitDirector?: boolean;
+  /** @description Whether this person is an exhibit and tttraction staff */
   exhibitAndAttractionStaff?: boolean;
+  /** @description Whether this person is a film editor */
   filmEditor?: boolean;
+  /** @description Whether this person is a linguist */
   linguist?: boolean;
+  /** @description Whether this person is a location staff */
   locationStaff?: boolean;
+  /** @description Whether this person is a make-up staff */
   makeupStaff?: boolean;
+  /** @description Whether this person is from music department */
   musicDepartment?: boolean;
+  /** @description Whether this person is a composer */
   composer?: boolean;
+  /** @description Whether this person is a personal assistant */
   personalAssistant?: boolean;
+  /** @description Whether this person is a producer */
   producer?: boolean;
+  /** @description Whether this person is a production associate */
   productionAssociate?: boolean;
+  /** @description Whether this person is a production staff */
   productionStaff?: boolean;
+  /** @description Whether this person is a publication staff */
   publicationStaff?: boolean;
+  /** @description Whether this person is a science consultant */
   scienceConsultant?: boolean;
+  /** @description Whether this person is from sound department */
   soundDepartment?: boolean;
+  /** @description Whether this person is a special and visual effects staff */
   specialAndVisualEffectsStaff?: boolean;
+  /** @description Whether this person is an author */
   author?: boolean;
+  /** @description Whether this person is an audio author */
   audioAuthor?: boolean;
+  /** @description Whether this person is a calendar artist */
   calendarArtist?: boolean;
+  /** @description Whether this person is a comic artist */
   comicArtist?: boolean;
+  /** @description Whether this person is a comic author */
   comicAuthor?: boolean;
+  /** @description Whether this person is a comic color artist */
   comicColorArtist?: boolean;
+  /** @description Whether this person is a comic interior artist */
   comicInteriorArtist?: boolean;
+  /** @description Whether this person is a comic ink artist */
   comicInkArtist?: boolean;
+  /** @description Whether this person is a comic pencil artist */
   comicPencilArtist?: boolean;
+  /** @description Whether this person is a comic letter artist */
   comicLetterArtist?: boolean;
+  /** @description Whether this person is a comic strip artist */
   comicStripArtist?: boolean;
+  /** @description Whether this person is a game artist */
   gameArtist?: boolean;
+  /** @description Whether this person is a game author */
   gameAuthor?: boolean;
+  /** @description Whether this person is a novel artist */
   novelArtist?: boolean;
+  /** @description Whether this person is a novel author */
   novelAuthor?: boolean;
+  /** @description Whether this person is a reference artist */
   referenceArtist?: boolean;
+  /** @description Whether this person is a reference author */
   referenceAuthor?: boolean;
+  /** @description Whether this person is a publication artist */
   publicationArtist?: boolean;
+  /** @description Whether this person is a publication designer */
   publicationDesigner?: boolean;
+  /** @description Whether this person is a publication editor */
   publicationEditor?: boolean;
+  /** @description Whether this person is a publication artist */
   publicityArtist?: boolean;
+  /** @description Whether this person is a part of CBS digital staff */
   cbsDigitalStaff?: boolean;
+  /** @description Whether this person is a part of ILM production staff */
   ilmProductionStaff?: boolean;
+  /** @description Whether this person is a special features artist */
   specialFeaturesStaff?: boolean;
+  /** @description Whether this person is a story editor */
   storyEditor?: boolean;
+  /** @description Whether this person is a studio executive */
   studioExecutive?: boolean;
+  /** @description Whether this person is from stunt department */
   stuntDepartment?: boolean;
+  /** @description Whether this person is from transportation department */
   transportationDepartment?: boolean;
+  /** @description Whether this person is video game production staff */
   videoGameProductionStaff?: boolean;
+  /** @description Whether this person is a writer */
   writer?: boolean;
 };
 
 export type StaffFull = {
+  /** @description Staff unique ID */
   uid: string;
+  /** @description Staff name */
   name: string;
+  /** @description Staff birth name */
   birthName?: string;
   gender?: Gender;
+  /** @description Date the staff was born */
   dateOfBirth?: string;
+  /** @description Place the staff was born */
   placeOfBirth?: string;
+  /** @description Date the staff died */
   dateOfDeath?: string;
+  /** @description Place the staff died */
   placeOfDeath?: string;
+  /** @description Whether this person is from art department */
   artDepartment?: boolean;
+  /** @description Whether this person is an art director */
   artDirector?: boolean;
+  /** @description Whether this person is a production designer */
   productionDesigner?: boolean;
+  /** @description Whether this person is from camera and electrical department */
   cameraAndElectricalDepartment?: boolean;
+  /** @description Whether this person is a cinematographer */
   cinematographer?: boolean;
+  /** @description Whether this person is from casting department */
   castingDepartment?: boolean;
+  /** @description Whether this person is from costume department */
   costumeDepartment?: boolean;
+  /** @description Whether this person is a custume designer */
   costumeDesigner?: boolean;
+  /** @description Whether this person is a director */
   director?: boolean;
+  /** @description Whether this person is an assistant or secound unit director director */
   assistantOrSecondUnitDirector?: boolean;
+  /** @description Whether this person is an exhibit and attraction staff */
   exhibitAndAttractionStaff?: boolean;
+  /** @description Whether this person is a film editor */
   filmEditor?: boolean;
+  /** @description Whether this person is a linguist */
   linguist?: boolean;
+  /** @description Whether this person is a location staff */
   locationStaff?: boolean;
+  /** @description Whether this person is a make-up staff */
   makeupStaff?: boolean;
+  /** @description Whether this person is from music department */
   musicDepartment?: boolean;
+  /** @description Whether this person is a composer */
   composer?: boolean;
+  /** @description Whether this person is a personal assistant */
   personalAssistant?: boolean;
+  /** @description Whether this person is a producer */
   producer?: boolean;
+  /** @description Whether this person is a production associate */
   productionAssociate?: boolean;
+  /** @description Whether this person is a production staff */
   productionStaff?: boolean;
+  /** @description Whether this person is a publication staff */
   publicationStaff?: boolean;
+  /** @description Whether this person is a science consultant */
   scienceConsultant?: boolean;
+  /** @description Whether this person is from sound department */
   soundDepartment?: boolean;
+  /** @description Whether this person is a special and visual effects staff */
   specialAndVisualEffectsStaff?: boolean;
+  /** @description Whether this person is an author */
   author?: boolean;
+  /** @description Whether this person is an audio author */
   audioAuthor?: boolean;
+  /** @description Whether this person is a calendar artist */
   calendarArtist?: boolean;
+  /** @description Whether this person is a comic artist */
   comicArtist?: boolean;
+  /** @description Whether this person is a comic author */
   comicAuthor?: boolean;
+  /** @description Whether this person is a comic color artist */
   comicColorArtist?: boolean;
+  /** @description Whether this person is a comic interior artist */
   comicInteriorArtist?: boolean;
+  /** @description Whether this person is a comic ink artist */
   comicInkArtist?: boolean;
+  /** @description Whether this person is a comic pencil artist */
   comicPencilArtist?: boolean;
+  /** @description Whether this person is a comic letter artist */
   comicLetterArtist?: boolean;
+  /** @description Whether this person is a comic strip artist */
   comicStripArtist?: boolean;
+  /** @description Whether this person is a game artist */
   gameArtist?: boolean;
+  /** @description Whether this person is a game author */
   gameAuthor?: boolean;
+  /** @description Whether this person is a novel artist */
   novelArtist?: boolean;
+  /** @description Whether this person is a novel author */
   novelAuthor?: boolean;
+  /** @description Whether this person is a reference artist */
   referenceArtist?: boolean;
+  /** @description Whether this person is a reference author */
   referenceAuthor?: boolean;
+  /** @description Whether this person is a publication artist */
   publicationArtist?: boolean;
+  /** @description Whether this person is a publication designer */
   publicationDesigner?: boolean;
+  /** @description Whether this person is a publication editor */
   publicationEditor?: boolean;
+  /** @description Whether this person is a publicity artist */
   publicityArtist?: boolean;
+  /** @description Whether this person is a part of CBS digital staff */
   cbsDigitalStaff?: boolean;
+  /** @description Whether this person is a part of ILM production staff */
   ilmProductionStaff?: boolean;
+  /** @description Whether this person is a special features artist */
   specialFeaturesStaff?: boolean;
+  /** @description Whether this person is a story editor */
   storyEditor?: boolean;
+  /** @description Whether this person is a studio executive */
   studioExecutive?: boolean;
+  /** @description Whether this person is from stunt department */
   stuntDepartment?: boolean;
+  /** @description Whether this person is from transportation department */
   transportationDepartment?: boolean;
+  /** @description Whether this person is video game production staff */
   videoGameProductionStaff?: boolean;
+  /** @description Whether this person is a writer */
   writer?: boolean;
+  /** @description Episodes written by this person */
   writtenEpisodes?: EpisodeBase[];
+  /** @description Episodes to which this person has written teleplay */
   teleplayAuthoredEpisodes?: EpisodeBase[];
+  /** @description Episodes to which this person has written story */
   storyAuthoredEpisodes?: EpisodeBase[];
+  /** @description Episodes directed by this person */
   directedEpisodes?: EpisodeBase[];
+  /** @description Episodes on which this person worked */
   episodes?: EpisodeBase[];
+  /** @description Movies written by this person */
   writtenMovies?: MovieBase[];
+  /** @description Movies to which this person has written screenplay */
   screenplayAuthoredMovies?: MovieBase[];
+  /** @description Movies to which this person has written story */
   storyAuthoredMovies?: MovieBase[];
+  /** @description Movies directed by this person */
   directedMovies?: MovieBase[];
+  /** @description Movies produced by this person */
   producedMovies?: MovieBase[];
+  /** @description Movies on which this person worked */
   movies?: MovieBase[];
 };
 
 export type StaffBaseResponse = {
   page?: ResponsePage;
   sort?: ResponseSort;
+  /** @description List of staff matching given criteria */
   staff?: StaffBase[];
 };
 
@@ -1844,63 +2942,110 @@ export type StaffFullResponse = {
 };
 
 export type TechnologyHeader = {
+  /** @description Technology unique ID */
   uid: string;
+  /** @description Technology name */
   name: string;
 };
 
 export type TechnologyBase = {
+  /** @description Technology unique ID */
   uid: string;
+  /** @description Technology name */
   name: string;
+  /** @description Whether it's a Borg technology */
   borgTechnology?: boolean;
+  /** @description Whether it's a Borg component */
   borgComponent?: boolean;
+  /** @description Whether it's a communications technology */
   communicationsTechnology?: boolean;
+  /** @description Whether it's a computer technology */
   computerTechnology?: boolean;
+  /** @description Whether it's a technology related to computer programming */
   computerProgramming?: boolean;
+  /** @description Whether it's a subroutine */
   subroutine?: boolean;
+  /** @description Whether it's a database */
   database?: boolean;
+  /** @description Whether it's a energy technology */
   energyTechnology?: boolean;
+  /** @description Whether it's a fictional technology */
   fictionalTechnology?: boolean;
+  /** @description Whether it's a holographic technology */
   holographicTechnology?: boolean;
+  /** @description Whether it's a identification technology */
   identificationTechnology?: boolean;
+  /** @description Whether it's a life support technology */
   lifeSupportTechnology?: boolean;
+  /** @description Whether it's a sensor technology */
   sensorTechnology?: boolean;
+  /** @description Whether it's a shield technology */
   shieldTechnology?: boolean;
+  /** @description Whether it's a tool */
   tool?: boolean;
+  /** @description Whether it's a culinary tool */
   culinaryTool?: boolean;
+  /** @description Whether it's a engineering tool */
   engineeringTool?: boolean;
+  /** @description Whether it's a household tool */
   householdTool?: boolean;
+  /** @description Whether it's a medical equipment */
   medicalEquipment?: boolean;
+  /** @description Whether it's a transporter technology */
   transporterTechnology?: boolean;
 };
 
 export type TechnologyFull = {
+  /** @description Technology unique ID */
   uid: string;
+  /** @description Technology name */
   name: string;
+  /** @description Whether it's a Borg technology */
   borgTechnology?: boolean;
+  /** @description Whether it's a Borg component */
   borgComponent?: boolean;
+  /** @description Whether it's a communications technology */
   communicationsTechnology?: boolean;
+  /** @description Whether it's a computer technology */
   computerTechnology?: boolean;
+  /** @description Whether it's a technology related to computer programming */
   computerProgramming?: boolean;
+  /** @description Whether it's a subroutine */
   subroutine?: boolean;
+  /** @description Whether it's a database */
   database?: boolean;
+  /** @description Whether it's a energy technology */
   energyTechnology?: boolean;
+  /** @description Whether it's a fictional technology */
   fictionalTechnology?: boolean;
+  /** @description Whether it's a holographic technology */
   holographicTechnology?: boolean;
+  /** @description Whether it's a identification technology */
   identificationTechnology?: boolean;
+  /** @description Whether it's a life support technology */
   lifeSupportTechnology?: boolean;
+  /** @description Whether it's a sensor technology */
   sensorTechnology?: boolean;
+  /** @description Whether it's a shield technology */
   shieldTechnology?: boolean;
+  /** @description Whether it's a tool */
   tool?: boolean;
+  /** @description Whether it's a culinary tool */
   culinaryTool?: boolean;
+  /** @description Whether it's a engineering tool */
   engineeringTool?: boolean;
+  /** @description Whether it's a household tool */
   householdTool?: boolean;
+  /** @description Whether it's a medical equipment */
   medicalEquipment?: boolean;
+  /** @description Whether it's a transporter technology */
   transporterTechnology?: boolean;
 };
 
 export type TechnologyBaseResponse = {
   page?: ResponsePage;
   sort?: ResponseSort;
+  /** @description List of technology matching given criteria */
   technology?: TechnologyBase[];
 };
 
@@ -1909,34 +3054,52 @@ export type TechnologyFullResponse = {
 };
 
 export type TitleHeader = {
+  /** @description Title unique ID */
   uid: string;
+  /** @description Title name */
   name: string;
 };
 
 export type TitleBase = {
+  /** @description Title unique ID */
   uid: string;
+  /** @description Title name */
   name: string;
+  /** @description Whether it's a military rank */
   militaryRank?: boolean;
+  /** @description Whether it's a fleet rank */
   fleetRank?: boolean;
+  /** @description Whether it's a religious title */
   religiousTitle?: boolean;
+  /** @description Whether it's a position */
   position?: boolean;
+  /** @description Whether this title is from mirror universe */
   mirror?: boolean;
 };
 
 export type TitleFull = {
+  /** @description Title unique ID */
   uid: string;
+  /** @description Title name */
   name: string;
+  /** @description Whether it's a military rank */
   militaryRank?: boolean;
+  /** @description Whether it's a fleet rank */
   fleetRank?: boolean;
+  /** @description Whether it's a religious title */
   religiousTitle?: boolean;
+  /** @description Whether it's a position */
   position?: boolean;
+  /** @description Whether this title is from mirror universe */
   mirror?: boolean;
+  /** @description Characters that holds this title */
   characters?: CharacterBase[];
 };
 
 export type TitleBaseResponse = {
   page?: ResponsePage;
   sort?: ResponseSort;
+  /** @description List of titles matching given criteria */
   titles?: TitleBase[];
 };
 
@@ -1945,33 +3108,46 @@ export type TitleFullResponse = {
 };
 
 export type TradingCardHeader = {
+  /** @description Trading card unique ID */
   uid: string;
+  /** @description Trading card name */
   name: string;
 };
 
 export type TradingCardBase = {
+  /** @description Trading card unique ID */
   uid: string;
+  /** @description Trading card name */
   name: string;
+  /** @description Trading card number */
   numberObject?: string;
+  /** @description Release year, if set was releases over multiple years */
   releaseYear?: number;
+  /** @description Production run, if different from trading card set production run */
   productionRun?: number;
   tradingCardSet?: TradingCardSetHeader;
   tradingCardDeck?: TradingCardDeckHeader;
 };
 
 export type TradingCardFull = {
+  /** @description Trading card unique ID */
   uid: string;
+  /** @description Trading card name */
   name: string;
   tradingCardSet?: TradingCardSetBase;
   tradingCardDeck?: TradingCardDeckBase;
+  /** @description Trading card number */
   numberObject?: string;
+  /** @description Release year, if set was releases over multiple years */
   releaseYear?: number;
+  /** @description Production run, if different from trading card set production run */
   productionRun?: number;
 };
 
 export type TradingCardBaseResponse = {
   page?: ResponsePage;
   sort?: ResponseSort;
+  /** @description List of trading cards matching given criteria */
   tradingCards?: TradingCardBase[];
 };
 
@@ -1980,28 +3156,38 @@ export type TradingCardFullResponse = {
 };
 
 export type TradingCardDeckHeader = {
+  /** @description Trading card deck unique ID */
   uid: string;
+  /** @description Trading card deck name */
   name: string;
 };
 
 export type TradingCardDeckBase = {
+  /** @description Trading card deck unique ID */
   uid: string;
+  /** @description Trading card deck name */
   name: string;
+  /** @description Frequency with which this deck occur in it's set */
   frequency?: string;
   tradingCardSet?: TradingCardSetHeader;
 };
 
 export type TradingCardDeckFull = {
+  /** @description Trading card deck unique ID */
   uid: string;
+  /** @description Trading card deck name */
   name: string;
+  /** @description Frequency with which this deck occur in it's set */
   frequency?: string;
   tradingCardSet?: TradingCardSetHeader;
+  /** @description Trading cards in this deck */
   tradingCards?: TradingCardBase[];
 };
 
 export type TradingCardDeckBaseResponse = {
   page?: ResponsePage;
   sort?: ResponseSort;
+  /** @description List of trading card decks matching given criteria */
   tradingCardDecks?: TradingCardDeckBase[];
 };
 
@@ -2010,47 +3196,76 @@ export type TradingCardDeckFullResponse = {
 };
 
 export type TradingCardSetHeader = {
+  /** @description Trading card set unique ID */
   uid: string;
+  /** @description Trading card set name */
   name: string;
 };
 
 export type TradingCardSetBase = {
+  /** @description Trading card set unique ID */
   uid: string;
+  /** @description Trading card set name */
   name: string;
+  /** @description Release year */
   releaseYear?: number;
+  /** @description Release month */
   releaseMonth?: number;
+  /** @description Release day */
   releaseDay?: number;
+  /** @description Cards per deck */
   cardsPerPack?: number;
+  /** @description Packs per box */
   packsPerBox?: number;
+  /** @description Boxes per case */
   boxesPerCase?: number;
+  /** @description Production run */
   productionRun?: number;
   productionRunUnit?: ProductionRunUnit;
+  /** @description Card width, in inches */
   cardWidth?: number;
+  /** @description Card height, in inches */
   cardHeight?: number;
 };
 
 export type TradingCardSetFull = {
+  /** @description Trading card set unique ID */
   uid: string;
+  /** @description Trading card set name */
   name: string;
+  /** @description Release year */
   releaseYear?: number;
+  /** @description Release month */
   releaseMonth?: number;
+  /** @description Release day */
   releaseDay?: number;
+  /** @description Cards per deck */
   cardsPerPack?: number;
+  /** @description Packs per box */
   packsPerBox?: number;
+  /** @description Boxes per case */
   boxesPerCase?: number;
+  /** @description Production run */
   productionRun?: number;
   productionRunUnit?: ProductionRunUnit;
+  /** @description Card width, in inches */
   cardWidth?: number;
+  /** @description Card height, in inches */
   cardHeight?: number;
+  /** @description Manufacturers */
   manufacturers?: CompanyBase[];
+  /** @description Trading card decks in this set */
   tradingCardDecks?: TradingCardDeckBase[];
+  /** @description Trading cards in this set */
   tradingCards?: TradingCardBase[];
+  /** @description Countries of origin */
   countriesOfOrigin?: Country[];
 };
 
 export type TradingCardSetBaseResponse = {
   page?: ResponsePage;
   sort?: ResponseSort;
+  /** @description List of trading card sets matching given criteria */
   tradingCardSets?: TradingCardSetBase[];
 };
 
@@ -2059,41 +3274,66 @@ export type TradingCardSetFullResponse = {
 };
 
 export type VideoGameHeader = {
+  /** @description Video game unique ID */
   uid: string;
+  /** @description Video game title */
   title: string;
 };
 
 export type VideoGameBase = {
+  /** @description Video game unique ID */
   uid: string;
+  /** @description Video game title */
   title: string;
+  /** @description Release date */
   releaseDate?: string;
+  /** @description Starting stardate of video game story */
   stardateFrom?: number;
+  /** @description Ending stardate of video game story */
   stardateTo?: number;
+  /** @description Starting year of video game story */
   yearFrom?: number;
+  /** @description Ending year of video game story */
   yearTo?: number;
+  /** @description System requirements */
   systemRequirements?: string;
 };
 
 export type VideoGameFull = {
+  /** @description Video game unique ID */
   uid: string;
+  /** @description Video game title */
   title: string;
+  /** @description Release date */
   releaseDate?: string;
+  /** @description Starting stardate of video game story */
   stardateFrom?: number;
+  /** @description Ending stardate of video game story */
   stardateTo?: number;
+  /** @description Starting year of video game story */
   yearFrom?: number;
+  /** @description Ending year of video game story */
   yearTo?: number;
+  /** @description System requirements */
   systemRequirements?: string;
+  /** @description Publishers */
   publishers?: CompanyBase[];
+  /** @description Developers */
   developers?: CompanyBase[];
+  /** @description Platforms */
   platforms?: Platform[];
+  /** @description Genres */
   genres?: Genre[];
+  /** @description Ratings */
   ratings?: ContentRating[];
+  /** @description References */
   references?: Reference[];
 };
 
 export type VideoGameBaseResponse = {
   page?: ResponsePage;
   sort?: ResponseSort;
+  /** @description List of video games matching given criteria */
   videoGames?: VideoGameBase[];
 };
 
@@ -2102,38 +3342,65 @@ export type VideoGameFullResponse = {
 };
 
 export type VideoReleaseHeader = {
+  /** @description Video release unique ID */
   uid: string;
+  /** @description Video release title */
   title: string;
 };
 
 export type VideoReleaseBase = {
+  /** @description Video release unique ID */
   uid: string;
+  /** @description Video release title */
   title: string;
   series?: SeriesHeader;
   season?: SeasonHeader;
   format?: VideoReleaseFormat;
+  /** @description Number of episodes */
   numberOfEpisodes?: number;
+  /** @description Number of feature-length episodes */
   numberOfFeatureLengthEpisodes?: number;
+  /** @description Number of data carriers (like DVD, VCD, VHS etc.) */
   numberOfDataCarriers?: number;
+  /** @description Run time, in minutes */
   runTime?: number;
+  /** @description Starting year of video release story */
   yearFrom?: number;
+  /** @description Ending year of video release story */
   yearTo?: number;
+  /** @description Region free release date */
   regionFreeReleaseDate?: string;
+  /** @description Region 1/A release date */
   region1AReleaseDate?: string;
+  /** @description Region 1 slimline release date */
   region1SlimlineReleaseDate?: string;
+  /** @description Region 2/B release date */
   region2BReleaseDate?: string;
+  /** @description Region 2 slimline release date */
   region2SlimlineReleaseDate?: string;
+  /** @description Region 4 release date */
   region4AReleaseDate?: string;
+  /** @description Region 4 slimline release date */
   region4SlimlineReleaseDate?: string;
+  /** @description Whether this video has been release on Amazon.com */
   amazonDigitalRelease?: boolean;
+  /** @description Whether this video has been release on Dailymotion */
   dailymotionDigitalRelease?: boolean;
+  /** @description Whether this video has been release on Google Play */
   googlePlayDigitalRelease?: boolean;
+  /** @description Whether this video has been release on iTunes */
   iTunesDigitalRelease?: boolean;
+  /** @description Whether this video has been release on UltraViolet */
   ultraVioletDigitalRelease?: boolean;
+  /** @description Whether this video has been release on Vimeo */
   vimeoDigitalRelease?: boolean;
+  /** @description Whether this video has been release on VUDU */
   vuduDigitalRelease?: boolean;
+  /** @description Whether this video has been release on Xbox SmartGlass */
   xboxSmartGlassDigitalRelease?: boolean;
+  /** @description Whether this video has been release on YouTube */
   youTubeDigitalRelease?: boolean;
+  /** @description Whether this video has been release on Netflix */
   netflixDigitalRelease?: boolean;
 };
 
@@ -2154,44 +3421,75 @@ export type VideoReleaseFormat =
   | "DIGITAL_FORMAT";
 
 export type VideoReleaseFull = {
+  /** @description Video release unique ID */
   uid: string;
+  /** @description Video release title */
   title: string;
   series?: SeriesBase;
   season?: SeasonBase;
   format?: VideoReleaseFormat;
+  /** @description Number of episodes */
   numberOfEpisodes?: number;
+  /** @description Number of feature-length episodes */
   numberOfFeatureLengthEpisodes?: number;
+  /** @description Number of data carriers (like DVD, VCD, VHS etc.) */
   numberOfDataCarriers?: number;
+  /** @description Run time, in minutes */
   runTime?: number;
+  /** @description Starting year of video release story */
   yearFrom?: number;
+  /** @description Ending year of video release story */
   yearTo?: number;
+  /** @description Region free release date */
   regionFreeReleaseDate?: string;
+  /** @description Region 1/A release date */
   region1AReleaseDate?: string;
+  /** @description Region 1 slimline release date */
   region1SlimlineReleaseDate?: string;
+  /** @description Region 2/B release date */
   region2BReleaseDate?: string;
+  /** @description Region 2 slimline release date */
   region2SlimlineReleaseDate?: string;
+  /** @description Region 4 release date */
   region4AReleaseDate?: string;
+  /** @description Region 4 slimline release date */
   region4SlimlineReleaseDate?: string;
+  /** @description Whether this video has been release on Amazon.com */
   amazonDigitalRelease?: boolean;
+  /** @description Whether this video has been release on Dailymotion */
   dailymotionDigitalRelease?: boolean;
+  /** @description Whether this video has been release on Google Play */
   googlePlayDigitalRelease?: boolean;
+  /** @description Whether this video has been release on iTunes */
   iTunesDigitalRelease?: boolean;
+  /** @description Whether this video has been release on UltraViolet */
   ultraVioletDigitalRelease?: boolean;
+  /** @description Whether this video has been release on Vimeo */
   vimeoDigitalRelease?: boolean;
+  /** @description Whether this video has been release on VUDU */
   vuduDigitalRelease?: boolean;
+  /** @description Whether this video has been release on Xbox SmartGlass */
   xboxSmartGlassDigitalRelease?: boolean;
+  /** @description Whether this video has been release on YouTube */
   youTubeDigitalRelease?: boolean;
+  /** @description Whether this video has been release on Netflix */
   netflixDigitalRelease?: boolean;
+  /** @description References */
   references?: Reference[];
+  /** @description Ratings */
   ratings?: ContentRating[];
+  /** @description Languages of audio track */
   languages?: ContentLanguage[];
+  /** @description Languages of subtitles */
   languagesSubtitles?: ContentLanguage[];
+  /** @description Languages that are available with dubbing */
   languagesDubbed?: ContentLanguage[];
 };
 
 export type VideoReleaseBaseResponse = {
   page?: ResponsePage;
   sort?: ResponseSort;
+  /** @description List of video releases matching given criteria */
   videoReleases?: VideoReleaseBase[];
 };
 
@@ -2200,37 +3498,58 @@ export type VideoReleaseFullResponse = {
 };
 
 export type WeaponHeader = {
+  /** @description Weapon unique ID */
   uid: string;
+  /** @description Weapon name */
   name: string;
 };
 
 export type WeaponBase = {
+  /** @description Weapon unique ID */
   uid: string;
+  /** @description Weapon name */
   name: string;
+  /** @description Whether it's hand-help weapon */
   handHeldWeapon?: boolean;
+  /** @description Whether it's a laser technology */
   laserTechnology?: boolean;
+  /** @description Whether it's a plasma technology */
   plasmaTechnology?: boolean;
+  /** @description Whether it's a photonic technology */
   photonicTechnology?: boolean;
+  /** @description Whether it's a phaser technology */
   phaserTechnology?: boolean;
+  /** @description Whether this weapon is from mirror universe */
   mirror?: boolean;
+  /** @description Whether this weapon is from alternate reality */
   alternateReality?: boolean;
 };
 
 export type WeaponFull = {
+  /** @description Weapon unique ID */
   uid: string;
+  /** @description Weapon name */
   name: string;
+  /** @description Whether it's a hand-help weapon */
   handHeldWeapon?: boolean;
+  /** @description Whether it's a laser technology */
   laserTechnology?: boolean;
+  /** @description Whether it's a plasma technology */
   plasmaTechnology?: boolean;
+  /** @description Whether it's a photonic technology */
   photonicTechnology?: boolean;
+  /** @description Whether it's a phaser technology */
   phaserTechnology?: boolean;
+  /** @description Whether this weapon is from mirror universe */
   mirror?: boolean;
+  /** @description Whether this weapon is from alternate reality */
   alternateReality?: boolean;
 };
 
 export type WeaponBaseResponse = {
   page?: ResponsePage;
   sort?: ResponseSort;
+  /** @description List of weapons matching given criteria */
   weapons?: WeaponBase[];
 };
 
