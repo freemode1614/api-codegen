@@ -1,383 +1,230 @@
 /**
  * 1.0.0
- * Support for parameter serialization
- * https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.3.md#style-values
+ * Swagger Petstore
+ * This is a sample server Petstore server.  You can find out more about Swagger at [http://swagger.io](http://swagger.io) or on [irc.freenode.net, #swagger](http://swagger.io/irc/).  For this sample, you can use the api key `special-key` to test the authorization filters.
  */
-
-cookiesStandardUsingGET.displayName = "cookiesStandardUsingGET";
-export async function cookiesStandardUsingGET() {
-  return fetch(`/cookies`);
+export enum OrderStatus {
+  placed = "placed",
+  approved = "approved",
+  delivered = "delivered",
 }
 
-cookiesFormNonExplodedUsingGET.displayName = "cookiesFormNonExplodedUsingGET";
-export async function cookiesFormNonExplodedUsingGET() {
-  return fetch(`/cookies#formNonExploded`);
+export enum PetStatus {
+  available = "available",
+  pending = "pending",
+  sold = "sold",
 }
 
-cookiesFormExplodedUsingGET.displayName = "cookiesFormExplodedUsingGET";
-export async function cookiesFormExplodedUsingGET() {
-  return fetch(`/cookies#formExploded`);
+export type Order = {
+  id?: number;
+  petId?: number;
+  quantity?: number;
+  shipDate?: string;
+  status?: OrderStatus;
+  complete?: boolean;
+};
+
+export type Category = { id?: number; name?: string };
+
+export type User = {
+  id?: number;
+  username?: string;
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+  password?: string;
+  phone?: string;
+  /** @description User Status */
+  userStatus?: number;
+};
+
+export type Tag = { id?: number; name?: string };
+
+export type Pet = {
+  id?: number;
+  category?: Category;
+  name: string;
+  photoUrls: string[];
+  tags?: Tag[];
+  status?: PetStatus;
+};
+
+export type ApiResponse = {
+  code?: number;
+  typeObject?: string;
+  message?: string;
+};
+
+export type UserArray = User[];
+
+updatePetUsingPUT.displayName = "updatePetUsingPUT";
+export async function updatePetUsingPUT(pet: Pet) {
+  return fetch(`/pet`, { method: "PUT", body: JSON.stringify(pet) });
 }
 
-headersStandardUsingGET.displayName = "headersStandardUsingGET";
-export async function headersStandardUsingGET({
-  primitive,
-  array,
-  object,
+addPetUsingPOST.displayName = "addPetUsingPOST";
+export async function addPetUsingPOST(pet: Pet) {
+  return fetch(`/pet`, { method: "POST", body: JSON.stringify(pet) });
+}
+
+findPetsByStatusUsingGET.displayName = "findPetsByStatusUsingGET";
+export async function findPetsByStatusUsingGET({
+  status,
 }: {
-  primitive: string;
-  array: string[];
-  object: { name?: string; description?: string };
-}) {
-  return fetch(`/anything/headers`, {
-    method: "GET",
-    headers: {
-      primitive: encodeURIComponent(JSON.stringify(primitive)),
-      array: encodeURIComponent(JSON.stringify(array)),
-      object: encodeURIComponent(JSON.stringify(object)),
-    },
-  });
-}
-
-headersSimpleNonExplodedUsingGET.displayName =
-  "headersSimpleNonExplodedUsingGET";
-export async function headersSimpleNonExplodedUsingGET({
-  primitive,
-  array,
-  object,
-}: {
-  primitive: string;
-  array: string[];
-  object: { name?: string; description?: string };
-}) {
-  return fetch(`/anything/headers/simple`, {
-    method: "GET",
-    headers: {
-      primitive: encodeURIComponent(JSON.stringify(primitive)),
-      array: encodeURIComponent(JSON.stringify(array)),
-      object: encodeURIComponent(JSON.stringify(object)),
-    },
-  });
-}
-
-headersSimpleExplodedUsingPOST.displayName = "headersSimpleExplodedUsingPOST";
-export async function headersSimpleExplodedUsingPOST({
-  primitive,
-  array,
-  object,
-}: {
-  primitive: string;
-  array: string[];
-  object: { name?: string; description?: string };
-}) {
-  return fetch(`/anything/headers/simple`, {
-    method: "POST",
-    headers: {
-      primitive: encodeURIComponent(JSON.stringify(primitive)),
-      array: encodeURIComponent(JSON.stringify(array)),
-      object: encodeURIComponent(JSON.stringify(object)),
-    },
-  });
-}
-
-pathsStandardUsingGET.displayName = "pathsStandardUsingGET";
-export async function pathsStandardUsingGET({
-  primitive,
-  array,
-  object,
-}: {
-  primitive: string;
-  array: string[];
-  object: { name?: string; description?: string };
-}) {
-  return fetch(`/anything/path/${primitive}/${array}/${object}`, {
-    method: "GET",
-  });
-}
-
-pathsMatrixNonExplodedUsingGET.displayName = "pathsMatrixNonExplodedUsingGET";
-export async function pathsMatrixNonExplodedUsingGET({
-  primitive,
-  array,
-  object,
-}: {
-  primitive: string;
-  array: string[];
-  object: { name?: string; description?: string };
-}) {
-  return fetch(`/anything/path/matrix/${primitive}/${array}/${object}`, {
-    method: "GET",
-  });
-}
-
-pathsMatrixExplodedUsingPOST.displayName = "pathsMatrixExplodedUsingPOST";
-export async function pathsMatrixExplodedUsingPOST({
-  primitive,
-  array,
-  object,
-}: {
-  primitive: string;
-  array: string[];
-  object: { name?: string; description?: string };
-}) {
-  return fetch(`/anything/path/matrix/${primitive}/${array}/${object}`, {
-    method: "POST",
-  });
-}
-
-pathsLabelNonExplodedUsingGET.displayName = "pathsLabelNonExplodedUsingGET";
-export async function pathsLabelNonExplodedUsingGET({
-  primitive,
-  array,
-  object,
-}: {
-  primitive: string;
-  array: string[];
-  object: { name?: string; description?: string };
-}) {
-  return fetch(`/anything/path/label/${primitive}/${array}/${object}`, {
-    method: "GET",
-  });
-}
-
-pathsLabelExplodedUsingPOST.displayName = "pathsLabelExplodedUsingPOST";
-export async function pathsLabelExplodedUsingPOST({
-  primitive,
-  array,
-  object,
-}: {
-  primitive: string;
-  array: string[];
-  object: { name?: string; description?: string };
-}) {
-  return fetch(`/anything/path/label/${primitive}/${array}/${object}`, {
-    method: "POST",
-  });
-}
-
-pathsSimpleNonExplodedUsingGET.displayName = "pathsSimpleNonExplodedUsingGET";
-export async function pathsSimpleNonExplodedUsingGET({
-  primitive,
-  array,
-  object,
-}: {
-  primitive: string;
-  array: string[];
-  object: { name?: string; description?: string };
-}) {
-  return fetch(`/anything/path/simple/${primitive}/${array}/${object}`, {
-    method: "GET",
-  });
-}
-
-pathsSimpleExplodedUsingPOST.displayName = "pathsSimpleExplodedUsingPOST";
-export async function pathsSimpleExplodedUsingPOST({
-  primitive,
-  array,
-  object,
-}: {
-  primitive: string;
-  array: string[];
-  object: { name?: string; description?: string };
-}) {
-  return fetch(`/anything/path/simple/${primitive}/${array}/${object}`, {
-    method: "POST",
-  });
-}
-
-queryStandardUsingGET.displayName = "queryStandardUsingGET";
-export async function queryStandardUsingGET({
-  primitive,
-  array,
-  object,
-}: {
-  primitive?: string;
-  array?: string[];
-  object?: { name?: string; description?: string };
+  status: ("available" | "pending" | "sold")[];
 }) {
   return fetch(
-    `/anything/query?primitive=${encodeURIComponent(String(primitive))}&array=${encodeURIComponent(String(array))}&object=${encodeURIComponent(String(object))}`,
+    `/pet/findByStatus?status=${encodeURIComponent(String(status))}`,
     { method: "GET" },
-  );
+  ).then(async (resp) => (await resp.json()) as Pet[]);
 }
 
-queryFormNonExplodedUsingGET.displayName = "queryFormNonExplodedUsingGET";
-export async function queryFormNonExplodedUsingGET({
-  primitive,
-  array,
-  object,
-}: {
-  primitive?: string;
-  array?: string[];
-  object?: { name?: string; description?: string };
-}) {
-  return fetch(
-    `/anything/query/form?primitive=${encodeURIComponent(String(primitive))}&array=${encodeURIComponent(String(array))}&object=${encodeURIComponent(String(object))}`,
-    { method: "GET" },
-  );
-}
-
-queryFormExplodedUsingPOST.displayName = "queryFormExplodedUsingPOST";
-export async function queryFormExplodedUsingPOST({
-  primitive,
-  array,
-  object,
-}: {
-  primitive?: string;
-  array?: string[];
-  object?: { name?: string; description?: string };
-}) {
-  return fetch(
-    `/anything/query/form?primitive=${encodeURIComponent(String(primitive))}&array=${encodeURIComponent(String(array))}&object=${encodeURIComponent(String(object))}`,
-    { method: "POST" },
-  );
-}
-
-querySpaceDelimitedNonExplodedUsingGET.displayName =
-  "querySpaceDelimitedNonExplodedUsingGET";
-export async function querySpaceDelimitedNonExplodedUsingGET({
-  array,
-  object,
-}: {
-  array?: string[];
-  object?: { name?: string; description?: string };
-}) {
-  return fetch(
-    `/anything/query/spaceDelimited?array=${encodeURIComponent(String(array))}&object=${encodeURIComponent(String(object))}`,
-    { method: "GET" },
-  );
-}
-
-queryPipeDelimitedNonExplodedUsingGET.displayName =
-  "queryPipeDelimitedNonExplodedUsingGET";
-export async function queryPipeDelimitedNonExplodedUsingGET({
-  array,
-  object,
-}: {
-  array?: string[];
-  object?: { name?: string; description?: string };
-}) {
-  return fetch(
-    `/anything/query/pipeDelimited?array=${encodeURIComponent(String(array))}&object=${encodeURIComponent(String(object))}`,
-    { method: "GET" },
-  );
-}
-
-queryDeepObjectNonExplodedUsingGET.displayName =
-  "queryDeepObjectNonExplodedUsingGET";
-export async function queryDeepObjectNonExplodedUsingGET({
-  object,
-}: {
-  object?: { name?: string; description?: string };
-}) {
-  return fetch(
-    `/anything/query/deepObject?object=${encodeURIComponent(String(object))}`,
-    { method: "GET" },
-  );
-}
-
-formDataStandardUsingPOST.displayName = "formDataStandardUsingPOST";
-export async function formDataStandardUsingPOST({
-  primitive,
-  array,
-  object,
-}: {
-  primitive: string;
-  array: string[];
-  object: { foo: string; bar: string };
-}) {
-  const fd = new FormData();
-  fd.append("primitive", String(primitive));
-  fd.append("array", String(array));
-  fd.append("object", String(object));
-  return fetch(`/anything/form-data`, { method: "POST", body: fd });
-}
-
-formDataFormExplodedUsingPUT.displayName = "formDataFormExplodedUsingPUT";
-export async function formDataFormExplodedUsingPUT({
-  primitive,
-  array,
-  object,
-}: {
-  primitive: string;
-  array: string[];
-  object: { foo: string; bar: string };
-}) {
-  const fd = new FormData();
-  fd.append("primitive", String(primitive));
-  fd.append("array", String(array));
-  fd.append("object", String(object));
-  return fetch(`/anything/form-data/form`, { method: "PUT", body: fd });
-}
-
-formDataFormNonExplodedUsingPOST.displayName =
-  "formDataFormNonExplodedUsingPOST";
-export async function formDataFormNonExplodedUsingPOST({
-  primitive,
-  array,
-  object,
-}: {
-  primitive: string;
-  array: string[];
-  object: { foo: string; bar: string };
-}) {
-  const fd = new FormData();
-  fd.append("primitive", String(primitive));
-  fd.append("array", String(array));
-  fd.append("object", String(object));
-  return fetch(`/anything/form-data/form`, { method: "POST", body: fd });
-}
-
-formDataSpaceDelimitedNonExplodedUsingGET.displayName =
-  "formDataSpaceDelimitedNonExplodedUsingGET";
-export async function formDataSpaceDelimitedNonExplodedUsingGET({
-  array,
-  object,
-}: {
-  array: string[];
-  object: { foo: string; bar: string };
-}) {
-  const fd = new FormData();
-  fd.append("array", String(array));
-  fd.append("object", String(object));
-  return fetch(`/anything/form-data/spaceDelimited`, {
+findPetsByTagsUsingGET.displayName = "findPetsByTagsUsingGET";
+export async function findPetsByTagsUsingGET({ tags }: { tags: string[] }) {
+  return fetch(`/pet/findByTags?tags=${encodeURIComponent(String(tags))}`, {
     method: "GET",
-    body: fd,
+  }).then(async (resp) => (await resp.json()) as Pet[]);
+}
+
+getPetByIdUsingGET.displayName = "getPetByIdUsingGET";
+export async function getPetByIdUsingGET({ petId }: { petId: number }) {
+  return fetch(`/pet/${petId}`, { method: "GET" }).then(
+    async (resp) => (await resp.json()) as Pet,
+  );
+}
+
+updatePetWithFormUsingPOST.displayName = "updatePetWithFormUsingPOST";
+export async function updatePetWithFormUsingPOST(
+  { petId }: { petId: number },
+  { name, status }: { name: string; status: string },
+) {
+  const fd = new FormData();
+  fd.append("name", String(name));
+  fd.append("status", String(status));
+  return fetch(`/pet/${petId}`, { method: "POST", body: fd });
+}
+
+deletePetUsingDELETE.displayName = "deletePetUsingDELETE";
+export async function deletePetUsingDELETE({
+  apiKey,
+  petId,
+}: {
+  apiKey: string;
+  petId: number;
+}) {
+  return fetch(`/pet/${petId}`, {
+    method: "DELETE",
+    headers: { api_key: encodeURIComponent(JSON.stringify(apiKey)) },
   });
 }
 
-formDataPipeDelimitedNonExplodedUsingPOST.displayName =
-  "formDataPipeDelimitedNonExplodedUsingPOST";
-export async function formDataPipeDelimitedNonExplodedUsingPOST({
-  array,
-  object,
-}: {
-  array: string[];
-  object: { foo: string; bar: string };
-}) {
-  const fd = new FormData();
-  fd.append("array", String(array));
-  fd.append("object", String(object));
-  return fetch(`/anything/form-data/pipeDelimited`, {
+uploadFileUsingPOST.displayName = "uploadFileUsingPOST";
+export async function uploadFileUsingPOST(
+  { petId }: { petId: number },
+  file: File,
+) {
+  return fetch(`/pet/${petId}/uploadImage`, {
     method: "POST",
-    body: fd,
+    body: JSON.stringify(file),
+  }).then(async (resp) => (await resp.json()) as ApiResponse);
+}
+
+getInventoryUsingGET.displayName = "getInventoryUsingGET";
+export async function getInventoryUsingGET() {
+  return fetch(`/store/inventory`).then(
+    async (resp) => (await resp.json()) as Record<string, unknown>,
+  );
+}
+
+placeOrderUsingPOST.displayName = "placeOrderUsingPOST";
+export async function placeOrderUsingPOST(order: Order) {
+  return fetch(`/store/order`, {
+    method: "POST",
+    body: JSON.stringify(order),
+  }).then(async (resp) => (await resp.json()) as Order);
+}
+
+getOrderByIdUsingGET.displayName = "getOrderByIdUsingGET";
+export async function getOrderByIdUsingGET({ orderId }: { orderId: number }) {
+  return fetch(`/store/order/${orderId}`, { method: "GET" }).then(
+    async (resp) => (await resp.json()) as Order,
+  );
+}
+
+deleteOrderUsingDELETE.displayName = "deleteOrderUsingDELETE";
+export async function deleteOrderUsingDELETE({ orderId }: { orderId: number }) {
+  return fetch(`/store/order/${orderId}`, { method: "DELETE" });
+}
+
+createUserUsingPOST.displayName = "createUserUsingPOST";
+export async function createUserUsingPOST(user: User) {
+  return fetch(`/user`, { method: "POST", body: JSON.stringify(user) });
+}
+
+createUsersWithArrayInputUsingPOST.displayName =
+  "createUsersWithArrayInputUsingPOST";
+export async function createUsersWithArrayInputUsingPOST(userarray: UserArray) {
+  return fetch(`/user/createWithArray`, {
+    method: "POST",
+    body: JSON.stringify(userarray),
   });
 }
 
-formDataDeepObjectExplodedUsingPOST.displayName =
-  "formDataDeepObjectExplodedUsingPOST";
-export async function formDataDeepObjectExplodedUsingPOST({
-  primitive,
-  array,
-  object,
+createUsersWithListInputUsingPOST.displayName =
+  "createUsersWithListInputUsingPOST";
+export async function createUsersWithListInputUsingPOST(userarray: UserArray) {
+  return fetch(`/user/createWithList`, {
+    method: "POST",
+    body: JSON.stringify(userarray),
+  });
+}
+
+loginUserUsingGET.displayName = "loginUserUsingGET";
+export async function loginUserUsingGET({
+  username,
+  password,
 }: {
-  primitive: string;
-  array: string[];
-  object: { foo: string; bar: string };
+  username: string;
+  password: string;
 }) {
-  const fd = new FormData();
-  fd.append("primitive", String(primitive));
-  fd.append("array", String(array));
-  fd.append("object", String(object));
-  return fetch(`/anything/form-data/deepObject`, { method: "POST", body: fd });
+  return fetch(
+    `/user/login?username=${encodeURIComponent(String(username))}&password=${encodeURIComponent(String(password))}`,
+    { method: "GET" },
+  ).then(async (resp) => (await resp.json()) as string);
+}
+
+logoutUserUsingGET.displayName = "logoutUserUsingGET";
+export async function logoutUserUsingGET() {
+  return fetch(`/user/logout`);
+}
+
+getUserByNameUsingGET.displayName = "getUserByNameUsingGET";
+export async function getUserByNameUsingGET({
+  username,
+}: {
+  username: string;
+}) {
+  return fetch(`/user/${username}`, { method: "GET" }).then(
+    async (resp) => (await resp.json()) as User,
+  );
+}
+
+updateUserUsingPUT.displayName = "updateUserUsingPUT";
+export async function updateUserUsingPUT(
+  { username }: { username: string },
+  user: User,
+) {
+  return fetch(`/user/${username}`, {
+    method: "PUT",
+    body: JSON.stringify(user),
+  });
+}
+
+deleteUserUsingDELETE.displayName = "deleteUserUsingDELETE";
+export async function deleteUserUsingDELETE({
+  username,
+}: {
+  username: string;
+}) {
+  return fetch(`/user/${username}`, { method: "DELETE" });
 }

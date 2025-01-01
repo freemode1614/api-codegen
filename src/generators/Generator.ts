@@ -174,7 +174,7 @@ export default class CodeGen implements Generator {
           if (t.in === "cookie") return "";
           const safeName = camelCase(normalizeName(name));
           return initializer
-            ? `${safeName}: ${typeof initializer === "string" ? initializer : this.toCode(initializer)},`
+            ? `${name}: ${typeof initializer === "string" ? initializer : this.toCode(initializer)},`
             : `${safeName},`;
         })
         .filter(Boolean),
