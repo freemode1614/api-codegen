@@ -14,9 +14,10 @@ export interface ClientGenOptions {
   doc: string;
   baseURL?: string;
   client?: ClientTypes;
+  ouput?: string;
 }
 
-export const codeGenByConfig = async (doc: OpenAPI.Document) => {
+export const codeGenByConfig = async (doc: OpenAPI.Document, output: string) => {
   const version = getOpenApiDocVersion(doc);
   const client = new FetchClient();
   switch (version) {
@@ -24,17 +25,17 @@ export const codeGenByConfig = async (doc: OpenAPI.Document) => {
       await new OpenApiV2().parse();
       break;
     case OpenApiVersion.v3:
-      await new OpenApiV3(doc as OpenAPIV3.Document, client).parse();
+      await new OpenApiV3(doc as OpenAPIV3.Document, client, output).parse();
       break;
     case OpenApiVersion.v3_1:
-      await new OpenApiV3_1(doc as OpenAPIV3_1.Document, client).parse();
+      await new OpenApiV3_1(doc as OpenAPIV3_1.Document, client, output).parse();
       break;
     default:
       break;
   }
 };
 
-export default async function codeGen(options: ClientGenOptions) {
+export default async function codeGen(options: ClientGenOptions, output: string) {
   if (!options.doc) {
     logger.error(`Missing openapi doc url`);
     process.exit(1);
@@ -57,10 +58,10 @@ export default async function codeGen(options: ClientGenOptions) {
       await new OpenApiV2().parse();
       break;
     case OpenApiVersion.v3:
-      await new OpenApiV3(doc as OpenAPIV3.Document, client).parse();
+      await new OpenApiV3(doc as OpenAPIV3.Document, client, output).parse();
       break;
     case OpenApiVersion.v3_1:
-      await new OpenApiV3_1(doc as OpenAPIV3_1.Document, client).parse();
+      await new OpenApiV3_1(doc as OpenAPIV3_1.Document, client, output).parse();
       break;
     default:
       break;

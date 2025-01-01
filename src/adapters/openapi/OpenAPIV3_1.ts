@@ -474,10 +474,12 @@ export default class OpenApiV3_1 implements Adaptor {
   }
 
   protected readonly doc!: OpenAPIV3_1.Document;
+  protected readonly output!: string;
 
-  constructor(doc: OpenAPIV3_1.Document, client: Client) {
+  constructor(doc: OpenAPIV3_1.Document, client: Client, output: string) {
     this.doc = doc;
     this.client = client;
+    this.output = output;
   }
 
   public async parse() {
@@ -511,7 +513,7 @@ export default class OpenApiV3_1 implements Adaptor {
         //
       })
       .catch((error: unknown) => {
-        console.error(error);
+        logger.error(error);
       });
 
     return await formatCode(code);
