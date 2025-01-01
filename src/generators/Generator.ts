@@ -96,6 +96,7 @@ export default class CodeGen implements Generator {
      */
     const args = (): string => {
       if (!parameters && !body) return "";
+
       return [
         parameters ? `${this.toCode(parameters)}: ${this.toTypeDeclaration(parameters)}` : "",
         body ? `${this.toCode(body)} : ${this.toTypeDeclaration(body)}` : "",
@@ -160,6 +161,7 @@ export default class CodeGen implements Generator {
     }
 
     const { members } = type;
+
     if (members.length === 0) {
       return "{}";
     }
@@ -179,7 +181,7 @@ export default class CodeGen implements Generator {
       "}",
     ]
       .filter(Boolean)
-      .join("\n");
+      .join("");
   }
 
   public toTypeDeclaration(type: ArrayType["elementType"], showComments = false): string {
@@ -220,6 +222,7 @@ export default class CodeGen implements Generator {
       "{",
       members
         .map((t) => {
+          if (t.in === "cookie") return "";
           return [
             showComments && t.description ? `/** @description ${t.description} */\n` : "",
             `"${camelCase(normalizeName(t.name))}"`,
@@ -233,7 +236,9 @@ export default class CodeGen implements Generator {
         })
         .join(""),
       "}",
-    ].join("\n");
+    ]
+      .filter(Boolean)
+      .join("");
   }
 
   public toTypeReferenceDeclaration(typeReference: TypeReference) {

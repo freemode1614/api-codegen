@@ -70,7 +70,7 @@ const typescriptKeywords = new Set([
   "number",
   "string",
   "symbol",
-  "object",
+  // "object",
   "undefined",
   "bigint",
 ]);

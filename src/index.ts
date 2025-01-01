@@ -1,4 +1,4 @@
-import { OpenAPI, OpenAPIV3 } from "openapi-types";
+import { OpenAPI, OpenAPIV3, OpenAPIV3_1 } from "openapi-types";
 
 import OpenApiV2 from "@/adapters/openapi/OpenAPIV2";
 import OpenApiV3 from "@/adapters/openapi/OpenAPIV3";
@@ -27,7 +27,7 @@ export const codeGenByConfig = async (doc: OpenAPI.Document) => {
       await new OpenApiV3(doc as OpenAPIV3.Document, client).parse();
       break;
     case OpenApiVersion.v3_1:
-      await new OpenApiV3_1().parse();
+      await new OpenApiV3_1(doc as OpenAPIV3_1.Document, client).parse();
       break;
     default:
       break;
@@ -60,7 +60,7 @@ export default async function codeGen(options: ClientGenOptions) {
       await new OpenApiV3(doc as OpenAPIV3.Document, client).parse();
       break;
     case OpenApiVersion.v3_1:
-      await new OpenApiV3_1().parse();
+      await new OpenApiV3_1(doc as OpenAPIV3_1.Document, client).parse();
       break;
     default:
       break;

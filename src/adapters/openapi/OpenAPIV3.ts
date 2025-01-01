@@ -229,15 +229,17 @@ export default class OpenApiV3 implements Adaptor {
                   });
                 }
               } else {
-                acc.push({
-                  in: (propSchema as OpenAPIV3.ParameterObject).in,
-                  deprecated: propSchema.deprecated,
-                  name: propKey,
-                  format: propSchema.format,
-                  required: (propSchema as OpenAPIV3.ParameterObject).required ?? required?.includes(propKey),
-                  type: this.expandSchemaObject(propSchema, propKey),
-                  description: propSchema.description,
-                } as PropertySignature);
+                if ((propSchema as OpenAPIV3.ParameterObject).in === "cookie") {
+                  acc.push({
+                    in: (propSchema as OpenAPIV3.ParameterObject).in,
+                    deprecated: propSchema.deprecated,
+                    name: propKey,
+                    format: propSchema.format,
+                    required: (propSchema as OpenAPIV3.ParameterObject).required ?? required?.includes(propKey),
+                    type: this.expandSchemaObject(propSchema, propKey),
+                    description: propSchema.description,
+                  } as PropertySignature);
+                }
               }
             }
 

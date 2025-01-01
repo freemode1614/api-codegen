@@ -2,6 +2,7 @@ import Generator from "@/generators/Generator";
 import Client from "@/providers/Client";
 import type { ClientInfo } from "@/types/client";
 import { isTypeLiteral, PropertySignature, TypeLiteral } from "@/types/type";
+import normalizeName from "@/utils/normalizeName";
 export default class FetchClient extends Generator implements Client {
   code = "";
   clientName = "fetch";
@@ -42,11 +43,11 @@ export default class FetchClient extends Generator implements Client {
               members: headers.map(
                 (h) =>
                   ({
-                    name: h.name,
+                    name: normalizeName(h.name),
                     initializer:
                       h.format !== "string"
-                        ? `encodeURIComponent(JSON.stringify(${h.name}))`
-                        : `encodeURIComponent(${h.name})`,
+                        ? `encodeURIComponent(JSON.stringify(${normalizeName(h.name)}))`
+                        : `encodeURIComponent(${normalizeName(h.name)})`,
                   }) as PropertySignature,
               ),
             },
