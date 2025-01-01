@@ -5,7 +5,6 @@ import OpenApiV3 from "@/adapters/openapi/OpenAPIV3";
 import OpenApiV3_1 from "@/adapters/openapi/OpenAPIV3_1";
 import AxiosClient from "@/client/AxiosClient";
 import FetchClient from "@/client/FetchClient";
-import logger from "@/logger";
 import { ClientTypes } from "@/types/client";
 import { OpenApiVersion } from "@/types/openapi";
 import getApiDoc, { getOpenApiDocVersion } from "@/utils/getApiDoc";
@@ -37,7 +36,7 @@ export const codeGenByConfig = async (doc: OpenAPI.Document, output: string) => 
 
 export default async function codeGen(options: ClientGenOptions, output: string) {
   if (!options.doc) {
-    logger.error(`Missing openapi doc url`);
+    console.error(`Missing openapi doc url`);
     process.exit(1);
   }
 
