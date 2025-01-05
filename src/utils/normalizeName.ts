@@ -77,7 +77,7 @@ const typescriptKeywords = new Set([
 
 export default function normalizeName(name: string) {
   if (typescriptKeywords.has(name)) {
-    name += "Object";
+    name += "_";
   }
   return name.replace(/[/\-_{}():\s`,*<>$]/g, "_").replaceAll("...", "");
 }

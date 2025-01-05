@@ -1,230 +1,48 @@
 /**
  * 1.0.0
- * Swagger Petstore
- * This is a sample server Petstore server.  You can find out more about Swagger at [http://swagger.io](http://swagger.io) or on [irc.freenode.net, #swagger](http://swagger.io/irc/).  For this sample, you can use the api key `special-key` to test the authorization filters.
+ * USPTO Data Set API
+ * The Data Set API (DSAPI) allows the public users to discover and search USPTO exported data sets. This is a generic API that allows USPTO users to make any CSV based data files searchable through API. With the help of GET call, it returns the list of data fields that are searchable. With the help of POST call, data can be fetched based on the filters on the field names. Please note that POST call is used to search the actual data. The reason for the POST call is that it allows users to specify any complex search criteria without worry about the GET size limitations as well as encoding of the input parameters.
  */
-export enum OrderStatus {
-  placed = "placed",
-  approved = "approved",
-  delivered = "delivered",
-}
 
-export enum PetStatus {
-  available = "available",
-  pending = "pending",
-  sold = "sold",
-}
-
-export type Order = {
-  id?: number;
-  petId?: number;
-  quantity?: number;
-  shipDate?: string;
-  status?: OrderStatus;
-  complete?: boolean;
+export type DataSetList = {
+  total?: number;
+  apis?: {
+    apiKey?: string;
+    apiVersionNumber?: string;
+    apiUrl?: unknown;
+    apiDocumentationUrl?: unknown;
+  }[];
 };
 
-export type Category = { id?: number; name?: string };
-
-export type User = {
-  id?: number;
-  username?: string;
-  firstName?: string;
-  lastName?: string;
-  email?: string;
-  password?: string;
-  phone?: string;
-  /** @description User Status */
-  userStatus?: number;
-};
-
-export type Tag = { id?: number; name?: string };
-
-export type Pet = {
-  id?: number;
-  category?: Category;
-  name: string;
-  photoUrls: string[];
-  tags?: Tag[];
-  status?: PetStatus;
-};
-
-export type ApiResponse = {
-  code?: number;
-  typeObject?: string;
-  message?: string;
-};
-
-export type UserArray = User[];
-
-updatePetUsingPUT.displayName = "updatePetUsingPUT";
-export async function updatePetUsingPUT(pet: Pet) {
-  return fetch(`/pet`, { method: "PUT", body: JSON.stringify(pet) });
+listDataSetsUsingGET.displayName = "listDataSetsUsingGET";
+export async function listDataSetsUsingGET() {
+  return fetch(`/`).then(async (resp) => (await resp.json()) as DataSetList);
 }
 
-addPetUsingPOST.displayName = "addPetUsingPOST";
-export async function addPetUsingPOST(pet: Pet) {
-  return fetch(`/pet`, { method: "POST", body: JSON.stringify(pet) });
-}
-
-findPetsByStatusUsingGET.displayName = "findPetsByStatusUsingGET";
-export async function findPetsByStatusUsingGET({
-  status,
+listSearchableFieldsUsingGET.displayName = "listSearchableFieldsUsingGET";
+export async function listSearchableFieldsUsingGET({
+  dataset,
+  version,
 }: {
-  status: ("available" | "pending" | "sold")[];
+  dataset: string;
+  version: string;
 }) {
-  return fetch(
-    `/pet/findByStatus?status=${encodeURIComponent(String(status))}`,
-    { method: "GET" },
-  ).then(async (resp) => (await resp.json()) as Pet[]);
-}
-
-findPetsByTagsUsingGET.displayName = "findPetsByTagsUsingGET";
-export async function findPetsByTagsUsingGET({ tags }: { tags: string[] }) {
-  return fetch(`/pet/findByTags?tags=${encodeURIComponent(String(tags))}`, {
-    method: "GET",
-  }).then(async (resp) => (await resp.json()) as Pet[]);
-}
-
-getPetByIdUsingGET.displayName = "getPetByIdUsingGET";
-export async function getPetByIdUsingGET({ petId }: { petId: number }) {
-  return fetch(`/pet/${petId}`, { method: "GET" }).then(
-    async (resp) => (await resp.json()) as Pet,
+  return fetch(`/${dataset}/${version}/fields`, { method: "GET" }).then(
+    async (resp) => (await resp.json()) as string,
   );
 }
 
-updatePetWithFormUsingPOST.displayName = "updatePetWithFormUsingPOST";
-export async function updatePetWithFormUsingPOST(
-  { petId }: { petId: number },
-  { name, status }: { name: string; status: string },
+performSearchUsingPOST.displayName = "performSearchUsingPOST";
+export async function performSearchUsingPOST(
+  { version, dataset }: { version: string; dataset: string },
+  { criteria, start, rows }: { criteria: string; start: number; rows: number },
 ) {
   const fd = new FormData();
-  fd.append("name", String(name));
-  fd.append("status", String(status));
-  return fetch(`/pet/${petId}`, { method: "POST", body: fd });
-}
-
-deletePetUsingDELETE.displayName = "deletePetUsingDELETE";
-export async function deletePetUsingDELETE({
-  apiKey,
-  petId,
-}: {
-  apiKey: string;
-  petId: number;
-}) {
-  return fetch(`/pet/${petId}`, {
-    method: "DELETE",
-    headers: { api_key: encodeURIComponent(JSON.stringify(apiKey)) },
-  });
-}
-
-uploadFileUsingPOST.displayName = "uploadFileUsingPOST";
-export async function uploadFileUsingPOST(
-  { petId }: { petId: number },
-  file: File,
-) {
-  return fetch(`/pet/${petId}/uploadImage`, {
+  fd.append("criteria", String(criteria));
+  fd.append("start", String(start));
+  fd.append("rows", String(rows));
+  return fetch(`/${dataset}/${version}/records`, {
     method: "POST",
-    body: JSON.stringify(file),
-  }).then(async (resp) => (await resp.json()) as ApiResponse);
-}
-
-getInventoryUsingGET.displayName = "getInventoryUsingGET";
-export async function getInventoryUsingGET() {
-  return fetch(`/store/inventory`).then(
-    async (resp) => (await resp.json()) as Record<string, unknown>,
-  );
-}
-
-placeOrderUsingPOST.displayName = "placeOrderUsingPOST";
-export async function placeOrderUsingPOST(order: Order) {
-  return fetch(`/store/order`, {
-    method: "POST",
-    body: JSON.stringify(order),
-  }).then(async (resp) => (await resp.json()) as Order);
-}
-
-getOrderByIdUsingGET.displayName = "getOrderByIdUsingGET";
-export async function getOrderByIdUsingGET({ orderId }: { orderId: number }) {
-  return fetch(`/store/order/${orderId}`, { method: "GET" }).then(
-    async (resp) => (await resp.json()) as Order,
-  );
-}
-
-deleteOrderUsingDELETE.displayName = "deleteOrderUsingDELETE";
-export async function deleteOrderUsingDELETE({ orderId }: { orderId: number }) {
-  return fetch(`/store/order/${orderId}`, { method: "DELETE" });
-}
-
-createUserUsingPOST.displayName = "createUserUsingPOST";
-export async function createUserUsingPOST(user: User) {
-  return fetch(`/user`, { method: "POST", body: JSON.stringify(user) });
-}
-
-createUsersWithArrayInputUsingPOST.displayName =
-  "createUsersWithArrayInputUsingPOST";
-export async function createUsersWithArrayInputUsingPOST(userarray: UserArray) {
-  return fetch(`/user/createWithArray`, {
-    method: "POST",
-    body: JSON.stringify(userarray),
-  });
-}
-
-createUsersWithListInputUsingPOST.displayName =
-  "createUsersWithListInputUsingPOST";
-export async function createUsersWithListInputUsingPOST(userarray: UserArray) {
-  return fetch(`/user/createWithList`, {
-    method: "POST",
-    body: JSON.stringify(userarray),
-  });
-}
-
-loginUserUsingGET.displayName = "loginUserUsingGET";
-export async function loginUserUsingGET({
-  username,
-  password,
-}: {
-  username: string;
-  password: string;
-}) {
-  return fetch(
-    `/user/login?username=${encodeURIComponent(String(username))}&password=${encodeURIComponent(String(password))}`,
-    { method: "GET" },
-  ).then(async (resp) => (await resp.json()) as string);
-}
-
-logoutUserUsingGET.displayName = "logoutUserUsingGET";
-export async function logoutUserUsingGET() {
-  return fetch(`/user/logout`);
-}
-
-getUserByNameUsingGET.displayName = "getUserByNameUsingGET";
-export async function getUserByNameUsingGET({
-  username,
-}: {
-  username: string;
-}) {
-  return fetch(`/user/${username}`, { method: "GET" }).then(
-    async (resp) => (await resp.json()) as User,
-  );
-}
-
-updateUserUsingPUT.displayName = "updateUserUsingPUT";
-export async function updateUserUsingPUT(
-  { username }: { username: string },
-  user: User,
-) {
-  return fetch(`/user/${username}`, {
-    method: "PUT",
-    body: JSON.stringify(user),
-  });
-}
-
-deleteUserUsingDELETE.displayName = "deleteUserUsingDELETE";
-export async function deleteUserUsingDELETE({
-  username,
-}: {
-  username: string;
-}) {
-  return fetch(`/user/${username}`, { method: "DELETE" });
+    body: fd,
+  }).then(async (resp) => (await resp.json()) as Record<string, unknown>[]);
 }

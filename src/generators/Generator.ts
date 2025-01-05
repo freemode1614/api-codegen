@@ -3,9 +3,9 @@ import Generator from "@/providers/Generator";
 import { ClientInfo } from "@/types/client";
 import type { MaybeTagItem } from "@/types/tag";
 import {
-  ArrayType,
-  Enum,
-  IntersectionType,
+  type ArrayType,
+  type Enum,
+  type IntersectionType,
   intersectionType,
   isArrayType,
   isIntersectionType,
@@ -13,9 +13,9 @@ import {
   isTypeParameter,
   isTypeReference,
   isUnionType,
-  TypeAlias,
-  TypeReference,
-  UnionType,
+  type TypeAlias,
+  type TypeReference,
+  type UnionType,
   unionType,
 } from "@/types/type";
 import normalizeName from "@/utils/normalizeName";
@@ -174,7 +174,7 @@ export default class CodeGen implements Generator {
           if (t.in === "cookie") return "";
           const safeName = camelCase(normalizeName(name));
           return initializer
-            ? `${name}: ${typeof initializer === "string" ? initializer : this.toCode(initializer)},`
+            ? `"${name}": ${typeof initializer === "string" ? initializer : this.toCode(initializer)},`
             : `${safeName},`;
         })
         .filter(Boolean),

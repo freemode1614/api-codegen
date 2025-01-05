@@ -229,7 +229,7 @@ export default class OpenApiV3 implements Adaptor {
                   });
                 }
               } else {
-                if ((propSchema as OpenAPIV3.ParameterObject).in === "cookie") {
+                if ((propSchema as OpenAPIV3.ParameterObject).in !== "cookie") {
                   acc.push({
                     in: (propSchema as OpenAPIV3.ParameterObject).in,
                     deprecated: propSchema.deprecated,
