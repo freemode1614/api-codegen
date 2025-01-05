@@ -8,7 +8,6 @@ import { createScopedLogger } from "@moccona/logger";
 import { OpenAPIV3, type OpenAPIV3_1 } from "openapi-types";
 
 import Adaptor from "@/providers/Adaptor";
-import Client from "@/providers/Client";
 import { ClientInfo } from "@/types/client";
 import { isV3_1ReferenceObject, isV3ArrySchemaObject, isV3ReferenceObject } from "@/types/openapi";
 import type { MaybeTagItem } from "@/types/tag";
@@ -37,12 +36,9 @@ const logger = createScopedLogger("OpenAPIV3");
  * OpenApiV3 Class
  * Implements the Adaptor interface for OpenAPI v3 schema parsing
  */
-export default class OpenApiV3_1 implements Adaptor {
+export default class OpenApiV3_1 extends Adaptor<OpenAPIV3_1.Document> {
   /** Store for enum definitions generated during parsing */
   protected enums: Record<string, Enum> = {};
-
-  /** Client instance for code generation */
-  private client: Client;
 
   /**
    * Returns the banner comment for generated code
@@ -473,18 +469,8 @@ export default class OpenApiV3_1 implements Adaptor {
     }, []);
   }
 
-  protected readonly doc!: OpenAPIV3_1.Document;
-  protected readonly output!: string;
-
-  constructor(doc: OpenAPIV3_1.Document, client: Client, output: string) {
-    this.doc = doc;
-    this.client = client;
-    this.output = output;
-  }
-
   public async parse() {
     const apis = this.analyzeApis();
-    logger.debug(apis);
 
     const code = [
       this.banner,

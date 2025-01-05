@@ -11,9 +11,9 @@ import getApiDoc, { getOpenApiDocVersion } from "@/utils/getApiDoc";
 
 export interface ClientGenOptions {
   doc: string;
+  ouput: string;
   baseURL?: string;
   client?: ClientTypes;
-  ouput?: string;
 }
 
 export const codeGenByConfig = async (doc: OpenAPI.Document, output: string) => {
@@ -34,7 +34,7 @@ export const codeGenByConfig = async (doc: OpenAPI.Document, output: string) => 
   }
 };
 
-export default async function codeGen(options: ClientGenOptions, output: string) {
+export default async function codeGen(options: ClientGenOptions) {
   if (!options.doc) {
     console.error(`Missing openapi doc url`);
     process.exit(1);
@@ -57,10 +57,10 @@ export default async function codeGen(options: ClientGenOptions, output: string)
       await new OpenApiV2().parse();
       break;
     case OpenApiVersion.v3:
-      await new OpenApiV3(doc as OpenAPIV3.Document, client, output).parse();
+      await new OpenApiV3(doc as OpenAPIV3.Document, client, options.ouput).parse();
       break;
     case OpenApiVersion.v3_1:
-      await new OpenApiV3_1(doc as OpenAPIV3_1.Document, client, output).parse();
+      await new OpenApiV3_1(doc as OpenAPIV3_1.Document, client, options.ouput).parse();
       break;
     default:
       break;

@@ -26,7 +26,7 @@ test("codegen", async () => {
       const rawString = decoder.decode(buf);
       const doc = JSON.parse(rawString) as OpenAPIV3.Document;
       console.log("file path ~>", file_path);
-      await expect(codeGenByConfig(doc)).resolves.not.toThrow();
+      await expect(codeGenByConfig(doc, "")).resolves.not.toThrow();
     } else {
       console.log(`Folder escaped`);
     }
