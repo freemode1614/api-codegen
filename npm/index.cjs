@@ -64,9 +64,9 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
   mod
 ));
 
-// node_modules/.pnpm/tsup@8.3.5_jiti@1.21.7_postcss@8.4.49_typescript@5.7.2_yaml@2.7.0/node_modules/tsup/assets/cjs_shims.js
+// node_modules/.pnpm/tsup@8.3.5_jiti@1.21.6_postcss@8.4.49_typescript@5.7.2_yaml@2.6.1/node_modules/tsup/assets/cjs_shims.js
 var init_cjs_shims = __esm({
-  "node_modules/.pnpm/tsup@8.3.5_jiti@1.21.7_postcss@8.4.49_typescript@5.7.2_yaml@2.7.0/node_modules/tsup/assets/cjs_shims.js"() {
+  "node_modules/.pnpm/tsup@8.3.5_jiti@1.21.6_postcss@8.4.49_typescript@5.7.2_yaml@2.6.1/node_modules/tsup/assets/cjs_shims.js"() {
   }
 });
 
@@ -120,10 +120,10 @@ init_cjs_shims();
 // node_modules/.pnpm/@moccona+logger@0.0.1/node_modules/@moccona/logger/npm/index.js
 init_cjs_shims();
 
-// node_modules/.pnpm/chalk@5.4.1/node_modules/chalk/source/index.js
+// node_modules/.pnpm/chalk@5.3.0/node_modules/chalk/source/index.js
 init_cjs_shims();
 
-// node_modules/.pnpm/chalk@5.4.1/node_modules/chalk/source/vendor/ansi-styles/index.js
+// node_modules/.pnpm/chalk@5.3.0/node_modules/chalk/source/vendor/ansi-styles/index.js
 init_cjs_shims();
 var ANSI_BACKGROUND_OFFSET = 10;
 var wrapAnsi16 = (offset = 0) => (code) => `\x1B[${code + offset}m`;
@@ -310,7 +310,7 @@ function assembleStyles() {
 var ansiStyles = assembleStyles();
 var ansi_styles_default = ansiStyles;
 
-// node_modules/.pnpm/chalk@5.4.1/node_modules/chalk/source/vendor/supports-color/index.js
+// node_modules/.pnpm/chalk@5.3.0/node_modules/chalk/source/vendor/supports-color/index.js
 init_cjs_shims();
 function hasFlag(flag, argv = globalThis.Deno ? globalThis.Deno.args : process2__default.default.argv) {
   const prefix = flag.startsWith("-") ? "" : flag.length === 1 ? "-" : "--";
@@ -382,10 +382,10 @@ function _supportsColor(haveStream, { streamIsTTY, sniffFlags = true } = {}) {
     return 1;
   }
   if ("CI" in env) {
-    if (["GITHUB_ACTIONS", "GITEA_ACTIONS", "CIRCLECI"].some((key) => key in env)) {
+    if ("GITHUB_ACTIONS" in env || "GITEA_ACTIONS" in env) {
       return 3;
     }
-    if (["TRAVIS", "APPVEYOR", "GITLAB_CI", "BUILDKITE", "DRONE"].some((sign) => sign in env) || env.CI_NAME === "codeship") {
+    if (["TRAVIS", "CIRCLECI", "APPVEYOR", "GITLAB_CI", "BUILDKITE", "DRONE"].some((sign) => sign in env) || env.CI_NAME === "codeship") {
       return 1;
     }
     return min;
@@ -434,7 +434,7 @@ var supportsColor = {
 };
 var supports_color_default = supportsColor;
 
-// node_modules/.pnpm/chalk@5.4.1/node_modules/chalk/source/utilities.js
+// node_modules/.pnpm/chalk@5.3.0/node_modules/chalk/source/utilities.js
 init_cjs_shims();
 function stringReplaceAll(string, substring, replacer) {
   let index = string.indexOf(substring);
@@ -465,7 +465,7 @@ function stringEncaseCRLFWithFirstIndex(string, prefix, postfix, index) {
   return returnValue;
 }
 
-// node_modules/.pnpm/chalk@5.4.1/node_modules/chalk/source/index.js
+// node_modules/.pnpm/chalk@5.3.0/node_modules/chalk/source/index.js
 var { stdout: stdoutColor, stderr: stderrColor } = supports_color_default;
 var GENERATOR = Symbol("GENERATOR");
 var STYLER = Symbol("STYLER");
@@ -699,6 +699,17 @@ function getColorForLevel(level) {
 // src/adapters/openapi/OpenAPIV3.ts
 var import_openapi_types = __toESM(require_dist());
 
+// src/providers/Adaptor.ts
+init_cjs_shims();
+var Adaptor = class {
+  doc;
+  client;
+  constructor(doc, client) {
+    this.doc = doc;
+    this.client = client;
+  }
+};
+
 // src/types/openapi.ts
 init_cjs_shims();
 var isV3ReferenceObject = (schema) => !!schema?.$ref;
@@ -883,7 +894,7 @@ var typescriptKeywords = /* @__PURE__ */ new Set([
 ]);
 function normalizeName(name) {
   if (typescriptKeywords.has(name)) {
-    name += "Object";
+    name += "_";
   }
   return name.replace(/[/\-_{}():\s`,*<>$]/g, "_").replaceAll("...", "");
 }
@@ -924,11 +935,9 @@ async function writeToFile(filePath, data) {
 
 // src/adapters/openapi/OpenAPIV3.ts
 var logger = createScopedLogger("OpenAPIV3");
-var OpenApiV3 = class {
+var OpenApiV3 = class extends Adaptor {
   /** Store for enum definitions generated during parsing */
   enums = {};
-  /** Client instance for code generation */
-  client;
   /**
    * Returns the banner comment for generated code
    * Including version, title and description from OpenAPI doc
@@ -1066,7 +1075,7 @@ var OpenApiV3 = class {
                   });
                 }
               } else {
-                if (propSchema.in === "cookie") {
+                if (propSchema.in !== "cookie") {
                   acc.push({
                     in: propSchema.in,
                     deprecated: propSchema.deprecated,
@@ -1255,16 +1264,8 @@ var OpenApiV3 = class {
       return [...acc, ...apiObjects];
     }, []);
   }
-  doc;
-  output;
-  constructor(doc, client, output) {
-    this.doc = doc;
-    this.client = client;
-    this.output = output;
-  }
   async parse() {
     const apis = this.analyzeApis();
-    logger.debug(apis);
     const code = [
       this.banner,
       Object.keys(this.enums).map((enumName) => this.client.enumDeclaration(this.enums[enumName])).join("\n\n"),
@@ -1293,11 +1294,9 @@ var OpenApiV3 = class {
 init_cjs_shims();
 var import_openapi_types2 = __toESM(require_dist());
 var logger2 = createScopedLogger("OpenAPIV3");
-var OpenApiV3_1 = class {
+var OpenApiV3_1 = class extends Adaptor {
   /** Store for enum definitions generated during parsing */
   enums = {};
-  /** Client instance for code generation */
-  client;
   /**
    * Returns the banner comment for generated code
    * Including version, title and description from OpenAPI doc
@@ -1625,16 +1624,8 @@ var OpenApiV3_1 = class {
       return [...acc, ...apiObjects];
     }, []);
   }
-  doc;
-  output;
-  constructor(doc, client, output) {
-    this.doc = doc;
-    this.client = client;
-    this.output = output;
-  }
   async parse() {
     const apis = this.analyzeApis();
-    logger2.debug(apis);
     const code = [
       this.banner,
       Object.keys(this.enums).map((enumName) => this.client.enumDeclaration(this.enums[enumName])).join("\n\n"),
@@ -1768,7 +1759,7 @@ var CodeGen = class {
         const { initializer, name } = t;
         if (t.in === "cookie") return "";
         const safeName = camelCase(normalizeName(name));
-        return initializer ? `${name}: ${typeof initializer === "string" ? initializer : this.toCode(initializer)},` : `${safeName},`;
+        return initializer ? `"${name}": ${typeof initializer === "string" ? initializer : this.toCode(initializer)},` : `${safeName},`;
       }).filter(Boolean),
       "}"
     ].filter(Boolean).join("");
@@ -1960,7 +1951,15 @@ var FetchClient = class extends CodeGen {
 // src/types/client.ts
 init_cjs_shims();
 
-// src/utils/getApiDoc.ts
+// src/utils/fatal.ts
+init_cjs_shims();
+var fatal = (message, cause) => {
+  throw new Error(message, {
+    cause
+  });
+};
+
+// src/utils/getAPIDoc.ts
 init_cjs_shims();
 var agent = new undici.Agent({
   connect: {
@@ -1990,7 +1989,7 @@ async function getApiDoc(docURL) {
 }
 
 // src/index.ts
-var codeGenByConfig = async (doc, output) => {
+var codeGenByConfigForTesting = async (doc) => {
   const version = getOpenApiDocVersion(doc);
   const client = new FetchClient();
   switch (version) {
@@ -1998,20 +1997,19 @@ var codeGenByConfig = async (doc, output) => {
       await new OpenApiV2().parse();
       break;
     case 1 /* v3 */:
-      await new OpenApiV3(doc, client, output).parse();
+      await new OpenApiV3(doc, client).parse();
       break;
     case 2 /* v3_1 */:
-      await new OpenApiV3_1(doc, client, output).parse();
+      await new OpenApiV3_1(doc, client).parse();
       break;
   }
 };
-async function codeGen(options, output) {
+async function openapi(options) {
   if (!options.doc) {
-    console.error(`Missing openapi doc url`);
-    process.exit(1);
+    fatal("Missing openapi doc url", "openapi doc url is missing");
   }
-  const doc = await getApiDoc(options.doc);
-  const version = getOpenApiDocVersion(doc);
+  const apidoc = await getApiDoc(options.doc);
+  const version = getOpenApiDocVersion(apidoc);
   const client = (() => {
     switch (options.client) {
       case 0 /* Axios */:
@@ -2025,15 +2023,15 @@ async function codeGen(options, output) {
       await new OpenApiV2().parse();
       break;
     case 1 /* v3 */:
-      await new OpenApiV3(doc, client, output).parse();
+      await new OpenApiV3(apidoc, client).parse();
       break;
     case 2 /* v3_1 */:
-      await new OpenApiV3_1(doc, client, output).parse();
+      await new OpenApiV3_1(apidoc, client).parse();
       break;
   }
 }
 
-exports.codeGenByConfig = codeGenByConfig;
-exports.default = codeGen;
+exports.codeGenByConfigForTesting = codeGenByConfigForTesting;
+exports.default = openapi;
 //# sourceMappingURL=index.cjs.map
 //# sourceMappingURL=index.cjs.map

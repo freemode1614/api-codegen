@@ -1,10 +1,10 @@
 import { OpenAPI } from "openapi-types";
 import { test } from "vitest";
 
-import { codeGenByConfig } from "@/index";
+import { codeGenByConfigForTesting } from "@/index";
 
 import doc1 from "../examples/3.0/json/uspto.json";
 
 test("codegen", async () => {
-  await codeGenByConfig(doc1 as unknown as OpenAPI.Document, "");
+  await codeGenByConfigForTesting(doc1 as unknown as OpenAPI.Document);
 });

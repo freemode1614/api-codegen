@@ -16,20 +16,18 @@ export type DataSetList = {
 
 listDataSetsUsingGET.displayName = "listDataSetsUsingGET";
 export async function listDataSetsUsingGET() {
-  return fetch(`/`).then(async (resp) => (await resp.json()) as DataSetList);
+  return fetch(`/`, {
+    signal: new AbortController().signal,
+  }).then(async (resp) => (await resp.json()) as DataSetList);
 }
 
 listSearchableFieldsUsingGET.displayName = "listSearchableFieldsUsingGET";
-export async function listSearchableFieldsUsingGET({
-  dataset,
-  version,
-}: {
-  dataset: string;
-  version: string;
-}) {
-  return fetch(`/${dataset}/${version}/fields`, { method: "GET" }).then(
-    async (resp) => (await resp.json()) as string,
-  );
+export async function listSearchableFieldsUsingGET({ dataset, version }: { dataset: string; version: string }) {
+  listSearchableFieldsUsingGET.abort = new AbortController();
+  return fetch(`/${dataset}/${version}/fields`, {
+    method: "GET",
+    signal: listDataSetsUsingGET.abort.signal,
+  }).then(async (resp) => (await resp.json()) as string);
 }
 
 performSearchUsingPOST.displayName = "performSearchUsingPOST";

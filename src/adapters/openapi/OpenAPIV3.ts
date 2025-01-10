@@ -38,24 +38,7 @@ const logger = createScopedLogger("OpenAPIV3");
  */
 export default class OpenApiV3 extends Adaptor<OpenAPIV3.Document> {
   /** Store for enum definitions generated during parsing */
-  protected enums: Record<string, Enum> = {};
-
-  /**
-   * Returns the banner comment for generated code
-   * Including version, title and description from OpenAPI doc
-   */
-  public get banner() {
-    const { info } = this.doc;
-    const { version, title, description } = info;
-
-    return this.client.comment([
-      {
-        comment: version,
-      },
-      { comment: title },
-      { comment: description ?? "" },
-    ]);
-  }
+  readonly enums: Record<string, Enum> = {};
 
   public get schemas() {
     const { components } = this.doc;
@@ -206,7 +189,7 @@ export default class OpenApiV3 extends Adaptor<OpenAPIV3.Document> {
             } else {
               if (propSchema.enum) {
                 const name = capitalize(parentName) + capitalize(propKey);
-                const preDefinedSchemaName = this.getEnum(propSchema.enum);
+                const preDefinedSchemaName = this.getEnumNameBySchema(propSchema.enum);
                 if (preDefinedSchemaName) {
                   acc.push({
                     name: propKey,
@@ -488,13 +471,16 @@ export default class OpenApiV3 extends Adaptor<OpenAPIV3.Document> {
       this.client.templates(apis),
     ].join("\n");
 
-    writeToFile("output.ts", await formatCode(code))
-      .then(() => {
-        //
-      })
-      .catch((error: unknown) => {
-        logger.error(error);
-      });
+    // Only write when testing
+    if (process.env.NODE_ENV === "test") {
+      writeToFile("output.ts", await formatCode(code))
+        .then(() => {
+          logger.debug("Write code to output.ts");
+        })
+        .catch((error: unknown) => {
+          logger.error(error);
+        });
+    }
 
     return await formatCode(code);
   }

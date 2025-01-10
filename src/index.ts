@@ -7,16 +7,18 @@ import AxiosClient from "@/client/AxiosClient";
 import FetchClient from "@/client/FetchClient";
 import { ClientTypes } from "@/types/client";
 import { OpenApiVersion } from "@/types/openapi";
+import { fatal } from "@/utils/fatal";
 import getApiDoc, { getOpenApiDocVersion } from "@/utils/getAPIDoc";
 
 export interface OpenapiOptions {
   doc: string;
   ouput: string;
   baseURL?: string;
-  client?: ClientTypes;
+  client?: ClientTypes | keyof typeof ClientTypes;
 }
 
-export const codeGenByConfig = async (doc: OpenAPI.Document) => {
+// for testing
+export const codeGenByConfigForTesting = async (doc: OpenAPI.Document) => {
   const version = getOpenApiDocVersion(doc);
   const client = new FetchClient();
   switch (version) {
@@ -36,12 +38,11 @@ export const codeGenByConfig = async (doc: OpenAPI.Document) => {
 
 export default async function openapi(options: OpenapiOptions) {
   if (!options.doc) {
-    console.error(`Missing openapi doc url`);
-    process.exit(1);
+    fatal("Missing openapi doc url", "openapi doc url is missing");
   }
 
-  const doc = await getApiDoc(options.doc);
-  const version = getOpenApiDocVersion(doc);
+  const apidoc = await getApiDoc(options.doc);
+  const version = getOpenApiDocVersion(apidoc);
 
   const client = (() => {
     switch (options.client) {
@@ -52,17 +53,21 @@ export default async function openapi(options: OpenapiOptions) {
     }
   })();
 
+  let code = "";
+
   switch (version) {
     case OpenApiVersion.v2:
-      await new OpenApiV2().parse();
+      code = await new OpenApiV2().parse();
       break;
     case OpenApiVersion.v3:
-      await new OpenApiV3(doc as OpenAPIV3.Document, client, options.ouput).parse();
+      code = await new OpenApiV3(apidoc as OpenAPIV3.Document, client).parse();
       break;
     case OpenApiVersion.v3_1:
-      await new OpenApiV3_1(doc as OpenAPIV3_1.Document, client, options.ouput).parse();
+      code = await new OpenApiV3_1(apidoc as OpenAPIV3_1.Document, client).parse();
       break;
     default:
       break;
   }
+
+  return code;
 }

@@ -5,13 +5,13 @@ declare enum ClientTypes {
     Fetch = 1
 }
 
-interface ClientGenOptions {
+interface OpenapiOptions {
     doc: string;
+    ouput: string;
     baseURL?: string;
-    client?: ClientTypes;
-    ouput?: string;
+    client?: ClientTypes | keyof typeof ClientTypes;
 }
-declare const codeGenByConfig: (doc: OpenAPI.Document, output: string) => Promise<void>;
-declare function codeGen(options: ClientGenOptions, output: string): Promise<void>;
+declare const codeGenByConfigForTesting: (doc: OpenAPI.Document) => Promise<void>;
+declare function openapi(options: OpenapiOptions): Promise<string>;
 
-export { type ClientGenOptions, codeGenByConfig, codeGen as default };
+export { type OpenapiOptions, codeGenByConfigForTesting, openapi as default };

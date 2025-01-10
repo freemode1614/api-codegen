@@ -5,7 +5,7 @@ import path from "node:path";
 import { OpenAPIV3 } from "openapi-types";
 import { beforeAll, expect, test } from "vitest";
 
-import { codeGenByConfig } from "@/index";
+import { codeGenByConfigForTesting } from "@/index";
 
 let files = [] as string[];
 
@@ -26,7 +26,7 @@ test("codegen", async () => {
       const rawString = decoder.decode(buf);
       const doc = JSON.parse(rawString) as OpenAPIV3.Document;
       console.log("file path ~>", file_path);
-      await expect(codeGenByConfig(doc, "")).resolves.not.toThrow();
+      await expect(codeGenByConfigForTesting(doc, "")).resolves.not.toThrow();
     } else {
       console.log(`Folder escaped`);
     }
