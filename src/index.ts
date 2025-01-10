@@ -7,16 +7,16 @@ import AxiosClient from "@/client/AxiosClient";
 import FetchClient from "@/client/FetchClient";
 import { ClientTypes } from "@/types/client";
 import { OpenApiVersion } from "@/types/openapi";
-import getApiDoc, { getOpenApiDocVersion } from "@/utils/getApiDoc";
+import getApiDoc, { getOpenApiDocVersion } from "@/utils/getAPIDoc";
 
-export interface ClientGenOptions {
+export interface OpenapiOptions {
   doc: string;
   ouput: string;
   baseURL?: string;
   client?: ClientTypes;
 }
 
-export const codeGenByConfig = async (doc: OpenAPI.Document, output: string) => {
+export const codeGenByConfig = async (doc: OpenAPI.Document) => {
   const version = getOpenApiDocVersion(doc);
   const client = new FetchClient();
   switch (version) {
@@ -24,17 +24,17 @@ export const codeGenByConfig = async (doc: OpenAPI.Document, output: string) => 
       await new OpenApiV2().parse();
       break;
     case OpenApiVersion.v3:
-      await new OpenApiV3(doc as OpenAPIV3.Document, client, output).parse();
+      await new OpenApiV3(doc as OpenAPIV3.Document, client).parse();
       break;
     case OpenApiVersion.v3_1:
-      await new OpenApiV3_1(doc as OpenAPIV3_1.Document, client, output).parse();
+      await new OpenApiV3_1(doc as OpenAPIV3_1.Document, client).parse();
       break;
     default:
       break;
   }
 };
 
-export default async function codeGen(options: ClientGenOptions) {
+export default async function openapi(options: OpenapiOptions) {
   if (!options.doc) {
     console.error(`Missing openapi doc url`);
     process.exit(1);
