@@ -118,3 +118,27 @@ export type Enum = {
   modifier?: string[];
   members: (Omit<PropertySignature, "require" | "deprecated"> & { type?: string })[];
 };
+
+// New Type With Kind
+//
+
+export interface BaseNode {
+  kind: number;
+}
+
+export interface StringLiteralNode {
+  kind: 1;
+  name: string;
+}
+
+export interface PropertySignatureNode {
+  name: string;
+  required?: boolean;
+  deprecated?: boolean;
+  description?: string;
+  in?: string;
+  type: ArrayType["elementType"];
+  format?: string;
+  dotdotdot?: boolean;
+  initializer?: string | TypeLiteral;
+}
