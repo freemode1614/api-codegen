@@ -122,6 +122,27 @@ export class V3 extends Adaptor<OpenAPIV3.Document> implements Adaptor<OpenAPIV3
     );
   }
 
+  private requestBodyToTsNode(
+    requestBody: OpenAPIV3.ReferenceObject | OpenAPIV3.RequestBodyObject,
+  ): ParameterDeclaration {
+    if (isV3ReferenceObject(requestBody)) {
+      // TODO:
+    } else {
+      const { description, required, content } = requestBody;
+
+      if (Object.values(content).length > 0) {
+        const mediaSchema = Object.values(requestBody.content)[0].schema;
+        if (mediaSchema) {
+          if (isV3ReferenceObject(mediaSchema)) {
+            // TODO:
+          } else {
+            //
+          }
+        }
+      }
+    }
+  }
+
   apis() {
     const apiDeclarations: (FunctionDeclaration | ExpressionStatement)[] = [];
 
@@ -163,7 +184,12 @@ export class V3 extends Adaptor<OpenAPIV3.Document> implements Adaptor<OpenAPIV3
                 undefined,
                 pathToName(path, httpMethod, operationId),
                 undefined,
-                parameters ? [this.parametersToTsNode(parameters)] : [],
+                parameters
+                  ? // eslint-disable-next-line unicorn/prefer-spread
+                    [this.parametersToTsNode(parameters)].concat(
+                      requestBody ? this.requestBodyToTsNode(requestBody) : [],
+                    )
+                  : [],
                 undefined,
                 body,
               );
