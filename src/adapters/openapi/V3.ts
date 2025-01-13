@@ -116,7 +116,7 @@ export class V3 extends Adaptor<OpenAPIV3.Document> implements Adaptor<OpenAPIV3
 
     return ts.createParameterDeclaration(
       //
-      [],
+      undefined,
       undefined,
       ts.createObjectBindingPattern(objectElements),
       undefined,
@@ -127,7 +127,13 @@ export class V3 extends Adaptor<OpenAPIV3.Document> implements Adaptor<OpenAPIV3
     requestBody: OpenAPIV3.ReferenceObject | OpenAPIV3.RequestBodyObject,
   ): ParameterDeclaration {
     if (isV3ReferenceObject(requestBody)) {
-      // TODO:
+      return ts.createParameterDeclaration(
+        undefined,
+        undefined,
+        ts.createIdentifier(camelCase(reference2name(requestBody.$ref))),
+        undefined,
+        ts.createTypeReferenceNode(reference2name(requestBody.$ref), undefined),
+      );
     } else {
       const { description, required, content } = requestBody;
 
@@ -143,10 +149,56 @@ export class V3 extends Adaptor<OpenAPIV3.Document> implements Adaptor<OpenAPIV3
               ts.createTypeReferenceNode(reference2name(mediaSchema.$ref)),
             );
           } else {
-            return ts.createParameterDeclaration(undefined, undefined, name, undefined)
+            if (
+              mediaSchema.type === "object" &&
+              mediaSchema.properties &&
+              Object.values(mediaSchema.properties).length > 0
+            ) {
+              return this.parametersToTsNode(
+                Object.keys(mediaSchema.properties).map((propKey) => {
+                  const propScheme = mediaSchema.properties![propKey];
+
+                  return Object.assign(
+                    {
+                      name: propKey,
+                      schema: propScheme,
+                      in: "body",
+                      required: mediaSchema.required ? mediaSchema.required.includes(propKey) : false,
+                    },
+                    isV3ReferenceObject(propScheme)
+                      ? {}
+                      : { description: propScheme.description, deprecated: propScheme.deprecated },
+                  ) as OpenAPIV3.ParameterObject;
+                }),
+              );
+            } else {
+              return ts.createParameterDeclaration(
+                undefined,
+                undefined,
+                ts.createIdentifier("req"),
+                undefined,
+                this.schemaToTypeNode(mediaSchema),
+              );
+            }
+
+            // ts.createParameterDeclaration(
+            //   undefined,
+            //   undefined,
+            //   name,
+            //   undefined,
+            //   this.schemaToTypeNode(mediaSchema),
+            // );
           }
         }
       }
+
+      return ts.createParameterDeclaration(
+        undefined,
+        undefined,
+        ts.createIdentifier("req"),
+        undefined,
+        ts.createToken(SyntaxKind.UnknownKeyword),
+      );
     }
   }
 
