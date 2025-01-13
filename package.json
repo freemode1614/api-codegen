@@ -1,8 +1,11 @@
 {
-  "name": "@moccona/openapi",
+  "name": "@moccona/openapi-generator",
   "version": "0.0.0",
   "description": "Code gen for OpenAPI/Swagger",
   "type": "module",
+  "bin": {
+    "gen": "./npm/cli.js"
+  },
   "scripts": {
     "dev": "cross-env NODE_ENV=development tsup --watch",
     "build": "cross-env NODE_ENV=production tsup",
@@ -30,10 +33,10 @@
     }
   },
   "dependencies": {
-    "prettier": "^3.4.2",
-    "typescript": "^5.7.2",
-    "undici": "^7.2.0",
-    "yaml": "^2.7.0"
+    "prettier": "^3",
+    "typescript": "^5",
+    "undici": "^7",
+    "yaml": "^2"
   },
   "devDependencies": {
     "@changesets/cli": "^2.27.11",

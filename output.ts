@@ -23,10 +23,8 @@ export async function listDataSetsUsingGET() {
 
 listSearchableFieldsUsingGET.displayName = "listSearchableFieldsUsingGET";
 export async function listSearchableFieldsUsingGET({ dataset, version }: { dataset: string; version: string }) {
-  listSearchableFieldsUsingGET.abort = new AbortController();
   return fetch(`/${dataset}/${version}/fields`, {
     method: "GET",
-    signal: listDataSetsUsingGET.abort.signal,
   }).then(async (resp) => (await resp.json()) as string);
 }
 

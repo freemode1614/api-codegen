@@ -1,4 +1,4 @@
-const formatMapping = {
+export const formatMapping = {
   int32: "number",
   int64: "number",
   float: "number",

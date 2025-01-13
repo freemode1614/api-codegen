@@ -1,2 +1,1 @@
-# ts-starter
-TS project start template
+# @moccona/openapi-generator

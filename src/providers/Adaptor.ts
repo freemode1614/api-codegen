@@ -1,9 +1,9 @@
 import type { OpenAPI } from "openapi-types";
+import { ExpressionStatement, FunctionDeclaration } from "typescript";
 
 import Client from "@/providers/Client";
 import { MaybeTagItem } from "@/types/tag";
 import { Enum } from "@/types/type";
-import isSameEnum from "@/utils/isSameEnum";
 
 type GetFromDoc<T> = (doc: T) => MaybeTagItem;
 
@@ -22,7 +22,6 @@ export default abstract class Adaptor<D = OpenAPI.Document> {
    */
   readonly client: Client;
   readonly enums: Record<string, Enum>;
-  abstract parse(): Promise<string>;
 
   /**
    *
@@ -48,50 +47,23 @@ export default abstract class Adaptor<D = OpenAPI.Document> {
 
   /**
    *
-   * Get enum name in store
-   *
-   * @example
-   *
-   * getEnumNameBySchema([0,1]); -> 'liveStatus'
-   *
-   *
-   */
-  protected getEnumNameBySchema(enumSchema: unknown[]) {
-    const enum_ = Object.values(this.enums).find((value) =>
-      isSameEnum(
-        value.members.map((m) => m.name),
-        enumSchema,
-      ),
-    );
-
-    return enum_?.name;
-  }
-
-  /**
-   *
-   * Get pre-defined schemas.
-   *
-   */
-  abstract schemas(): {
-    requestBodies: unknown;
-    responses: unknown;
-    schemas: unknown;
-    parameters: unknown;
-  };
-
-  /**
-   *
    * Get api definitions
    *
    */
-  abstract apis(): void;
+  abstract apis(): (FunctionDeclaration | ExpressionStatement)[];
+
+  /**
+   *
+   * Assemble all nodes
+   *
+   */
+  // abstract assemble(): SourceFile;
 
   constructor(doc: D, client: Client) {
     this.doc = doc;
     this.client = client;
     this.enums = {};
 
-    this.schemas();
     this.apis();
   }
 }
