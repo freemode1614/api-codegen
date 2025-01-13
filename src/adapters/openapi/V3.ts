@@ -13,7 +13,8 @@ import {
 import Adaptor from "@/providers/Adaptor";
 import { isV3ReferenceObject } from "@/types/openapi";
 import { formatMapping } from "@/utils/format2type";
-import pathToName from "@/utils/pathToName";
+import pathToName, { camelCase } from "@/utils/pathToName";
+import reference2name from "@/utils/reference2name";
 
 export class V3 extends Adaptor<OpenAPIV3.Document> implements Adaptor<OpenAPIV3.Document> {
   assemble() {
@@ -134,9 +135,15 @@ export class V3 extends Adaptor<OpenAPIV3.Document> implements Adaptor<OpenAPIV3
         const mediaSchema = Object.values(requestBody.content)[0].schema;
         if (mediaSchema) {
           if (isV3ReferenceObject(mediaSchema)) {
-            // TODO:
+            return ts.createParameterDeclaration(
+              [],
+              undefined,
+              camelCase(reference2name(mediaSchema.$ref)),
+              undefined,
+              ts.createTypeReferenceNode(reference2name(mediaSchema.$ref)),
+            );
           } else {
-            //
+            return ts.createParameterDeclaration(undefined, undefined, name, undefined)
           }
         }
       }
