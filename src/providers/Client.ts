@@ -1,18 +1,31 @@
-import { factory as ts, NodeFlags, Statement } from "typescript";
+import {
+  BindingElement,
+  factory as ts,
+  NodeFlags,
+  ParameterDeclaration,
+  PropertySignature,
+  Statement,
+  SyntaxKind,
+  TypeNode,
+} from "typescript";
 
 import { isV3ReferenceObject } from "@/types/openapi";
+import { formatMapping } from "@/utils/format2type";
 
 export type ClientReferenceObject = { $ref: string };
 export type ClientNonArraySchemaObjectType = "boolean" | "object" | "number" | "string" | "integer";
 export type ClientArraySchemaObjectType = "array";
 export type ClientSchemaObject = ClientArraySchemaObject | ClientNonArraySchemaObject;
+
 export interface ClientArraySchemaObject extends ClientBaseSchemaObject {
   type: ClientArraySchemaObjectType;
   items: ClientReferenceObject | ClientSchemaObject;
 }
+
 export interface ClientNonArraySchemaObject extends ClientBaseSchemaObject {
   type?: ClientNonArraySchemaObjectType;
 }
+
 export interface ClientBaseSchemaObject {
   title?: string;
   description?: string;
@@ -52,6 +65,7 @@ export default abstract class Client {
     requestBody?: ClientSchemaObject,
     response?: ClientSchemaObject,
     useFormData?: boolean,
+    useJSONResponse?: boolean,
   ): Statement[];
 
   /**
@@ -138,6 +152,107 @@ export default abstract class Client {
               ),
         );
       }),
+    );
+  }
+
+  public schemaToTypeNode(schema: ClientSchemaObject | ClientReferenceObject): TypeNode {
+    if (isV3ReferenceObject(schema)) {
+      // TODO:
+    } else {
+      if (schema.type === "array") {
+        const { items } = schema;
+        if (isV3ReferenceObject(items)) {
+          // TODO:
+        } else {
+          return ts.createArrayTypeNode(this.schemaToTypeNode(items));
+        }
+      }
+
+      if (schema.type === "object" && schema.properties && Object.values(schema.properties).length > 0) {
+        return ts.createTypeLiteralNode(
+          Object.keys(schema.properties)
+            .map((propKey) => {
+              const propSchema = schema.properties![propKey];
+              if (isV3ReferenceObject(propSchema)) {
+                // TODO:
+              } else {
+                return ts.createPropertySignature(
+                  undefined,
+                  ts.createIdentifier(propKey),
+                  undefined,
+                  this.schemaToTypeNode(propSchema),
+                );
+              }
+            })
+            .filter(Boolean) as PropertySignature[],
+        );
+      }
+
+      if (schema.format && Object.keys(formatMapping).includes(schema.format)) {
+        switch (formatMapping[schema.format as keyof typeof formatMapping]) {
+          case "number":
+            return ts.createToken(SyntaxKind.NumberKeyword);
+          case "string":
+            return ts.createToken(SyntaxKind.StringKeyword);
+          case "boolean":
+            return ts.createToken(SyntaxKind.BooleanKeyword);
+          case "File":
+            return ts.createTypeReferenceNode(ts.createIdentifier("File"));
+          default:
+            break;
+        }
+      }
+
+      // None array and object schema
+      if (schema.type && ["boolean", "number", "string", "integer"].includes(schema.type)) {
+        switch (schema.type) {
+          case "boolean":
+            return ts.createToken(SyntaxKind.BooleanKeyword);
+          case "string":
+            return ts.createToken(SyntaxKind.StringKeyword);
+          case "number":
+          case "integer":
+            return ts.createToken(SyntaxKind.NumberKeyword);
+          default:
+            break;
+        }
+      }
+    }
+
+    return ts.createToken(SyntaxKind.UnknownKeyword);
+  }
+
+  public parametersToTsNode(parameters: (ClientParameterObject | ClientReferenceObject)[]): ParameterDeclaration {
+    const objectElements: BindingElement[] = [];
+    const typeObjectElements: PropertySignature[] = [];
+
+    for (const parameter of parameters) {
+      if (isV3ReferenceObject(parameter)) {
+        // TODO:
+        continue;
+      }
+
+      const { name, deprecated, description, allowEmptyValue, schema, required } = parameter;
+
+      objectElements.push(ts.createBindingElement(undefined, undefined, ts.createIdentifier(name)));
+      typeObjectElements.push(
+        ts.createPropertySignature(
+          [],
+          ts.createIdentifier(name),
+          required ? undefined : ts.createToken(SyntaxKind.QuestionToken),
+          !schema ? ts.createToken(SyntaxKind.UnknownKeyword) : this.schemaToTypeNode(schema),
+        ),
+      );
+    }
+
+    return ts.createParameterDeclaration(
+      //
+      undefined,
+      undefined,
+      ts.createObjectBindingPattern(objectElements),
+      undefined,
+      ts.createTypeLiteralNode(typeObjectElements),
+      undefined,
     );
   }
 }

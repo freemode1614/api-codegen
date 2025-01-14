@@ -1,131 +1,24 @@
 import { OpenAPIV3 } from "openapi-types";
 import {
-  BindingElement,
   Block,
   ExpressionStatement,
   factory as ts,
   FunctionDeclaration,
   ParameterDeclaration,
-  PropertySignature,
   SyntaxKind,
-  TypeNode,
 } from "typescript";
 
 import Adaptor from "@/providers/Adaptor";
 import { ClientSchemaObject } from "@/providers/Client";
 import { isV3ReferenceObject } from "@/types/openapi";
-import { formatMapping } from "@/utils/format2type";
 import pathToName, { camelCase } from "@/utils/pathToName";
 import reference2name from "@/utils/reference2name";
 
 export class V3 extends Adaptor<OpenAPIV3.Document> implements Adaptor<OpenAPIV3.Document> {
-  assemble() {
-    throw new Error("Method not implemented.");
-  }
-
-  private schemaToTypeNode(schema: OpenAPIV3.SchemaObject | OpenAPIV3.ReferenceObject): TypeNode {
-    if (isV3ReferenceObject(schema)) {
-      // TODO:
-    } else {
-      if (schema.type === "array") {
-        const { items } = schema;
-        if (isV3ReferenceObject(items)) {
-          // TODO:
-        } else {
-          return ts.createArrayTypeNode(this.schemaToTypeNode(items));
-        }
-      }
-
-      if (schema.type === "object" && schema.properties && Object.values(schema.properties).length > 0) {
-        return ts.createTypeLiteralNode(
-          Object.keys(schema.properties)
-            .map((propKey) => {
-              const propSchema = schema.properties![propKey];
-              if (isV3ReferenceObject(propSchema)) {
-                // TODO:
-              } else {
-                return ts.createPropertySignature(
-                  undefined,
-                  ts.createIdentifier(propKey),
-                  undefined,
-                  this.schemaToTypeNode(propSchema),
-                );
-              }
-            })
-            .filter(Boolean) as PropertySignature[],
-        );
-      }
-
-      if (schema.format && Object.keys(formatMapping).includes(schema.format)) {
-        switch (formatMapping[schema.format as keyof typeof formatMapping]) {
-          case "number":
-            return ts.createToken(SyntaxKind.NumberKeyword);
-          case "string":
-            return ts.createToken(SyntaxKind.StringKeyword);
-          case "boolean":
-            return ts.createToken(SyntaxKind.BooleanKeyword);
-          case "File":
-            return ts.createTypeReferenceNode(ts.createIdentifier("File"));
-
-          default:
-            break;
-        }
-      }
-
-      // None array and object schema
-      if (schema.type && ["boolean", "number", "string", "integer"].includes(schema.type)) {
-        switch (schema.type) {
-          case "boolean":
-            return ts.createToken(SyntaxKind.BooleanKeyword);
-          case "string":
-            return ts.createToken(SyntaxKind.StringKeyword);
-          case "number":
-          case "integer":
-            return ts.createToken(SyntaxKind.NumberKeyword);
-          default:
-            break;
-        }
-      }
-    }
-
-    return ts.createToken(SyntaxKind.UnknownKeyword);
-  }
-
-  private parametersToTsNode(
-    parameters: (OpenAPIV3.ParameterObject | OpenAPIV3.ReferenceObject)[],
-  ): ParameterDeclaration {
-    const objectElements: BindingElement[] = [];
-    const typeObjectElements: PropertySignature[] = [];
-
-    for (const parameter of parameters) {
-      if (isV3ReferenceObject(parameter)) {
-        // TODO:
-        continue;
-      }
-
-      const { name, deprecated, description, allowEmptyValue, schema, required } = parameter;
-
-      objectElements.push(ts.createBindingElement(undefined, undefined, ts.createIdentifier(name)));
-      typeObjectElements.push(
-        ts.createPropertySignature(
-          [],
-          ts.createIdentifier(name),
-          required ? undefined : ts.createToken(SyntaxKind.QuestionToken),
-          !schema ? ts.createToken(SyntaxKind.UnknownKeyword) : this.schemaToTypeNode(schema),
-        ),
-      );
-    }
-
-    return ts.createParameterDeclaration(
-      //
-      undefined,
-      undefined,
-      ts.createObjectBindingPattern(objectElements),
-      undefined,
-      ts.createTypeLiteralNode(typeObjectElements),
-      undefined,
-    );
-  }
+  private requestBodies: OpenAPIV3.ComponentsObject["requestBodies"] = {};
+  private responses: OpenAPIV3.ComponentsObject["responses"] = {};
+  private parameters: OpenAPIV3.ComponentsObject["parameters"] = {};
+  private schemas: OpenAPIV3.ComponentsObject["schemas"] = {};
 
   private requestBodyToTsNode(
     requestBody: OpenAPIV3.ReferenceObject | OpenAPIV3.RequestBodyObject,
@@ -158,7 +51,7 @@ export class V3 extends Adaptor<OpenAPIV3.Document> implements Adaptor<OpenAPIV3
               mediaSchema.properties &&
               Object.values(mediaSchema.properties).length > 0
             ) {
-              return this.parametersToTsNode(
+              return this.client.parametersToTsNode(
                 Object.keys(mediaSchema.properties).map((propKey) => {
                   const propScheme = mediaSchema.properties![propKey];
 
@@ -181,7 +74,7 @@ export class V3 extends Adaptor<OpenAPIV3.Document> implements Adaptor<OpenAPIV3
                 undefined,
                 ts.createIdentifier("req"),
                 undefined,
-                this.schemaToTypeNode(mediaSchema),
+                this.client.schemaToTypeNode(mediaSchema),
               );
             }
           }
@@ -206,19 +99,22 @@ export class V3 extends Adaptor<OpenAPIV3.Document> implements Adaptor<OpenAPIV3
     responses?: OpenAPIV3.OperationObject["responses"],
   ): Block {
     const shouldPutRequestBodyInFormData =
-      !isV3ReferenceObject(requestBody) &&
-      requestBody?.content &&
-      ("multipart/form-data" in requestBody.content || "application/x-www-form-urlencoded" in requestBody.content);
+      (!isV3ReferenceObject(requestBody) &&
+        requestBody?.content &&
+        ("multipart/form-data" in requestBody.content || "application/x-www-form-urlencoded" in requestBody.content)) ??
+      parameters.some((s) => !isV3ReferenceObject(s) && s.in === "formData");
 
-    if (!requestBody) {
-      requestBody = {
-        content: {},
-      };
+    if (requestBody && isV3ReferenceObject(requestBody)) {
+      requestBody = this.requestBodies![reference2name(requestBody.$ref)] as OpenAPIV3.RequestBodyObject;
     }
 
-    if (!responses) {
-      responses = {};
+    let response = responses ? responses[200] : undefined;
+
+    if (response && isV3ReferenceObject(response)) {
+      response = this.responses![reference2name(response.$ref)] as OpenAPIV3.ResponseObject;
     }
+
+    const shouldUseJSONResponse = response?.content && "application/json" in response.content;
 
     return ts.createBlock(
       [
@@ -226,11 +122,21 @@ export class V3 extends Adaptor<OpenAPIV3.Document> implements Adaptor<OpenAPIV3
         ...(shouldPutRequestBodyInFormData
           ? this.client.formDataStatement(
               parameters,
-              // TODO: need make sure mediaTypeObject.schema is always a jsonschema not a reference.
-              // Object.values(requestBody.content)[0].schema! as ClientSchemaObject,
+              requestBody?.content
+                ? //
+                  (Object.values(requestBody.content)[0].schema as ClientSchemaObject)
+                : undefined,
             )
           : []),
-        ...this.client.httpClient(path, method, parameters, requestBody, responses, !!shouldPutRequestBodyInFormData),
+        ...this.client.httpClient(
+          path,
+          method,
+          parameters,
+          requestBody ? (Object.values(requestBody.content)[0].schema as ClientSchemaObject) : undefined,
+          response?.content ? (Object.values(response.content)[0].schema as ClientSchemaObject) : undefined,
+          !!shouldPutRequestBodyInFormData,
+          !!shouldUseJSONResponse,
+        ),
       ],
       true,
     );
@@ -240,23 +146,19 @@ export class V3 extends Adaptor<OpenAPIV3.Document> implements Adaptor<OpenAPIV3
     const apiDeclarations: (FunctionDeclaration | ExpressionStatement)[] = [];
 
     const { components = {}, paths = {} } = this.doc;
+    const { requestBodies, responses, parameters, schemas } = components;
+
+    this.requestBodies = requestBodies;
+    this.responses = responses;
+    this.parameters = parameters;
+    this.schemas = schemas;
 
     if (Object.values(paths).length === 0) {
       return apiDeclarations;
     }
 
     // Global schema definitions
-    const {
-      schemas,
-      responses,
-      parameters: g_parameters,
-      examples,
-      requestBodies,
-      headers,
-      securitySchemes,
-      links,
-      callbacks,
-    } = components;
+    const { parameters: g_parameters, examples, headers, securitySchemes, links, callbacks } = components;
 
     for (const path in paths) {
       if (Object.prototype.hasOwnProperty.call(paths, path)) {
@@ -293,7 +195,7 @@ export class V3 extends Adaptor<OpenAPIV3.Document> implements Adaptor<OpenAPIV3
                 undefined,
                 parameters.length > 0
                   ? ([
-                      this.parametersToTsNode(parameters),
+                      this.client.parametersToTsNode(parameters),
                       requestBody ? this.requestBodyToTsNode(requestBody) : undefined,
                     ].filter(Boolean) as ParameterDeclaration[])
                   : [],
@@ -315,5 +217,9 @@ export class V3 extends Adaptor<OpenAPIV3.Document> implements Adaptor<OpenAPIV3
     }
 
     return apiDeclarations;
+  }
+
+  assemble() {
+    throw new Error("Method not implemented.");
   }
 }
