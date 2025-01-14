@@ -18,6 +18,7 @@ export default class FetchClient extends Client implements Client {
     useJSONResponse = false,
   ): Statement[] {
     const statements: Statement[] = [];
+    const inBody = parameters.filter((p) => p.in === "body");
 
     const returnValue = ts.createReturnStatement(
       ts.createCallExpression(
@@ -28,7 +29,24 @@ export default class FetchClient extends Client implements Client {
                 ts.createObjectLiteralExpression(
                   [
                     ts.createPropertyAssignment(ts.createIdentifier(this.methodName), ts.createStringLiteral(method)),
-                    ts.createPropertyAssignment(ts.createIdentifier(this.bodyName), ts.createIdentifier("fd")),
+                    ts.createPropertyAssignment(
+                      ts.createIdentifier(this.bodyName),
+                      useFormData
+                        ? ts.createIdentifier("fd")
+                        : ts.createCallExpression(
+                            ts.createPropertyAccessExpression(
+                              ts.createIdentifier("JSON"),
+                              ts.createIdentifier("stringify"),
+                            ),
+                            [],
+                            [
+                              ts.createObjectLiteralExpression(
+                                inBody.map((b) => ts.createShorthandPropertyAssignment(ts.createIdentifier(b.name))),
+                                true,
+                              ),
+                            ],
+                          ),
+                    ),
                     ts.createPropertyAssignment(ts.createIdentifier(this.headerName), ts.createIdentifier("header")),
                   ],
                   true,
