@@ -1,8 +1,8 @@
 import { OpenAPI, OpenAPIV3, OpenAPIV3_1 } from "openapi-types";
 
 import OpenApiV2 from "@/adapters/openapi/OpenAPIV2";
-import OpenApiV3 from "@/adapters/openapi/OpenAPIV3";
 import OpenApiV3_1 from "@/adapters/openapi/OpenAPIV3_1";
+import { V3 } from "@/adapters/openapi/V3";
 import AxiosClient from "@/client/AxiosClient";
 import FetchClient from "@/client/FetchClient";
 import { ClientTypes } from "@/types/client";
@@ -26,7 +26,7 @@ export const codeGenByConfigForTesting = async (doc: OpenAPI.Document) => {
       await new OpenApiV2().parse();
       break;
     case OpenApiVersion.v3:
-      await new OpenApiV3(doc as OpenAPIV3.Document, client).parse();
+      new V3(doc as OpenAPIV3.Document, client);
       break;
     case OpenApiVersion.v3_1:
       await new OpenApiV3_1(doc as OpenAPIV3_1.Document, client).parse();
@@ -60,10 +60,10 @@ export default async function openapi(options: OpenapiOptions) {
       code = await new OpenApiV2().parse();
       break;
     case OpenApiVersion.v3:
-      code = await new OpenApiV3(apidoc as OpenAPIV3.Document, client).parse();
+      new V3(apidoc as OpenAPIV3.Document, client);
       break;
     case OpenApiVersion.v3_1:
-      code = await new OpenApiV3_1(apidoc as OpenAPIV3_1.Document, client).parse();
+      await new OpenApiV3_1(apidoc as OpenAPIV3_1.Document, client).parse();
       break;
     default:
       break;

@@ -1,6 +1,7 @@
 import { OpenAPIV3 } from "openapi-types";
 import {
   BindingElement,
+  Block,
   ExpressionStatement,
   factory as ts,
   FunctionDeclaration,
@@ -11,6 +12,7 @@ import {
 } from "typescript";
 
 import Adaptor from "@/providers/Adaptor";
+import { ClientSchemaObject } from "@/providers/Client";
 import { isV3ReferenceObject } from "@/types/openapi";
 import { formatMapping } from "@/utils/format2type";
 import pathToName, { camelCase } from "@/utils/pathToName";
@@ -120,6 +122,8 @@ export class V3 extends Adaptor<OpenAPIV3.Document> implements Adaptor<OpenAPIV3
       undefined,
       ts.createObjectBindingPattern(objectElements),
       undefined,
+      ts.createTypeLiteralNode(typeObjectElements),
+      undefined,
     );
   }
 
@@ -180,14 +184,6 @@ export class V3 extends Adaptor<OpenAPIV3.Document> implements Adaptor<OpenAPIV3
                 this.schemaToTypeNode(mediaSchema),
               );
             }
-
-            // ts.createParameterDeclaration(
-            //   undefined,
-            //   undefined,
-            //   name,
-            //   undefined,
-            //   this.schemaToTypeNode(mediaSchema),
-            // );
           }
         }
       }
@@ -200,6 +196,44 @@ export class V3 extends Adaptor<OpenAPIV3.Document> implements Adaptor<OpenAPIV3
         ts.createToken(SyntaxKind.UnknownKeyword),
       );
     }
+  }
+
+  private bodyBlock(
+    path: string,
+    method: keyof typeof OpenAPIV3.HttpMethods,
+    parameters: OpenAPIV3.OperationObject["parameters"] = [],
+    requestBody?: OpenAPIV3.OperationObject["requestBody"],
+    responses?: OpenAPIV3.OperationObject["responses"],
+  ): Block {
+    const shouldPutRequestBodyInFormData =
+      !isV3ReferenceObject(requestBody) &&
+      requestBody?.content &&
+      ("multipart/form-data" in requestBody.content || "application/x-www-form-urlencoded" in requestBody.content);
+
+    if (!requestBody) {
+      requestBody = {
+        content: {},
+      };
+    }
+
+    if (!responses) {
+      responses = {};
+    }
+
+    return ts.createBlock(
+      [
+        //
+        ...(shouldPutRequestBodyInFormData
+          ? this.client.formDataStatement(
+              parameters,
+              // TODO: need make sure mediaTypeObject.schema is always a jsonschema not a reference.
+              // Object.values(requestBody.content)[0].schema! as ClientSchemaObject,
+            )
+          : []),
+        ...this.client.httpClient(path, method, parameters, requestBody, responses, !!shouldPutRequestBodyInFormData),
+      ],
+      true,
+    );
   }
 
   apis() {
@@ -235,22 +269,42 @@ export class V3 extends Adaptor<OpenAPIV3.Document> implements Adaptor<OpenAPIV3
             httpMethod = httpMethod.toLowerCase();
             const operationByMethod = pathObject[httpMethod as OpenAPIV3.HttpMethods];
             if (operationByMethod) {
-              const { parameters, operationId, requestBody, responses, callbacks, deprecated, summary } =
-                operationByMethod;
+              const { operationId, requestBody, responses, callbacks, deprecated, summary } = operationByMethod;
+              let { parameters = [] } = operationByMethod;
+
+              if (p_parameters) {
+                const names = new Set(p_parameters.map((p) => (isV3ReferenceObject(p) ? p.$ref : p.name)));
+                parameters = [
+                  ...p_parameters,
+                  ...parameters.filter((parameter) => {
+                    if (isV3ReferenceObject(parameter)) {
+                      return !names.has(parameter.$ref);
+                    } else {
+                      return !names.has(parameter.name);
+                    }
+                  }),
+                ];
+              }
 
               const fnDeclararion = ts.createFunctionDeclaration(
                 [ts.createModifier(SyntaxKind.ExportKeyword)],
                 undefined,
                 pathToName(path, httpMethod, operationId),
                 undefined,
-                parameters
-                  ? // eslint-disable-next-line unicorn/prefer-spread
-                    [this.parametersToTsNode(parameters)].concat(
-                      requestBody ? this.requestBodyToTsNode(requestBody) : [],
-                    )
+                parameters.length > 0
+                  ? ([
+                      this.parametersToTsNode(parameters),
+                      requestBody ? this.requestBodyToTsNode(requestBody) : undefined,
+                    ].filter(Boolean) as ParameterDeclaration[])
                   : [],
                 undefined,
-                body,
+                this.bodyBlock(
+                  path,
+                  httpMethod as keyof typeof OpenAPIV3.HttpMethods,
+                  parameters,
+                  requestBody,
+                  responses,
+                ),
               );
 
               apiDeclarations.push(fnDeclararion);

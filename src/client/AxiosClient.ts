@@ -1,17 +1,18 @@
-import Generator from "@/generators/Generator";
-import Client from "@/providers/Client";
-import type { ClientInfo } from "@/types/client";
+import { Statement, TemplateExpression } from "typescript";
 
-export default class AxiosClient extends Generator implements Client {
-  fnBody(apis: ClientInfo): string {
+import Client, { ClientParameterObject, ClientReferenceObject, ClientSchemaObject } from "@/providers/Client";
+
+export default class AxiosClient extends Client implements Client {
+  httpClient(path: string, method: string, parameters: (ClientParameterObject | ClientReferenceObject)[]): Statement[] {
     throw new Error("Method not implemented.");
   }
-
-  code = "";
-  clientName = "axios";
-  clientInfos: ClientInfo[] = [];
-
-  templates(apis: ClientInfo[]): string {
-    return "";
+  public formDataStatement(
+    parameters: (ClientParameterObject | ClientReferenceObject)[],
+    requestBodySchema: ClientSchemaObject,
+  ): Statement[] {
+    throw new Error("Method not implemented.");
+  }
+  public urlTemplate(path: string, parameters: ClientParameterObject[]): TemplateExpression {
+    throw new Error("Method not implemented.");
   }
 }

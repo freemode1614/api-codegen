@@ -1,11 +1,10 @@
 import type { OpenAPI } from "openapi-types";
-import { ExpressionStatement, FunctionDeclaration } from "typescript";
+import { ExpressionStatement, FunctionDeclaration, NodeFlags, SyntaxKind } from "typescript";
+import { factory as ts } from "typescript";
 
 import Client from "@/providers/Client";
-import { MaybeTagItem } from "@/types/tag";
 import { Enum } from "@/types/type";
-
-type GetFromDoc<T> = (doc: T) => MaybeTagItem;
+import { sourceFileToCode } from "@/utils/sourceFileToCode";
 
 export default abstract class Adaptor<D = OpenAPI.Document> {
   /**
@@ -37,12 +36,12 @@ export default abstract class Adaptor<D = OpenAPI.Document> {
    *
    */
   public banner(title: GetFromDoc<D>, version: GetFromDoc<D>, description: GetFromDoc<D>) {
-    return this.client.comment([
-      //
-      title(this.doc),
-      version(this.doc),
-      description(this.doc),
-    ]);
+    // return this.client.comment([
+    //   //
+    //   title(this.doc),
+    //   version(this.doc),
+    //   description(this.doc),
+    // ]);
   }
 
   /**
@@ -64,6 +63,15 @@ export default abstract class Adaptor<D = OpenAPI.Document> {
     this.client = client;
     this.enums = {};
 
-    this.apis();
+    const statements = this.apis();
+
+    const sourceFile = ts.createSourceFile(
+      //
+      statements,
+      ts.createToken(SyntaxKind.EndOfFileToken),
+      NodeFlags.None,
+    );
+
+    console.log(sourceFileToCode(sourceFile));
   }
 }

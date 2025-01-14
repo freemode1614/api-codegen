@@ -1,101 +1,46 @@
-import Generator from "@/generators/Generator";
-import Client from "@/providers/Client";
-import type { ClientInfo } from "@/types/client";
-import { isTypeLiteral, PropertySignature, TypeLiteral } from "@/types/type";
-import normalizeName from "@/utils/normalizeName";
-import { camelCase } from "@/utils/pathToName";
-export default class FetchClient extends Generator implements Client {
-  code = "";
-  clientName = "fetch";
-  clientInfos: ClientInfo[] = [];
+import { factory as ts, Statement } from "typescript";
 
-  fnBody(api: ClientInfo): string {
-    const { parameters, method, body, metadata, response } = api;
+import Client, { ClientParameterObject } from "@/providers/Client";
 
-    const args = () => {
-      if (!parameters && !body) return "";
-      const objectLiterals = {
-        members: [
-          {
-            name: "method",
-            initializer: `"${method.toUpperCase()}"`,
-          },
+export default class FetchClient extends Client implements Client {
+  private readonly clientName = "fetch";
+  private readonly methodName = "method";
+  private readonly bodyName = "body";
+  private readonly headerName = "header";
+
+  public httpClient(
+    path: string,
+    method: string,
+    parameters: ClientParameterObject[],
+    useFormData = false,
+  ): Statement[] {
+    const statements: Statement[] = [];
+
+    const returnValue = ts.createReturnStatement(
+      ts.createCallExpression(
+        ts.createPropertyAccessExpression(
+          ts.createCallExpression(ts.createIdentifier(this.clientName), undefined, [
+            this.urlTemplate(path, parameters),
+            ts.createObjectLiteralExpression(
+              [
+                ts.createPropertyAssignment(ts.createIdentifier(this.methodName), ts.createStringLiteral(method)),
+                ts.createPropertyAssignment(ts.createIdentifier(this.bodyName), ts.createIdentifier("fd")),
+                ts.createPropertyAssignment(ts.createIdentifier(this.headerName), ts.createIdentifier("header")),
+              ],
+              true,
+            ),
+          ]),
+          ts.createIdentifier("then"),
+        ),
+        undefined,
+        [
+          // TODO: If response is application/json, using response.json() to decode response to json format.
         ],
-      } as TypeLiteral;
+      ),
+    );
 
-      if (body) {
-        objectLiterals.members.push({
-          name: "body",
-          initializer: metadata.useFormData
-            ? isTypeLiteral(body)
-              ? "fd"
-              : this.toCode(body)
-            : `JSON.stringify(${this.toCode(body)})`,
-        } as PropertySignature);
-      }
+    statements.push(returnValue);
 
-      if (isTypeLiteral(parameters)) {
-        const headers = parameters.members.filter((p) => p.in === "header");
-        const bodies = parameters.members.filter((p) => p.in === "body" || !p.in);
-        if (headers.length > 0) {
-          objectLiterals.members.push({
-            name: "headers",
-            initializer: {
-              members: headers.map(
-                (h) =>
-                  ({
-                    name: h.name,
-                    initializer:
-                      h.format !== "string"
-                        ? `encodeURIComponent(JSON.stringify(${camelCase(normalizeName(h.name))}))`
-                        : `encodeURIComponent(${camelCase(normalizeName(h.name))})`,
-                  }) as PropertySignature,
-              ),
-            },
-          } as PropertySignature);
-        }
-
-        if (!body && bodies.length > 0) {
-          objectLiterals.members.push({
-            name: "body",
-            initializer: metadata.useFormData
-              ? "fd"
-              : `JSON.stringify(${this.toCode({
-                  members: bodies.map(
-                    (b) =>
-                      ({
-                        name: b.name,
-                      }) as PropertySignature,
-                  ),
-                })})`,
-          } as PropertySignature);
-        }
-      }
-
-      return this.toCode(objectLiterals);
-    };
-
-    const code = [
-      this.toFormData(api), //
-      "\n",
-      "return",
-      `${this.clientName}(`,
-      `\`${this.toURL(api)}\`,`,
-      args(),
-      ")",
-      metadata.useJSONResponse && response
-        ? `.then(async (resp) => await resp.json() as ${this.toTypeDeclaration(response)})`
-        : "",
-    ];
-    return code.join(" ");
-  }
-
-  template(api: ClientInfo): string {
-    return this.toFunction(api, this);
-  }
-
-  templates(apis: ClientInfo[]): string {
-    const code = apis.map((api) => this.template(api)).join("\n\n");
-    return code;
+    return statements;
   }
 }
