@@ -5,7 +5,7 @@ export async function anythingImagePngUsingPost(req: File) {
   });
 }
 export async function anythingMultipartFormdataUsingPut(req: {
-  filename?: File[];
+  filename: File[];
 }) {
   const fd = new FormData();
   fd.append("filename", String(req.filename));

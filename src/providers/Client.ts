@@ -9,6 +9,7 @@ import {
   TypeNode,
 } from "typescript";
 
+import { isV3ReferenceObject } from "@/types/openapi";
 import { formatMapping } from "@/utils/format2type";
 import reference2name from "@/utils/reference2name";
 
@@ -79,6 +80,7 @@ export default abstract class Client {
   public formDataStatement(parameters: ClientParameterObject[], requestBodySchema?: ClientSchemaObject): Statement[] {
     const statements: Statement[] = [];
 
+    // const fd = new FormData();
     statements.push(
       ts.createVariableStatement(
         undefined,
@@ -187,7 +189,14 @@ export default abstract class Client {
                 undefined,
                 ts.createStringLiteral(propKey),
                 schema.required?.includes(propKey) ||
-                  (!isClientReferenceObject(propSchema) && propSchema.format === "binary")
+                  (!isClientReferenceObject(propSchema) &&
+                    (propSchema.format === "binary" ||
+                      (propSchema.type === "array" &&
+                        // TODO: propSchema.items acutaly can be undefined
+                        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+                        propSchema.items &&
+                        !isClientReferenceObject(propSchema.items) &&
+                        propSchema.items.format === "binary")))
                   ? undefined
                   : ts.createToken(SyntaxKind.QuestionToken),
                 this.schemaToTypeNode(propSchema),
