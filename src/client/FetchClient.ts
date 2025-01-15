@@ -29,26 +29,33 @@ export default class FetchClient extends Client implements Client {
                 ts.createObjectLiteralExpression(
                   [
                     ts.createPropertyAssignment(ts.createIdentifier(this.methodName), ts.createStringLiteral(method)),
-                    ts.createPropertyAssignment(
-                      ts.createIdentifier(this.bodyName),
-                      useFormData
-                        ? ts.createIdentifier("fd")
-                        : ts.createCallExpression(
-                            ts.createPropertyAccessExpression(
-                              ts.createIdentifier("JSON"),
-                              ts.createIdentifier("stringify"),
-                            ),
-                            [],
-                            [
-                              ts.createObjectLiteralExpression(
-                                inBody.map((b) => ts.createShorthandPropertyAssignment(ts.createIdentifier(b.name))),
-                                true,
+                    // ts.createPropertyAssignment(ts.createIdentifier(this.headerName), ts.createIdentifier("header")),
+                  ].concat(
+                    useFormData || inBody.length > 0 || requestBody
+                      ? ts.createPropertyAssignment(
+                          ts.createIdentifier(this.bodyName),
+                          useFormData
+                            ? ts.createIdentifier("fd")
+                            : ts.createCallExpression(
+                                ts.createPropertyAccessExpression(
+                                  ts.createIdentifier("JSON"),
+                                  ts.createIdentifier("stringify"),
+                                ),
+                                [],
+                                inBody.length > 0
+                                  ? [
+                                      ts.createObjectLiteralExpression(
+                                        inBody.map((b) =>
+                                          ts.createShorthandPropertyAssignment(ts.createIdentifier(b.name)),
+                                        ),
+                                        true,
+                                      ),
+                                    ]
+                                  : [ts.createIdentifier("req")],
                               ),
-                            ],
-                          ),
-                    ),
-                    ts.createPropertyAssignment(ts.createIdentifier(this.headerName), ts.createIdentifier("header")),
-                  ],
+                        )
+                      : [],
+                  ),
                   true,
                 ),
               ]),
@@ -69,7 +76,7 @@ export default class FetchClient extends Client implements Client {
         [
           // TODO: If response is application/json, using response.json() to decode response to json format.
           ts.createArrowFunction(
-            undefined,
+            [ts.createModifier(SyntaxKind.AsyncKeyword)],
             [],
             [ts.createParameterDeclaration(undefined, undefined, ts.createIdentifier("response"))],
             undefined,

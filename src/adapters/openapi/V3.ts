@@ -6,12 +6,13 @@ import {
   FunctionDeclaration,
   ParameterDeclaration,
   SyntaxKind,
+  TypeAliasDeclaration,
 } from "typescript";
 
 import Adaptor from "@/providers/Adaptor";
 import { ClientSchemaObject } from "@/providers/Client";
 import { isV3ReferenceObject } from "@/types/openapi";
-import pathToName, { camelCase } from "@/utils/pathToName";
+import pathToName from "@/utils/pathToName";
 import reference2name from "@/utils/reference2name";
 
 export class V3 extends Adaptor<OpenAPIV3.Document> implements Adaptor<OpenAPIV3.Document> {
@@ -27,7 +28,7 @@ export class V3 extends Adaptor<OpenAPIV3.Document> implements Adaptor<OpenAPIV3
       return ts.createParameterDeclaration(
         undefined,
         undefined,
-        ts.createIdentifier(camelCase(reference2name(requestBody.$ref))),
+        ts.createIdentifier("req"),
         undefined,
         ts.createTypeReferenceNode(reference2name(requestBody.$ref), undefined),
       );
@@ -39,44 +40,20 @@ export class V3 extends Adaptor<OpenAPIV3.Document> implements Adaptor<OpenAPIV3
         if (mediaSchema) {
           if (isV3ReferenceObject(mediaSchema)) {
             return ts.createParameterDeclaration(
-              [],
               undefined,
-              camelCase(reference2name(mediaSchema.$ref)),
+              undefined,
+              ts.createIdentifier("req"),
               undefined,
               ts.createTypeReferenceNode(reference2name(mediaSchema.$ref)),
             );
           } else {
-            if (
-              mediaSchema.type === "object" &&
-              mediaSchema.properties &&
-              Object.values(mediaSchema.properties).length > 0
-            ) {
-              return this.client.parametersToTsNode(
-                Object.keys(mediaSchema.properties).map((propKey) => {
-                  const propScheme = mediaSchema.properties![propKey];
-
-                  return Object.assign(
-                    {
-                      name: propKey,
-                      schema: propScheme,
-                      in: "body",
-                      required: mediaSchema.required ? mediaSchema.required.includes(propKey) : false,
-                    },
-                    isV3ReferenceObject(propScheme)
-                      ? {}
-                      : { description: propScheme.description, deprecated: propScheme.deprecated },
-                  ) as OpenAPIV3.ParameterObject;
-                }),
-              );
-            } else {
-              return ts.createParameterDeclaration(
-                undefined,
-                undefined,
-                ts.createIdentifier("req"),
-                undefined,
-                this.client.schemaToTypeNode(mediaSchema),
-              );
-            }
+            return ts.createParameterDeclaration(
+              undefined,
+              undefined,
+              ts.createIdentifier("req"),
+              undefined,
+              this.client.schemaToTypeNode(mediaSchema),
+            );
           }
         }
       }
@@ -132,7 +109,7 @@ export class V3 extends Adaptor<OpenAPIV3.Document> implements Adaptor<OpenAPIV3
           path,
           method,
           parameters,
-          requestBody ? (Object.values(requestBody.content)[0].schema as ClientSchemaObject) : undefined,
+          requestBody?.content ? (Object.values(requestBody.content)[0].schema as ClientSchemaObject) : undefined,
           response?.content ? (Object.values(response.content)[0].schema as ClientSchemaObject) : undefined,
           !!shouldPutRequestBodyInFormData,
           !!shouldUseJSONResponse,
@@ -143,7 +120,7 @@ export class V3 extends Adaptor<OpenAPIV3.Document> implements Adaptor<OpenAPIV3
   }
 
   apis() {
-    const apiDeclarations: (FunctionDeclaration | ExpressionStatement)[] = [];
+    const apiDeclarations: (FunctionDeclaration | ExpressionStatement | TypeAliasDeclaration)[] = [];
 
     const { components = {}, paths = {} } = this.doc;
     const { requestBodies, responses, parameters, schemas } = components;
@@ -157,8 +134,22 @@ export class V3 extends Adaptor<OpenAPIV3.Document> implements Adaptor<OpenAPIV3
       return apiDeclarations;
     }
 
+    if (this.schemas) {
+      Object.keys(this.schemas).forEach((key) => {
+        const schema = this.schemas![key];
+        apiDeclarations.push(
+          ts.createTypeAliasDeclaration(
+            [ts.createModifier(SyntaxKind.ExportKeyword)],
+            ts.createIdentifier(key),
+            undefined,
+            this.client.schemaToTypeNode(schema),
+          ),
+        );
+      });
+    }
+
     // Global schema definitions
-    const { parameters: g_parameters, examples, headers, securitySchemes, links, callbacks } = components;
+    const { parameters: g_parameters } = components;
 
     for (const path in paths) {
       if (Object.prototype.hasOwnProperty.call(paths, path)) {
@@ -171,7 +162,7 @@ export class V3 extends Adaptor<OpenAPIV3.Document> implements Adaptor<OpenAPIV3
             httpMethod = httpMethod.toLowerCase();
             const operationByMethod = pathObject[httpMethod as OpenAPIV3.HttpMethods];
             if (operationByMethod) {
-              const { operationId, requestBody, responses, callbacks, deprecated, summary } = operationByMethod;
+              const { operationId, requestBody, responses, deprecated, summary } = operationByMethod;
               let { parameters = [] } = operationByMethod;
 
               if (p_parameters) {
@@ -188,14 +179,20 @@ export class V3 extends Adaptor<OpenAPIV3.Document> implements Adaptor<OpenAPIV3
                 ];
               }
 
+              const hasParameters = parameters.length > 0;
+
               const fnDeclararion = ts.createFunctionDeclaration(
-                [ts.createModifier(SyntaxKind.ExportKeyword)],
+                [
+                  //
+                  ts.createModifier(SyntaxKind.ExportKeyword),
+                  ts.createModifier(SyntaxKind.AsyncKeyword),
+                ],
                 undefined,
                 pathToName(path, httpMethod, operationId),
                 undefined,
-                parameters.length > 0
+                hasParameters || requestBody
                   ? ([
-                      this.client.parametersToTsNode(parameters),
+                      hasParameters ? this.client.parametersToTsNode(parameters) : undefined,
                       requestBody ? this.requestBodyToTsNode(requestBody) : undefined,
                     ].filter(Boolean) as ParameterDeclaration[])
                   : [],

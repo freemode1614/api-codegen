@@ -1,10 +1,12 @@
 import type { OpenAPI } from "openapi-types";
-import { ExpressionStatement, FunctionDeclaration, NodeFlags, SyntaxKind } from "typescript";
+import { ExpressionStatement, FunctionDeclaration, NodeFlags, SyntaxKind, TypeAliasDeclaration } from "typescript";
 import { factory as ts } from "typescript";
 
 import Client from "@/providers/Client";
 import { Enum } from "@/types/type";
+import { formatCode } from "@/utils/formatCode";
 import { sourceFileToCode } from "@/utils/sourceFileToCode";
+import { writeToFile } from "@/utils/writetoFile";
 
 export default abstract class Adaptor<D = OpenAPI.Document> {
   /**
@@ -49,7 +51,7 @@ export default abstract class Adaptor<D = OpenAPI.Document> {
    * Get api definitions
    *
    */
-  abstract apis(): (FunctionDeclaration | ExpressionStatement)[];
+  abstract apis(): (FunctionDeclaration | ExpressionStatement | TypeAliasDeclaration)[];
 
   /**
    *
@@ -72,6 +74,21 @@ export default abstract class Adaptor<D = OpenAPI.Document> {
       NodeFlags.None,
     );
 
-    console.log(sourceFileToCode(sourceFile));
+    const code = sourceFileToCode(sourceFile);
+
+    const w = async () => {
+      const code_ = await formatCode(code);
+      writeToFile("./output.ts", code_)
+        .then(() => {
+          //
+        })
+        .catch(() => {
+          //
+        });
+    };
+
+    w().catch((e: unknown) => {
+      console.log("error", (e as Error).message);
+    });
   }
 }

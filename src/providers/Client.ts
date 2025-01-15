@@ -9,8 +9,8 @@ import {
   TypeNode,
 } from "typescript";
 
-import { isV3ReferenceObject } from "@/types/openapi";
 import { formatMapping } from "@/utils/format2type";
+import reference2name from "@/utils/reference2name";
 
 export type ClientReferenceObject = { $ref: string };
 export type ClientNonArraySchemaObjectType = "boolean" | "object" | "number" | "string" | "integer";
@@ -51,6 +51,9 @@ export type ClientParameterObject = {
   deprecated?: boolean;
   schema?: ClientReferenceObject | ClientSchemaObject;
 };
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
+const isClientReferenceObject = (object: any): object is ClientReferenceObject => !!object.$ref;
 
 export default abstract class Client {
   /**
@@ -96,7 +99,7 @@ export default abstract class Client {
       ),
     );
 
-    (parameters.filter((p) => !isV3ReferenceObject(p) && p.in === "formData") as ClientParameterObject[]).forEach(
+    (parameters.filter((p) => !isClientReferenceObject(p) && p.in === "formData") as ClientParameterObject[]).forEach(
       (p) => {
         statements.push(
           ts.createExpressionStatement(
@@ -112,15 +115,25 @@ export default abstract class Client {
 
     if (requestBodySchema?.properties && Object.values(requestBodySchema.properties).length > 0) {
       Object.keys(requestBodySchema.properties).forEach((p) => {
-        statements.push(
-          ts.createExpressionStatement(
-            ts.createCallExpression(
-              ts.createPropertyAccessExpression(ts.createIdentifier("fd"), ts.createIdentifier("append")),
-              undefined,
-              [ts.createStringLiteral(p), ts.createIdentifier(p)],
+        const schemaByKey = requestBodySchema.properties![p];
+        if (!isClientReferenceObject(schemaByKey)) {
+          statements.push(
+            ts.createExpressionStatement(
+              ts.createCallExpression(
+                ts.createPropertyAccessExpression(ts.createIdentifier("fd"), ts.createIdentifier("append")),
+                undefined,
+                [
+                  ts.createStringLiteral(p),
+                  schemaByKey.format === "string" || schemaByKey.type === "string"
+                    ? ts.createPropertyAccessExpression(ts.createIdentifier("req"), ts.createIdentifier(p))
+                    : ts.createCallExpression(ts.createIdentifier("String"), undefined, [
+                        ts.createPropertyAccessExpression(ts.createIdentifier("req"), ts.createIdentifier(p)),
+                      ]),
+                ],
+              ),
             ),
-          ),
-        );
+          );
+        }
       });
     }
 
@@ -156,16 +169,12 @@ export default abstract class Client {
   }
 
   public schemaToTypeNode(schema: ClientSchemaObject | ClientReferenceObject): TypeNode {
-    if (isV3ReferenceObject(schema)) {
-      // TODO:
+    if (isClientReferenceObject(schema)) {
+      return ts.createTypeReferenceNode(ts.createIdentifier(reference2name(schema.$ref)));
     } else {
       if (schema.type === "array") {
         const { items } = schema;
-        if (isV3ReferenceObject(items)) {
-          // TODO:
-        } else {
-          return ts.createArrayTypeNode(this.schemaToTypeNode(items));
-        }
+        return ts.createArrayTypeNode(this.schemaToTypeNode(items));
       }
 
       if (schema.type === "object" && schema.properties && Object.values(schema.properties).length > 0) {
@@ -173,19 +182,23 @@ export default abstract class Client {
           Object.keys(schema.properties)
             .map((propKey) => {
               const propSchema = schema.properties![propKey];
-              if (isV3ReferenceObject(propSchema)) {
-                // TODO:
-              } else {
-                return ts.createPropertySignature(
-                  undefined,
-                  ts.createIdentifier(propKey),
-                  undefined,
-                  this.schemaToTypeNode(propSchema),
-                );
-              }
+              return ts.createPropertySignature(
+                undefined,
+                ts.createStringLiteral(propKey),
+                !schema.required?.includes(propKey) ? ts.createToken(SyntaxKind.QuestionToken) : undefined,
+                this.schemaToTypeNode(propSchema),
+              );
             })
-            .filter(Boolean) as PropertySignature[],
+            .filter(Boolean),
         );
+      }
+
+      if (schema.type === "object") {
+        return ts.createTypeReferenceNode(ts.createIdentifier("Record"), [
+          // Using string only for NOW.
+          ts.createToken(SyntaxKind.StringKeyword),
+          ts.createToken(SyntaxKind.UnknownKeyword),
+        ]);
       }
 
       if (schema.format && Object.keys(formatMapping).includes(schema.format)) {
@@ -217,6 +230,21 @@ export default abstract class Client {
             break;
         }
       }
+
+      // Complex
+      const { oneOf, allOf, anyOf } = schema;
+
+      if (oneOf) {
+        return ts.createUnionTypeNode(oneOf.map((s) => this.schemaToTypeNode(s)));
+      }
+
+      if (anyOf) {
+        return ts.createUnionTypeNode(anyOf.map((s) => this.schemaToTypeNode(s)));
+      }
+
+      if (allOf) {
+        return ts.createIntersectionTypeNode(allOf.map((s) => this.schemaToTypeNode(s)));
+      }
     }
 
     return ts.createToken(SyntaxKind.UnknownKeyword);
@@ -227,7 +255,7 @@ export default abstract class Client {
     const typeObjectElements: PropertySignature[] = [];
 
     for (const parameter of parameters) {
-      if (isV3ReferenceObject(parameter)) {
+      if (isClientReferenceObject(parameter)) {
         // TODO:
         continue;
       }
