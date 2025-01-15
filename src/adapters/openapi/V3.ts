@@ -32,7 +32,7 @@ export class V3 extends Adaptor<OpenAPIV3.Document> implements Adaptor<OpenAPIV3
         ts.createTypeReferenceNode(reference2name(requestBody.$ref), undefined),
       );
     } else {
-      const { description, required, content } = requestBody;
+      const { content } = requestBody; // description, required,
 
       if (Object.values(content).length > 0) {
         const mediaSchema = Object.values(requestBody.content)[0].schema;
