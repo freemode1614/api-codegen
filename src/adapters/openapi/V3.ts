@@ -79,7 +79,11 @@ export class V3 extends Adaptor<OpenAPIV3.Document> implements Adaptor<OpenAPIV3
       (!isV3ReferenceObject(requestBody) &&
         requestBody?.content &&
         ("multipart/form-data" in requestBody.content || "application/x-www-form-urlencoded" in requestBody.content)) ??
-      parameters.some((s) => !isV3ReferenceObject(s) && s.in === "formData");
+      parameters.some(
+        (s) =>
+          !isV3ReferenceObject(s) &&
+          (s.in === "formData" || (!isV3ReferenceObject(s.schema) && s.schema?.format && s.schema.format === "binary")),
+      );
 
     if (requestBody && isV3ReferenceObject(requestBody)) {
       requestBody = this.requestBodies![reference2name(requestBody.$ref)] as OpenAPIV3.RequestBodyObject;

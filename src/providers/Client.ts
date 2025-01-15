@@ -99,19 +99,23 @@ export default abstract class Client {
       ),
     );
 
-    (parameters.filter((p) => !isClientReferenceObject(p) && p.in === "formData") as ClientParameterObject[]).forEach(
-      (p) => {
-        statements.push(
-          ts.createExpressionStatement(
-            ts.createCallExpression(
-              ts.createPropertyAccessExpression(ts.createIdentifier("fd"), ts.createIdentifier("append")),
-              undefined,
-              [ts.createStringLiteral(p.name), ts.createIdentifier(p.name)],
-            ),
+    (
+      parameters.filter(
+        (p) =>
+          !isClientReferenceObject(p) &&
+          (p.in === "formData" || (!isClientReferenceObject(p.schema) && p.schema?.format === "binary")),
+      ) as ClientParameterObject[]
+    ).forEach((p) => {
+      statements.push(
+        ts.createExpressionStatement(
+          ts.createCallExpression(
+            ts.createPropertyAccessExpression(ts.createIdentifier("fd"), ts.createIdentifier("append")),
+            undefined,
+            [ts.createStringLiteral(p.name), ts.createIdentifier(p.name)],
           ),
-        );
-      },
-    );
+        ),
+      );
+    });
 
     if (requestBodySchema?.properties && Object.values(requestBodySchema.properties).length > 0) {
       Object.keys(requestBodySchema.properties).forEach((p) => {
@@ -185,7 +189,10 @@ export default abstract class Client {
               return ts.createPropertySignature(
                 undefined,
                 ts.createStringLiteral(propKey),
-                !schema.required?.includes(propKey) ? ts.createToken(SyntaxKind.QuestionToken) : undefined,
+                schema.required?.includes(propKey) ||
+                  (!isClientReferenceObject(propSchema) && propSchema.format === "binary")
+                  ? undefined
+                  : ts.createToken(SyntaxKind.QuestionToken),
                 this.schemaToTypeNode(propSchema),
               );
             })

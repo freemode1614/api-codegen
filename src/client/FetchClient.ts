@@ -6,7 +6,7 @@ export default class FetchClient extends Client implements Client {
   private readonly clientName = "fetch";
   private readonly methodName = "method";
   private readonly bodyName = "body";
-  private readonly headerName = "header";
+  private readonly headerName = "headers";
 
   public httpClient(
     path: string,
@@ -20,82 +20,75 @@ export default class FetchClient extends Client implements Client {
     const statements: Statement[] = [];
     const inBody = parameters.filter((p) => p.in === "body");
 
-    const returnValue = ts.createReturnStatement(
-      ts.createCallExpression(
-        useJSONResponse
-          ? ts.createPropertyAccessExpression(
-              ts.createCallExpression(ts.createIdentifier(this.clientName), undefined, [
-                this.urlTemplate(path, parameters),
-                ts.createObjectLiteralExpression(
-                  [
-                    ts.createPropertyAssignment(ts.createIdentifier(this.methodName), ts.createStringLiteral(method)),
-                    // ts.createPropertyAssignment(ts.createIdentifier(this.headerName), ts.createIdentifier("header")),
-                  ].concat(
-                    useFormData || inBody.length > 0 || requestBody
-                      ? ts.createPropertyAssignment(
-                          ts.createIdentifier(this.bodyName),
-                          useFormData
-                            ? ts.createIdentifier("fd")
-                            : ts.createCallExpression(
-                                ts.createPropertyAccessExpression(
-                                  ts.createIdentifier("JSON"),
-                                  ts.createIdentifier("stringify"),
-                                ),
-                                [],
-                                inBody.length > 0
-                                  ? [
-                                      ts.createObjectLiteralExpression(
-                                        inBody.map((b) =>
-                                          ts.createShorthandPropertyAssignment(ts.createIdentifier(b.name)),
-                                        ),
-                                        true,
-                                      ),
-                                    ]
-                                  : [ts.createIdentifier("req")],
-                              ),
-                        )
-                      : [],
-                  ),
-                  true,
-                ),
-              ]),
-              ts.createIdentifier("then"),
-            )
-          : ts.createCallExpression(ts.createIdentifier(this.clientName), undefined, [
-              this.urlTemplate(path, parameters),
-              ts.createObjectLiteralExpression(
-                [
-                  ts.createPropertyAssignment(ts.createIdentifier(this.methodName), ts.createStringLiteral(method)),
-                  ts.createPropertyAssignment(ts.createIdentifier(this.bodyName), ts.createIdentifier("fd")),
-                  ts.createPropertyAssignment(ts.createIdentifier(this.headerName), ts.createIdentifier("header")),
-                ],
-                true,
-              ),
-            ]),
-        undefined,
+    const toLiterlExpression = () =>
+      ts.createObjectLiteralExpression(
         [
-          // TODO: If response is application/json, using response.json() to decode response to json format.
-          ts.createArrowFunction(
-            [ts.createModifier(SyntaxKind.AsyncKeyword)],
-            [],
-            [ts.createParameterDeclaration(undefined, undefined, ts.createIdentifier("response"))],
+          ts.createPropertyAssignment(ts.createIdentifier(this.methodName), ts.createStringLiteral(method)),
+          // ts.createPropertyAssignment(ts.createIdentifier(this.headerName), ts.createIdentifier("header")),
+        ].concat(
+          useFormData || inBody.length > 0 || requestBody
+            ? ts.createPropertyAssignment(
+                ts.createIdentifier(this.bodyName),
+                useFormData
+                  ? ts.createIdentifier("fd")
+                  : ts.createCallExpression(
+                      ts.createPropertyAccessExpression(ts.createIdentifier("JSON"), ts.createIdentifier("stringify")),
+                      [],
+                      inBody.length > 0
+                        ? [
+                            ts.createObjectLiteralExpression(
+                              inBody.map((b) => ts.createShorthandPropertyAssignment(ts.createIdentifier(b.name))),
+                              true,
+                            ),
+                          ]
+                        : [ts.createIdentifier("req")],
+                    ),
+              )
+            : [],
+        ),
+        true,
+      );
+
+    const returnValue = ts.createReturnStatement(
+      useJSONResponse
+        ? ts.createCallExpression(
+            ts.createPropertyAccessExpression(
+              ts.createCallExpression(
+                //
+                ts.createIdentifier(this.clientName),
+                undefined,
+                [this.urlTemplate(path, parameters), toLiterlExpression()],
+              ),
+              ts.createIdentifier("then"),
+            ),
             undefined,
-            ts.createToken(SyntaxKind.EqualsGreaterThanToken),
-            ts.createAsExpression(
-              ts.createParenthesizedExpression(
-                ts.createAwaitExpression(
-                  ts.createCallExpression(
-                    ts.createPropertyAccessExpression(ts.createIdentifier("response"), ts.createIdentifier("json")),
-                    undefined,
-                    [],
+            [
+              // TODO: If response is application/json, using response.json() to decode response to json format.
+              ts.createArrowFunction(
+                [ts.createModifier(SyntaxKind.AsyncKeyword)],
+                [],
+                [ts.createParameterDeclaration(undefined, undefined, ts.createIdentifier("response"))],
+                undefined,
+                ts.createToken(SyntaxKind.EqualsGreaterThanToken),
+                ts.createAsExpression(
+                  ts.createParenthesizedExpression(
+                    ts.createAwaitExpression(
+                      ts.createCallExpression(
+                        ts.createPropertyAccessExpression(ts.createIdentifier("response"), ts.createIdentifier("json")),
+                        undefined,
+                        [],
+                      ),
+                    ),
                   ),
+                  response ? this.schemaToTypeNode(response) : ts.createToken(SyntaxKind.UnknownKeyword),
                 ),
               ),
-              response ? this.schemaToTypeNode(response) : ts.createToken(SyntaxKind.UnknownKeyword),
-            ),
-          ),
-        ],
-      ),
+            ],
+          )
+        : ts.createCallExpression(ts.createIdentifier(this.clientName), undefined, [
+            this.urlTemplate(path, parameters),
+            toLiterlExpression(),
+          ]),
     );
 
     statements.push(returnValue);
