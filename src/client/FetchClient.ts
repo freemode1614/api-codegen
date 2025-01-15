@@ -20,11 +20,12 @@ export default class FetchClient extends Client implements Client {
     const statements: Statement[] = [];
     const inBody = parameters.filter((p) => p.in === "body");
 
-    const toLiterlExpression = () =>
-      ts.createObjectLiteralExpression(
+    const toLiterlExpression = () => {
+      return ts.createObjectLiteralExpression(
         [
           ts.createPropertyAssignment(ts.createIdentifier(this.methodName), ts.createStringLiteral(method)),
           // ts.createPropertyAssignment(ts.createIdentifier(this.headerName), ts.createIdentifier("header")),
+          // eslint-disable-next-line unicorn/prefer-spread
         ].concat(
           useFormData || inBody.length > 0 || requestBody
             ? ts.createPropertyAssignment(
@@ -48,6 +49,7 @@ export default class FetchClient extends Client implements Client {
         ),
         true,
       );
+    };
 
     const returnValue = ts.createReturnStatement(
       useJSONResponse

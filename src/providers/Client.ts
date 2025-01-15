@@ -64,7 +64,7 @@ export default abstract class Client {
   abstract httpClient(
     path: string,
     method: string,
-    parameters: (ClientParameterObject | ClientReferenceObject)[],
+    parameters: ClientParameterObject[],
     requestBody?: ClientSchemaObject,
     response?: ClientSchemaObject,
     useFormData?: boolean,
@@ -76,10 +76,7 @@ export default abstract class Client {
    * FormData statements.
    *
    */
-  public formDataStatement(
-    parameters: (ClientParameterObject | ClientReferenceObject)[],
-    requestBodySchema?: ClientSchemaObject,
-  ): Statement[] {
+  public formDataStatement(parameters: ClientParameterObject[], requestBodySchema?: ClientSchemaObject): Statement[] {
     const statements: Statement[] = [];
 
     statements.push(
@@ -99,23 +96,23 @@ export default abstract class Client {
       ),
     );
 
-    (
-      parameters.filter(
+    parameters
+      .filter(
         (p) =>
           !isClientReferenceObject(p) &&
           (p.in === "formData" || (!isClientReferenceObject(p.schema) && p.schema?.format === "binary")),
-      ) as ClientParameterObject[]
-    ).forEach((p) => {
-      statements.push(
-        ts.createExpressionStatement(
-          ts.createCallExpression(
-            ts.createPropertyAccessExpression(ts.createIdentifier("fd"), ts.createIdentifier("append")),
-            undefined,
-            [ts.createStringLiteral(p.name), ts.createIdentifier(p.name)],
+      )
+      .forEach((p) => {
+        statements.push(
+          ts.createExpressionStatement(
+            ts.createCallExpression(
+              ts.createPropertyAccessExpression(ts.createIdentifier("fd"), ts.createIdentifier("append")),
+              undefined,
+              [ts.createStringLiteral(p.name), ts.createIdentifier(p.name)],
+            ),
           ),
-        ),
-      );
-    });
+        );
+      });
 
     if (requestBodySchema?.properties && Object.values(requestBodySchema.properties).length > 0) {
       Object.keys(requestBodySchema.properties).forEach((p) => {

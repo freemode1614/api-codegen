@@ -72,49 +72,74 @@ export class V3 extends Adaptor<OpenAPIV3.Document> implements Adaptor<OpenAPIV3
     path: string,
     method: keyof typeof OpenAPIV3.HttpMethods,
     parameters: OpenAPIV3.OperationObject["parameters"] = [],
-    requestBody?: OpenAPIV3.OperationObject["requestBody"],
-    responses?: OpenAPIV3.OperationObject["responses"],
+    requestBody: OpenAPIV3.OperationObject["requestBody"] = { content: {} },
+    responses: OpenAPIV3.OperationObject["responses"] = {},
   ): Block {
-    const shouldPutRequestBodyInFormData =
-      (!isV3ReferenceObject(requestBody) &&
-        requestBody?.content &&
-        ("multipart/form-data" in requestBody.content || "application/x-www-form-urlencoded" in requestBody.content)) ??
-      parameters.some(
-        (s) =>
-          !isV3ReferenceObject(s) &&
-          (s.in === "formData" || (!isV3ReferenceObject(s.schema) && s.schema?.format && s.schema.format === "binary")),
-      );
+    if (isV3ReferenceObject(requestBody)) {
+      requestBody = this.requestBodies![reference2name(requestBody.$ref)];
+    }
 
-    if (requestBody && isV3ReferenceObject(requestBody)) {
+    requestBody = requestBody as OpenAPIV3.RequestBodyObject;
+
+    const isFormDataContentType =
+      "multipart/form-data" in requestBody.content || "application/x-www-form-urlencoded" in requestBody.content;
+
+    let contentSchema = Object.values(requestBody.content)[0]?.schema;
+
+    if (isV3ReferenceObject(contentSchema)) {
+      contentSchema = this.schemas![reference2name(contentSchema.$ref)] as OpenAPIV3.SchemaObject;
+    }
+
+    const requestBodyIsBinarySchema = (() => {
+      const isNonArrayBinaryFormat = contentSchema?.format === "binary";
+      let isArrayBinaryFormat = false;
+
+      if (contentSchema?.type === "array") {
+        isArrayBinaryFormat = isV3ReferenceObject(contentSchema.items)
+          ? (this.schemas![reference2name(contentSchema.items.$ref)] as OpenAPIV3.SchemaObject).format === "binary"
+          : contentSchema.items.format === "binary";
+      }
+
+      return isNonArrayBinaryFormat || isArrayBinaryFormat;
+    })();
+
+    const hasBinaryInParameter = parameters.some(
+      (s) =>
+        !isV3ReferenceObject(s) &&
+        (s.in === "formData" || (!isV3ReferenceObject(s.schema) && s.schema?.format === "binary")),
+    );
+
+    const shouldPutRequestBodyInFormData =
+      (isFormDataContentType || hasBinaryInParameter) && !requestBodyIsBinarySchema;
+
+    if (isV3ReferenceObject(requestBody)) {
       requestBody = this.requestBodies![reference2name(requestBody.$ref)] as OpenAPIV3.RequestBodyObject;
     }
 
-    let response = responses ? responses[200] : undefined;
+    let response = responses[200];
 
-    if (response && isV3ReferenceObject(response)) {
+    if (isV3ReferenceObject(response)) {
       response = this.responses![reference2name(response.$ref)] as OpenAPIV3.ResponseObject;
     }
 
-    const shouldUseJSONResponse = response?.content && "application/json" in response.content;
+    const shouldUseJSONResponse = response.content && "application/json" in response.content;
+
+    parameters = parameters.map((p) =>
+      isV3ReferenceObject(p) ? (this.parameters![reference2name(p.$ref)] as OpenAPIV3.ParameterObject) : p,
+    );
 
     return ts.createBlock(
       [
         //
         ...(shouldPutRequestBodyInFormData
-          ? this.client.formDataStatement(
-              parameters,
-              requestBody?.content
-                ? //
-                  (Object.values(requestBody.content)[0].schema as ClientSchemaObject)
-                : undefined,
-            )
+          ? this.client.formDataStatement(parameters as OpenAPIV3.ParameterObject[], contentSchema)
           : []),
         ...this.client.httpClient(
           path,
           method,
-          parameters,
-          requestBody?.content ? (Object.values(requestBody.content)[0].schema as ClientSchemaObject) : undefined,
-          response?.content ? (Object.values(response.content)[0].schema as ClientSchemaObject) : undefined,
+          parameters as OpenAPIV3.ParameterObject[],
+          contentSchema ? contentSchema : undefined,
+          response.content ? (Object.values(response.content)[0].schema as ClientSchemaObject) : undefined,
           !!shouldPutRequestBodyInFormData,
           !!shouldUseJSONResponse,
         ),
