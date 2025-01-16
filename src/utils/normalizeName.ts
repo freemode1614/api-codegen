@@ -34,7 +34,7 @@ const typescriptKeywords = new Set([
   "var",
   "void",
   "while",
-  "with",
+  // "with",
   "as",
   "implements",
   "interface",
@@ -46,7 +46,7 @@ const typescriptKeywords = new Set([
   "static",
   "yield",
   "abstract",
-  "any",
+  // "any",
   "async",
   "await",
   "constructor",
@@ -62,7 +62,7 @@ const typescriptKeywords = new Set([
   // "type",
   "unknown",
   "readonly",
-  "of",
+  // "of",
   "asserts",
   "infer",
   "keyof",
@@ -79,5 +79,5 @@ export default function normalizeName(name: string) {
   if (typescriptKeywords.has(name)) {
     name += "_";
   }
-  return name.replace(/[/\-_{}():\s`,*<>$]/g, "_").replaceAll("...", "");
+  return name.replace(/[/\-_{}():\s`,*<>$]/gm, "_").replaceAll("...", "");
 }

@@ -9,6 +9,11 @@ test("path name correct", () => {
     ["/token/logout", "tokenLogout", "TokenLogout"],
     ["tokenlogout", "tokenlogout", "Tokenlogout"],
     ["/anything/image-png", "anythingImagePng", "AnythingImagePng"],
+    [
+      "/anything/nested-one-of-object-with-nested-one-of",
+      "anythingNestedOneOfObjectWithNestedOneOf",
+      "AnythingNestedOneOfObjectWithNestedOneOf",
+    ],
   ];
 
   names.forEach((g) => {

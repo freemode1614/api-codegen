@@ -16,7 +16,7 @@ export type Object2 = {
 };
 export type String1 = string;
 export type String2 = string;
-export type NestedOneOf_Ref = {
+export type NestedOneOfRef = {
   config?: String1 | String2;
 };
 export async function petsUsingPatch(req: Cat | Dog) {
@@ -25,7 +25,7 @@ export async function petsUsingPatch(req: Cat | Dog) {
     body: JSON.stringify(req),
   });
 }
-export async function anythingAllOf_ObjectUsingPost(
+export async function anythingAllOfObjectUsingPost(
   req: Record<string, unknown>,
 ) {
   return fetch(`/anything/all-of-object`, {
@@ -33,7 +33,7 @@ export async function anythingAllOf_ObjectUsingPost(
     body: JSON.stringify(req),
   });
 }
-export async function anythingAny_Of_ObjectUsingPost(
+export async function anythingAnyOfObjectUsingPost(
   req:
     | {
         a?: string;
@@ -49,19 +49,19 @@ export async function anythingAny_Of_ObjectUsingPost(
     body: JSON.stringify(req),
   });
 }
-export async function anythingAny_Of_PrimitiveUsingPost(req: string | number) {
+export async function anythingAnyOfPrimitiveUsingPost(req: string | number) {
   return fetch(`/anything/any-of-primitive`, {
     method: "POST",
     body: JSON.stringify(req),
   });
 }
-export async function anyOf_With_TypeUsingPost(req: { event?: string }) {
+export async function anyOfWithTypeUsingPost(req: { event?: string }) {
   return fetch(`/any-of-with-type`, {
     method: "POST",
     body: JSON.stringify(req),
   });
 }
-export async function anythingOneOf_ObjectUsingPost(
+export async function anythingOneOfObjectUsingPost(
   req:
     | {
         a?: string;
@@ -77,25 +77,25 @@ export async function anythingOneOf_ObjectUsingPost(
     body: JSON.stringify(req),
   });
 }
-export async function anythingOneOf_PrimitiveUsingPost(req: string | number) {
+export async function anythingOneOfPrimitiveUsingPost(req: string | number) {
   return fetch(`/anything/one-of-primitive`, {
     method: "POST",
     body: JSON.stringify(req),
   });
 }
-export async function anythingOneOf_ObjectRefUsingPost(req: Object1 | Object2) {
+export async function anythingOneOfObjectRefUsingPost(req: Object1 | Object2) {
   return fetch(`/anything/one-of-object-ref`, {
     method: "POST",
     body: JSON.stringify(req),
   });
 }
-export async function oneOf_ComplexUsingPost(req: Record<string, unknown>) {
+export async function oneOfComplexUsingPost(req: Record<string, unknown>) {
   return fetch(`/one-of-complex`, {
     method: "POST",
     body: JSON.stringify(req),
   });
 }
-export async function anythingNestedOneOf_ObjectRefUsingPost(req: {
+export async function anythingNestedOneOfObjectRefUsingPost(req: {
   config?: Object1 | Object2;
 }) {
   return fetch(`/anything/nested-one-of-object-ref`, {
@@ -103,13 +103,13 @@ export async function anythingNestedOneOf_ObjectRefUsingPost(req: {
     body: JSON.stringify(req),
   });
 }
-export async function anythingNestedOneOf_RefUsingPost(req: NestedOneOf_Ref) {
+export async function anythingNestedOneOfRefUsingPost(req: NestedOneOfRef) {
   return fetch(`/anything/nested-one-of-ref`, {
     method: "POST",
     body: JSON.stringify(req),
   });
 }
-export async function anythingNestedOneOf_ObjectWith_NestedOneOf_UsingPost(req: {
+export async function anythingNestedOneOfObjectWithNestedOneOfUsingPost(req: {
   config?: Object1 | Object2 | (Cat | Dog);
 }) {
   return fetch(`/anything/nested-one-of-object-with-nested-one-of`, {
@@ -117,7 +117,7 @@ export async function anythingNestedOneOf_ObjectWith_NestedOneOf_UsingPost(req: 
     body: JSON.stringify(req),
   });
 }
-export async function oneOf_With_TypeUsingPost(req: { event?: string }) {
+export async function oneOfWithTypeUsingPost(req: { event?: string }) {
   return fetch(`/one-of-with-type`, {
     method: "POST",
     body: JSON.stringify(req),
