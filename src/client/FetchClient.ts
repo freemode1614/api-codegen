@@ -100,7 +100,6 @@ export default class FetchClient extends Client implements Client {
             ),
             undefined,
             [
-              // TODO: If response is application/json, using response.json() to decode response to json format.
               ts.createArrowFunction(
                 [ts.createModifier(SyntaxKind.AsyncKeyword)],
                 [],
