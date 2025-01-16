@@ -4,6 +4,7 @@ export async function anythingImagePngUsingPost(req: File) {
     body: JSON.stringify(req),
   });
 }
+
 export async function anythingMultipartFormdataUsingPut(req: {
   filename: File[];
 }) {
@@ -14,6 +15,7 @@ export async function anythingMultipartFormdataUsingPut(req: {
     body: fd,
   });
 }
+
 export async function anythingMultipartFormdataUsingPost(req: {
   orderId?: number;
   userId?: number;

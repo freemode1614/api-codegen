@@ -9,7 +9,6 @@ import {
   TypeNode,
 } from "typescript";
 
-import { isV3ReferenceObject } from "@/types/openapi";
 import { formatMapping } from "@/utils/format2type";
 import reference2name from "@/utils/reference2name";
 
