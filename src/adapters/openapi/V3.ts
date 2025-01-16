@@ -12,7 +12,8 @@ import {
 import Adaptor from "@/providers/Adaptor";
 import { ClientSchemaObject } from "@/providers/Client";
 import { isV3ReferenceObject } from "@/types/openapi";
-import pathToName from "@/utils/pathToName";
+import normalizeName from "@/utils/normalizeName";
+import pathToName, { upperCamelCase } from "@/utils/pathToName";
 import reference2name from "@/utils/reference2name";
 
 export class V3 extends Adaptor<OpenAPIV3.Document> implements Adaptor<OpenAPIV3.Document> {
@@ -30,7 +31,7 @@ export class V3 extends Adaptor<OpenAPIV3.Document> implements Adaptor<OpenAPIV3
         undefined,
         ts.createIdentifier("req"),
         undefined,
-        ts.createTypeReferenceNode(reference2name(requestBody.$ref), undefined),
+        ts.createTypeReferenceNode(upperCamelCase(normalizeName(reference2name(requestBody.$ref))), undefined),
       );
     } else {
       const { content } = requestBody; // description, required,
@@ -116,7 +117,8 @@ export class V3 extends Adaptor<OpenAPIV3.Document> implements Adaptor<OpenAPIV3
       requestBody = this.requestBodies![reference2name(requestBody.$ref)] as OpenAPIV3.RequestBodyObject;
     }
 
-    let response = responses[200];
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+    let response = responses[200] || responses[201] || { content: { description: "OK" } };
 
     if (isV3ReferenceObject(response)) {
       response = this.responses![reference2name(response.$ref)] as OpenAPIV3.ResponseObject;
@@ -169,7 +171,7 @@ export class V3 extends Adaptor<OpenAPIV3.Document> implements Adaptor<OpenAPIV3
         apiDeclarations.push(
           ts.createTypeAliasDeclaration(
             [ts.createModifier(SyntaxKind.ExportKeyword)],
-            ts.createIdentifier(key),
+            ts.createIdentifier(upperCamelCase(key)),
             undefined,
             this.client.schemaToTypeNode(schema),
           ),
@@ -177,8 +179,27 @@ export class V3 extends Adaptor<OpenAPIV3.Document> implements Adaptor<OpenAPIV3
       });
     }
 
-    // Global schema definitions
-    const { parameters: g_parameters } = components;
+    if (this.requestBodies) {
+      Object.keys(this.requestBodies).forEach((key) => {
+        const requestBody = this.requestBodies![key] as OpenAPIV3.RequestBodyObject;
+        let schema = Object.values(requestBody.content)[0].schema;
+
+        if (isV3ReferenceObject(schema)) {
+          schema = this.schemas![reference2name(schema.$ref)] as OpenAPIV3.SchemaObject;
+        }
+
+        if (!(key in this.schemas!)) {
+          apiDeclarations.push(
+            ts.createTypeAliasDeclaration(
+              [ts.createModifier(SyntaxKind.ExportKeyword)],
+              ts.createIdentifier(upperCamelCase(key)),
+              undefined,
+              this.client.schemaToTypeNode(schema!),
+            ),
+          );
+        }
+      });
+    }
 
     for (const path in paths) {
       if (Object.prototype.hasOwnProperty.call(paths, path)) {
@@ -191,7 +212,7 @@ export class V3 extends Adaptor<OpenAPIV3.Document> implements Adaptor<OpenAPIV3
             httpMethod = httpMethod.toLowerCase();
             const operationByMethod = pathObject[httpMethod as OpenAPIV3.HttpMethods];
             if (operationByMethod) {
-              const { operationId, requestBody, responses, deprecated, summary } = operationByMethod;
+              const { operationId, requestBody, responses } = operationByMethod;
               let { parameters = [] } = operationByMethod;
 
               if (p_parameters) {
@@ -200,13 +221,18 @@ export class V3 extends Adaptor<OpenAPIV3.Document> implements Adaptor<OpenAPIV3
                   ...p_parameters,
                   ...parameters.filter((parameter) => {
                     if (isV3ReferenceObject(parameter)) {
-                      return !names.has(parameter.$ref);
+                      const schema = this.parameters![reference2name(parameter.$ref)] as OpenAPIV3.ParameterObject;
+                      return !names.has(schema.name);
                     } else {
                       return !names.has(parameter.name);
                     }
                   }),
-                ];
+                ].map((s) =>
+                  isV3ReferenceObject(s) ? this.parameters![reference2name(s.$ref)] : s,
+                ) as OpenAPIV3.ParameterObject[];
               }
+
+              parameters = (parameters as OpenAPIV3.ParameterObject[]).filter((s) => s.in !== "cookie");
 
               const hasParameters = parameters.length > 0;
 

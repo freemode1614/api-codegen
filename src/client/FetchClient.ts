@@ -1,6 +1,9 @@
+/* eslint-disable unicorn/prefer-spread */
 import { factory as ts, Statement, SyntaxKind } from "typescript";
 
 import Client, { ClientParameterObject, ClientSchemaObject } from "@/providers/Client";
+import normalizeName from "@/utils/normalizeName";
+import { camelCase } from "@/utils/pathToName";
 
 export default class FetchClient extends Client implements Client {
   private readonly clientName = "fetch";
@@ -18,35 +21,69 @@ export default class FetchClient extends Client implements Client {
     useJSONResponse = false,
   ): Statement[] {
     const statements: Statement[] = [];
-    const inBody = parameters.filter((p) => p.in === "body");
+    const inBody = parameters.filter((p) => !p.in || p.in === "body");
+    const inHeader = parameters.filter((p) => p.in === "header");
 
     const toLiterlExpression = () => {
       return ts.createObjectLiteralExpression(
         [
-          ts.createPropertyAssignment(ts.createIdentifier(this.methodName), ts.createStringLiteral(method)),
-          // ts.createPropertyAssignment(ts.createIdentifier(this.headerName), ts.createIdentifier("header")),
-          // eslint-disable-next-line unicorn/prefer-spread
-        ].concat(
-          useFormData || inBody.length > 0 || requestBody
-            ? ts.createPropertyAssignment(
-                ts.createIdentifier(this.bodyName),
-                useFormData
-                  ? ts.createIdentifier("fd")
-                  : ts.createCallExpression(
-                      ts.createPropertyAccessExpression(ts.createIdentifier("JSON"), ts.createIdentifier("stringify")),
-                      [],
-                      inBody.length > 0
-                        ? [
-                            ts.createObjectLiteralExpression(
-                              inBody.map((b) => ts.createShorthandPropertyAssignment(ts.createIdentifier(b.name))),
-                              true,
+          ts.createPropertyAssignment(
+            ts.createIdentifier(this.methodName),
+            ts.createStringLiteral(method.toUpperCase()),
+          ),
+        ]
+          .concat(
+            inHeader.length > 0
+              ? ts.createPropertyAssignment(
+                  ts.createIdentifier(this.headerName),
+                  ts.createObjectLiteralExpression(
+                    inHeader.map((p) =>
+                      ts.createPropertyAssignment(
+                        ts.createStringLiteral(p.name),
+                        ts.createCallExpression(ts.createIdentifier("encodeURIComponent"), undefined, [
+                          // TODO: No need to wrap with JSON.stringify if field value is already a string
+                          ts.createCallExpression(
+                            ts.createPropertyAccessExpression(
+                              ts.createIdentifier("JSON"),
+                              ts.createIdentifier("stringify"),
                             ),
-                          ]
-                        : [ts.createIdentifier("req")],
+                            undefined,
+                            [ts.createIdentifier(camelCase(normalizeName(p.name)))],
+                          ),
+                        ]),
+                      ),
                     ),
-              )
-            : [],
-        ),
+                  ),
+                )
+              : [],
+          )
+          .concat(
+            useFormData || inBody.length > 0 || requestBody
+              ? ts.createPropertyAssignment(
+                  ts.createIdentifier(this.bodyName),
+                  useFormData
+                    ? ts.createIdentifier("fd")
+                    : inBody.length > 0 || (requestBody && !this.isBinary(requestBody))
+                      ? ts.createCallExpression(
+                          ts.createPropertyAccessExpression(
+                            ts.createIdentifier("JSON"),
+                            ts.createIdentifier("stringify"),
+                          ),
+                          [],
+                          [
+                            requestBody
+                              ? ts.createIdentifier("req")
+                              : ts.createObjectLiteralExpression(
+                                  inBody.map((b) => ts.createShorthandPropertyAssignment(ts.createIdentifier(b.name))),
+                                  true,
+                                ),
+                          ],
+                        )
+                      : // One File parameter
+                        ts.createIdentifier("req"),
+                )
+              : [],
+          ),
         true,
       );
     };
@@ -55,12 +92,10 @@ export default class FetchClient extends Client implements Client {
       useJSONResponse
         ? ts.createCallExpression(
             ts.createPropertyAccessExpression(
-              ts.createCallExpression(
-                //
-                ts.createIdentifier(this.clientName),
-                undefined,
-                [this.urlTemplate(path, parameters), toLiterlExpression()],
-              ),
+              ts.createCallExpression(ts.createIdentifier(this.clientName), undefined, [
+                this.urlTemplate(path, parameters),
+                toLiterlExpression(),
+              ]),
               ts.createIdentifier("then"),
             ),
             undefined,
