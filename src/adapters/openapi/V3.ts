@@ -45,7 +45,7 @@ export class V3 extends Adaptor<OpenAPIV3.Document> implements Adaptor<OpenAPIV3
               undefined,
               ts.createIdentifier("req"),
               undefined,
-              ts.createTypeReferenceNode(reference2name(mediaSchema.$ref)),
+              ts.createTypeReferenceNode(upperCamelCase(normalizeName(reference2name(mediaSchema.$ref)))),
             );
           } else {
             return ts.createParameterDeclaration(
