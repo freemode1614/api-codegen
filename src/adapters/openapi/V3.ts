@@ -10,10 +10,9 @@ import {
 } from "typescript";
 
 import Adaptor from "@/providers/Adaptor";
-import { ClientSchemaObject } from "@/providers/Client";
 import { isV3ReferenceObject } from "@/types/openapi";
 import normalizeName from "@/utils/normalizeName";
-import pathToName, { upperCamelCase } from "@/utils/pathToName";
+import pathToName, { capitalize, upperCamelCase } from "@/utils/pathToName";
 import reference2name from "@/utils/reference2name";
 
 export class V3 extends Adaptor<OpenAPIV3.Document> implements Adaptor<OpenAPIV3.Document> {
@@ -22,43 +21,10 @@ export class V3 extends Adaptor<OpenAPIV3.Document> implements Adaptor<OpenAPIV3
   private parameters: OpenAPIV3.ComponentsObject["parameters"] = {};
   private schemas: OpenAPIV3.ComponentsObject["schemas"] = {};
 
-  private requestBodyToTsNode(
-    requestBody: OpenAPIV3.ReferenceObject | OpenAPIV3.RequestBodyObject,
-  ): ParameterDeclaration {
-    if (isV3ReferenceObject(requestBody)) {
-      return ts.createParameterDeclaration(
-        undefined,
-        undefined,
-        ts.createIdentifier("req"),
-        undefined,
-        ts.createTypeReferenceNode(upperCamelCase(normalizeName(reference2name(requestBody.$ref))), undefined),
-      );
-    } else {
-      const { content } = requestBody; // description, required,
-
-      if (Object.values(content).length > 0) {
-        const mediaSchema = Object.values(requestBody.content)[0].schema;
-        if (mediaSchema) {
-          if (isV3ReferenceObject(mediaSchema)) {
-            return ts.createParameterDeclaration(
-              undefined,
-              undefined,
-              ts.createIdentifier("req"),
-              undefined,
-              ts.createTypeReferenceNode(upperCamelCase(normalizeName(reference2name(mediaSchema.$ref)))),
-            );
-          } else {
-            return ts.createParameterDeclaration(
-              undefined,
-              undefined,
-              ts.createIdentifier("req"),
-              undefined,
-              this.client.schemaToTypeNode(mediaSchema),
-            );
-          }
-        }
-      }
-
+  private requestBodyToTsNode(mediaType: string, mediaSchema: OpenAPIV3.MediaTypeObject): ParameterDeclaration {
+    const { schema } = mediaSchema;
+    if (!schema) {
+      // unknown
       return ts.createParameterDeclaration(
         undefined,
         undefined,
@@ -67,38 +33,57 @@ export class V3 extends Adaptor<OpenAPIV3.Document> implements Adaptor<OpenAPIV3
         ts.createToken(SyntaxKind.UnknownKeyword),
       );
     }
+    if (isV3ReferenceObject(schema)) {
+      // Type reference
+      return ts.createParameterDeclaration(
+        undefined,
+        undefined,
+        ts.createIdentifier("req"),
+        undefined,
+        ts.createTypeReferenceNode(upperCamelCase(normalizeName(reference2name(schema.$ref))), undefined),
+      );
+    } else {
+      // Literal expression
+      return ts.createParameterDeclaration(
+        undefined,
+        undefined,
+        ts.createIdentifier("req"),
+        undefined,
+        this.client.schemaToTypeNode(schema),
+      );
+    }
   }
 
   private bodyBlock(
     path: string,
     method: keyof typeof OpenAPIV3.HttpMethods,
     parameters: OpenAPIV3.OperationObject["parameters"] = [],
-    requestBody: OpenAPIV3.OperationObject["requestBody"] = { content: {} },
-    responses: OpenAPIV3.OperationObject["responses"] = {},
+    requestBody: OpenAPIV3.MediaTypeObject = {},
+    response: OpenAPIV3.MediaTypeObject = {},
+    mediaType: string,
   ): Block {
-    if (isV3ReferenceObject(requestBody)) {
-      requestBody = this.requestBodies![reference2name(requestBody.$ref)];
+    let responseSchema = response.schema;
+
+    let requestBodySchema = requestBody.schema;
+
+    if (isV3ReferenceObject(requestBodySchema)) {
+      requestBodySchema = this.schemas![reference2name(requestBodySchema.$ref)] as OpenAPIV3.SchemaObject;
     }
 
-    requestBody = requestBody as OpenAPIV3.RequestBodyObject;
-
-    const isFormDataContentType =
-      "multipart/form-data" in requestBody.content || "application/x-www-form-urlencoded" in requestBody.content;
-
-    let contentSchema = Object.values(requestBody.content)[0]?.schema;
-
-    if (isV3ReferenceObject(contentSchema)) {
-      contentSchema = this.schemas![reference2name(contentSchema.$ref)] as OpenAPIV3.SchemaObject;
+    if (isV3ReferenceObject(responseSchema)) {
+      responseSchema = this.schemas![reference2name(responseSchema.$ref)] as OpenAPIV3.SchemaObject;
     }
+
+    const isFormDataContentType = ["multipart/form-data", "application/x-www-form-urlencoded"].includes(mediaType);
 
     const requestBodyIsBinarySchema = (() => {
-      const isNonArrayBinaryFormat = contentSchema?.format === "binary";
+      const isNonArrayBinaryFormat = responseSchema?.format === "binary";
       let isArrayBinaryFormat = false;
 
-      if (contentSchema?.type === "array") {
-        isArrayBinaryFormat = isV3ReferenceObject(contentSchema.items)
-          ? (this.schemas![reference2name(contentSchema.items.$ref)] as OpenAPIV3.SchemaObject).format === "binary"
-          : contentSchema.items.format === "binary";
+      if (responseSchema?.type === "array") {
+        isArrayBinaryFormat = isV3ReferenceObject(responseSchema.items)
+          ? (this.schemas![reference2name(responseSchema.items.$ref)] as OpenAPIV3.SchemaObject).format === "binary"
+          : responseSchema.items.format === "binary";
       }
 
       return isNonArrayBinaryFormat || isArrayBinaryFormat;
@@ -113,18 +98,7 @@ export class V3 extends Adaptor<OpenAPIV3.Document> implements Adaptor<OpenAPIV3
     const shouldPutRequestBodyInFormData =
       (isFormDataContentType || hasBinaryInParameter) && !requestBodyIsBinarySchema;
 
-    if (isV3ReferenceObject(requestBody)) {
-      requestBody = this.requestBodies![reference2name(requestBody.$ref)] as OpenAPIV3.RequestBodyObject;
-    }
-
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-    let response = responses[200] || responses[201] || { content: { description: "OK" } };
-
-    if (isV3ReferenceObject(response)) {
-      response = this.responses![reference2name(response.$ref)] as OpenAPIV3.ResponseObject;
-    }
-
-    const shouldUseJSONResponse = response.content && "application/json" in response.content;
+    const shouldUseJSONResponse = mediaType === "application/json";
 
     parameters = parameters.map((p) =>
       isV3ReferenceObject(p) ? (this.parameters![reference2name(p.$ref)] as OpenAPIV3.ParameterObject) : p,
@@ -134,16 +108,16 @@ export class V3 extends Adaptor<OpenAPIV3.Document> implements Adaptor<OpenAPIV3
       [
         //
         ...(shouldPutRequestBodyInFormData
-          ? this.client.formDataStatement(parameters as OpenAPIV3.ParameterObject[], contentSchema)
+          ? this.client.formDataStatement(parameters as OpenAPIV3.ParameterObject[], responseSchema)
           : []),
         ...this.client.httpClient(
           path,
           method,
           parameters as OpenAPIV3.ParameterObject[],
-          contentSchema ? contentSchema : undefined,
-          response.content ? (Object.values(response.content)[0].schema as ClientSchemaObject) : undefined,
+          requestBodySchema ? requestBodySchema : undefined,
+          responseSchema ? responseSchema : undefined,
           !!shouldPutRequestBodyInFormData,
-          !!shouldUseJSONResponse,
+          shouldUseJSONResponse,
         ),
       ],
       true,
@@ -212,9 +186,11 @@ export class V3 extends Adaptor<OpenAPIV3.Document> implements Adaptor<OpenAPIV3
             httpMethod = httpMethod.toLowerCase();
             const operationByMethod = pathObject[httpMethod as OpenAPIV3.HttpMethods];
             if (operationByMethod) {
-              const { operationId, requestBody, responses } = operationByMethod;
+              const { operationId, responses } = operationByMethod;
+              let { requestBody = { content: {} } } = operationByMethod;
               let { parameters = [] } = operationByMethod;
 
+              // Merge perameters
               if (p_parameters) {
                 const names = new Set(p_parameters.map((p) => (isV3ReferenceObject(p) ? p.$ref : p.name)));
                 parameters = [
@@ -232,36 +208,89 @@ export class V3 extends Adaptor<OpenAPIV3.Document> implements Adaptor<OpenAPIV3
                 ) as OpenAPIV3.ParameterObject[];
               }
 
+              // Filter out parameters in cookies.
               parameters = (parameters as OpenAPIV3.ParameterObject[]).filter((s) => s.in !== "cookie");
 
               const hasParameters = parameters.length > 0;
 
-              const fnDeclararion = ts.createFunctionDeclaration(
-                [
-                  //
-                  ts.createModifier(SyntaxKind.ExportKeyword),
-                  ts.createModifier(SyntaxKind.AsyncKeyword),
-                ],
-                undefined,
-                pathToName(path, httpMethod, operationId),
-                undefined,
-                hasParameters || requestBody
-                  ? ([
-                      hasParameters ? this.client.parametersToTsNode(parameters) : undefined,
-                      requestBody ? this.requestBodyToTsNode(requestBody) : undefined,
-                    ].filter(Boolean) as ParameterDeclaration[])
-                  : [],
-                undefined,
-                this.bodyBlock(
-                  path,
-                  httpMethod as keyof typeof OpenAPIV3.HttpMethods,
-                  parameters,
-                  requestBody,
-                  responses,
-                ),
-              );
+              if (isV3ReferenceObject(requestBody)) {
+                requestBody = this.requestBodies![reference2name(requestBody.$ref)] as OpenAPIV3.RequestBodyObject;
+              }
 
-              apiDeclarations.push(fnDeclararion);
+              const { content } = requestBody;
+              const shouldAppendSuffix = Object.keys(content).length > 1;
+              let response: OpenAPIV3.ResponseObject = { content: {}, description: "" };
+
+              for (const httpCode of ["200", "201", "202", "203", "204", "205", "206", "207", "208", "226"]) {
+                const _resp = responses[httpCode];
+                // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+                if (_resp) {
+                  if (isV3ReferenceObject(_resp)) {
+                    response = this.responses![reference2name(_resp.$ref)] as OpenAPIV3.ResponseObject;
+                  } else {
+                    response = _resp;
+                  }
+                  break;
+                }
+              }
+
+              if (Object.keys(content).length === 0) {
+                const fnDeclararion = ts.createFunctionDeclaration(
+                  [
+                    //
+                    ts.createModifier(SyntaxKind.ExportKeyword),
+                    ts.createModifier(SyntaxKind.AsyncKeyword),
+                  ],
+                  undefined,
+                  pathToName(path, httpMethod, operationId),
+                  undefined,
+                  [hasParameters ? this.client.parametersToTsNode(parameters) : undefined].filter(
+                    Boolean,
+                  ) as ParameterDeclaration[],
+                  undefined,
+                  this.bodyBlock(
+                    path,
+                    httpMethod as keyof typeof OpenAPIV3.HttpMethods,
+                    parameters,
+                    undefined,
+                    Object.values(response.content!)[0],
+                    "text/plain",
+                  ),
+                );
+
+                apiDeclarations.push(fnDeclararion);
+              } else {
+                Object.keys(content).forEach((requestMediaType) => {
+                  // TODO: Need to handle multi type content.
+                  const requestSchema = content[requestMediaType];
+                  const fnDeclararion = ts.createFunctionDeclaration(
+                    [
+                      //
+                      ts.createModifier(SyntaxKind.ExportKeyword),
+                      ts.createModifier(SyntaxKind.AsyncKeyword),
+                    ],
+                    undefined,
+                    pathToName(path, httpMethod, operationId) +
+                      (shouldAppendSuffix ? capitalize(requestMediaType.split("/")[1]) : ""),
+                    undefined,
+                    [
+                      hasParameters ? this.client.parametersToTsNode(parameters) : undefined,
+                      this.requestBodyToTsNode(requestMediaType, requestSchema),
+                    ].filter(Boolean) as ParameterDeclaration[],
+                    undefined,
+                    this.bodyBlock(
+                      path,
+                      httpMethod as keyof typeof OpenAPIV3.HttpMethods,
+                      parameters,
+                      requestSchema,
+                      response.content![requestMediaType],
+                      requestMediaType,
+                    ),
+                  );
+
+                  apiDeclarations.push(fnDeclararion);
+                });
+              }
             }
           }
         }

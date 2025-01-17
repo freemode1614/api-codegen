@@ -26,7 +26,7 @@ export async function parameterExamplesParam1Param2UsingGet({
 }) {
   return fetch(`/parameterExamples/${param1}/${param2}`, {
     method: "GET",
-  }).then(async (response) => (await response.json()) as User);
+  });
 }
 export async function parameterExamplesParam1Param2UsingPut(
   {
@@ -41,7 +41,14 @@ export async function parameterExamplesParam1Param2UsingPut(
   return fetch(`/parameterExamples/${param1}/${param2}`, {
     method: "PUT",
     body: JSON.stringify(req),
-  }).then(async (response) => (await response.json()) as User);
+  }).then(
+    async (response) =>
+      (await response.json()) as {
+        id?: number;
+        email?: string;
+        name?: string;
+      },
+  );
 }
 export async function parameterExamplesParam1Param2UsingPatch(
   {
@@ -71,31 +78,59 @@ export async function parameterExamplesParam1Param2UsingPatch(
       },
       body: JSON.stringify(req),
     },
-  ).then(async (response) => (await response.json()) as User);
+  ).then(
+    async (response) =>
+      (await response.json()) as {
+        id?: number;
+        email?: string;
+        name?: string;
+      },
+  );
 }
 export async function requestBodyUsingPut(req: User) {
   return fetch(`/requestBody`, {
     method: "PUT",
     body: JSON.stringify(req),
-  }).then(async (response) => (await response.json()) as User);
+  }).then(
+    async (response) =>
+      (await response.json()) as {
+        id?: number;
+        email?: string;
+        name?: string;
+      },
+  );
 }
 export async function requestBodyUsingPost(req: User) {
   return fetch(`/requestBody`, {
     method: "POST",
     body: JSON.stringify(req),
-  }).then(async (response) => (await response.json()) as User);
+  }).then(
+    async (response) =>
+      (await response.json()) as {
+        id?: number;
+        email?: string;
+        name?: string;
+      },
+  );
 }
 export async function requestBodyUsingPatch(req: User) {
   return fetch(`/requestBody`, {
     method: "PATCH",
     body: JSON.stringify(req),
-  }).then(async (response) => (await response.json()) as User);
+  }).then(
+    async (response) =>
+      (await response.json()) as {
+        id?: number;
+        email?: string;
+        name?: string;
+      },
+  );
 }
 export async function requestBodyPrimitiveExampleUsingPut(req: Pets) {
   return fetch(`/requestBody-primitive-example`, {
     method: "PUT",
     body: JSON.stringify(req),
-  }).then(async (response) => (await response.json()) as Pets);
+  }).then(async (response) => (await response.json()) as Pet[]);
 }
 export async function requestBodyPrimitiveExampleUsingPost(req: string) {
   return fetch(`/requestBody-primitive-example`, {
@@ -107,9 +142,20 @@ export async function requestBodyPrimitiveExampleUsingPatch(req: Pet) {
   return fetch(`/requestBody-primitive-example`, {
     method: "PATCH",
     body: JSON.stringify(req),
-  }).then(async (response) => (await response.json()) as Pet);
+  }).then(
+    async (response) =>
+      (await response.json()) as {
+        name?: string;
+        petType?: string;
+      },
+  );
 }
-export async function requestBodyMultiMediaTypesUsingPost(req: unknown) {
+export async function requestBodyMultiMediaTypesUsingPostPlain(req: unknown) {
+  return fetch(`/requestBody-multi-media-types`, {
+    method: "POST",
+  });
+}
+export async function requestBodyMultiMediaTypesUsingPostJson(req: unknown) {
   return fetch(`/requestBody-multi-media-types`, {
     method: "POST",
   }).then(async (response) => (await response.json()) as unknown);
@@ -120,11 +166,8 @@ export async function demoFormDataUsingPost(req: {
   scope?: number;
 }) {
   const fd = new FormData();
-  fd.append("client_id", req.client_id);
-  fd.append("client_secret", req.client_secret);
-  req.scope && fd.append("scope", String(req.scope));
   return fetch(`/requestBody-form-data-example`, {
     method: "POST",
     body: fd,
-  }).then(async (response) => (await response.json()) as Token);
+  });
 }
