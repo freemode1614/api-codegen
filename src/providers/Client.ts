@@ -332,11 +332,12 @@ export default abstract class Client {
         continue;
       }
 
-      const { name, deprecated, description, schema, required } = parameter;
+      const { name, schema, required } = parameter;
 
       objectElements.push(
         ts.createBindingElement(undefined, undefined, ts.createIdentifier(camelCase(normalizeName(name)))),
       );
+
       typeObjectElements.push(
         ts.createPropertySignature(
           [],

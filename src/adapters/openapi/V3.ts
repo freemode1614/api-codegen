@@ -108,7 +108,7 @@ export class V3 extends Adaptor<OpenAPIV3.Document> implements Adaptor<OpenAPIV3
       [
         //
         ...(shouldPutRequestBodyInFormData
-          ? this.client.formDataStatement(parameters as OpenAPIV3.ParameterObject[], responseSchema)
+          ? this.client.formDataStatement(parameters as OpenAPIV3.ParameterObject[], requestBodySchema)
           : []),
         ...this.client.httpClient(
           path,
