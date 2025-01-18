@@ -1,9 +1,11 @@
 import { OpenAPIV3 } from "openapi-types";
 import {
+  addSyntheticLeadingComment,
   Block,
   ExpressionStatement,
   factory as ts,
   FunctionDeclaration,
+  Node,
   ParameterDeclaration,
   SyntaxKind,
   TypeAliasDeclaration,
@@ -189,6 +191,7 @@ export class V3 extends Adaptor<OpenAPIV3.Document> implements Adaptor<OpenAPIV3
               const { operationId, responses } = operationByMethod;
               let { requestBody = { content: {} } } = operationByMethod;
               let { parameters = [] } = operationByMethod;
+              const { description, deprecated } = operationByMethod;
 
               // Merge perameters
               if (p_parameters) {
@@ -234,6 +237,16 @@ export class V3 extends Adaptor<OpenAPIV3.Document> implements Adaptor<OpenAPIV3
                 }
               }
 
+              const addComments = (node: Node) => {
+                if (description) {
+                  addSyntheticLeadingComment(node, SyntaxKind.SingleLineCommentTrivia, description, true);
+                }
+
+                if (deprecated) {
+                  addSyntheticLeadingComment(node, SyntaxKind.SingleLineCommentTrivia, "@deprecated", true);
+                }
+              };
+
               if (Object.keys(content).length === 0) {
                 const fnDeclararion = ts.createFunctionDeclaration(
                   [
@@ -257,7 +270,7 @@ export class V3 extends Adaptor<OpenAPIV3.Document> implements Adaptor<OpenAPIV3
                     "text/plain",
                   ),
                 );
-
+                addComments(fnDeclararion);
                 apiDeclarations.push(fnDeclararion);
               } else {
                 Object.keys(content).forEach((requestMediaType) => {
@@ -287,7 +300,7 @@ export class V3 extends Adaptor<OpenAPIV3.Document> implements Adaptor<OpenAPIV3
                       requestMediaType,
                     ),
                   );
-
+                  addComments(fnDeclararion);
                   apiDeclarations.push(fnDeclararion);
                 });
               }
