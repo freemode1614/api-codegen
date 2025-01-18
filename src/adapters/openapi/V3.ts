@@ -283,7 +283,7 @@ export class V3 extends Adaptor<OpenAPIV3.Document> implements Adaptor<OpenAPIV3
                       httpMethod as keyof typeof OpenAPIV3.HttpMethods,
                       parameters,
                       requestSchema,
-                      response.content![requestMediaType],
+                      response.content?.[requestMediaType],
                       requestMediaType,
                     ),
                   );
