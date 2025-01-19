@@ -182,7 +182,7 @@ export class V3 extends Adaptor<OpenAPIV3.Document> implements Adaptor<OpenAPIV3
         const pathObject = paths[path];
 
         if (pathObject) {
-          const { parameters: p_parameters } = pathObject;
+          const { parameters: p_parameters = [] } = pathObject;
 
           for (let httpMethod of Object.keys(OpenAPIV3.HttpMethods)) {
             httpMethod = httpMethod.toLowerCase();
@@ -194,22 +194,19 @@ export class V3 extends Adaptor<OpenAPIV3.Document> implements Adaptor<OpenAPIV3
               const { description, deprecated } = operationByMethod;
 
               // Merge perameters
-              if (p_parameters) {
-                const names = new Set(p_parameters.map((p) => (isV3ReferenceObject(p) ? p.$ref : p.name)));
-                parameters = [
-                  ...p_parameters,
-                  ...parameters.filter((parameter) => {
-                    if (isV3ReferenceObject(parameter)) {
-                      const schema = this.parameters![reference2name(parameter.$ref)] as OpenAPIV3.ParameterObject;
-                      return !names.has(schema.name);
-                    } else {
-                      return !names.has(parameter.name);
-                    }
-                  }),
-                ].map((s) =>
-                  isV3ReferenceObject(s) ? this.parameters![reference2name(s.$ref)] : s,
-                ) as OpenAPIV3.ParameterObject[];
-              }
+              const names = new Set(p_parameters.map((p) => (isV3ReferenceObject(p) ? p.$ref : p.name)));
+              parameters = [
+                ...p_parameters,
+                ...parameters
+                  .map((s) =>
+                    isV3ReferenceObject(s)
+                      ? (this.parameters![reference2name(s.$ref)] as OpenAPIV3.ParameterObject)
+                      : s,
+                  )
+                  .filter((parameter) => !names.has(parameter.name)),
+              ].map((s) =>
+                isV3ReferenceObject(s) ? this.parameters![reference2name(s.$ref)] : s,
+              ) as OpenAPIV3.ParameterObject[];
 
               // Filter out parameters in cookies.
               parameters = (parameters as OpenAPIV3.ParameterObject[]).filter((s) => s.in !== "cookie");
@@ -239,11 +236,11 @@ export class V3 extends Adaptor<OpenAPIV3.Document> implements Adaptor<OpenAPIV3
 
               const addComments = (node: Node) => {
                 if (description) {
-                  addSyntheticLeadingComment(node, SyntaxKind.SingleLineCommentTrivia, description, true);
+                  addSyntheticLeadingComment(node, SyntaxKind.MultiLineCommentTrivia, description, true);
                 }
 
                 if (deprecated) {
-                  addSyntheticLeadingComment(node, SyntaxKind.SingleLineCommentTrivia, "@deprecated", true);
+                  addSyntheticLeadingComment(node, SyntaxKind.MultiLineCommentTrivia, "@deprecated", true);
                 }
               };
 
@@ -266,7 +263,7 @@ export class V3 extends Adaptor<OpenAPIV3.Document> implements Adaptor<OpenAPIV3
                     httpMethod as keyof typeof OpenAPIV3.HttpMethods,
                     parameters,
                     undefined,
-                    Object.values(response.content!)[0],
+                    response.content ? Object.values(response.content)[0] : undefined,
                     "text/plain",
                   ),
                 );

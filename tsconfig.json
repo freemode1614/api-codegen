@@ -44,5 +44,5 @@
       "@@/*": ["./__tests__/*"]
     }
   },
-  "include": ["src", "__tests__", "mock"]
+  "include": ["src", "__tests__"]
 }

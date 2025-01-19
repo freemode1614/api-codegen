@@ -42,14 +42,9 @@ export default class FetchClient extends Client implements Client {
                         ts.createStringLiteral(p.name),
                         ts.createCallExpression(ts.createIdentifier("encodeURIComponent"), undefined, [
                           // TODO: No need to wrap with JSON.stringify if field value is already a string
-                          ts.createCallExpression(
-                            ts.createPropertyAccessExpression(
-                              ts.createIdentifier("JSON"),
-                              ts.createIdentifier("stringify"),
-                            ),
-                            undefined,
-                            [ts.createIdentifier(camelCase(normalizeName(p.name)))],
-                          ),
+                          ts.createCallExpression(ts.createIdentifier("String"), undefined, [
+                            ts.createIdentifier(camelCase(normalizeName(p.name))),
+                          ]),
                         ]),
                       ),
                     ),
