@@ -235,13 +235,11 @@ export class V3 extends Adaptor<OpenAPIV3.Document> implements Adaptor<OpenAPIV3
               }
 
               const addComments = (node: Node) => {
-                if (description) {
-                  addSyntheticLeadingComment(node, SyntaxKind.MultiLineCommentTrivia, description, true);
-                }
-
-                if (deprecated) {
-                  addSyntheticLeadingComment(node, SyntaxKind.MultiLineCommentTrivia, "@deprecated", true);
-                }
+                addSyntheticLeadingComment(
+                  node,
+                  SyntaxKind.MultiLineCommentTrivia,
+                  [description ? "\n * " + description : "", deprecated ? " * @deprecated \n" : ""].join("\n"), true,
+                );
               };
 
               if (Object.keys(content).length === 0) {
@@ -264,7 +262,7 @@ export class V3 extends Adaptor<OpenAPIV3.Document> implements Adaptor<OpenAPIV3
                     parameters,
                     undefined,
                     response.content ? Object.values(response.content)[0] : undefined,
-                    "text/plain",
+                    Object.keys(content)[0],
                   ),
                 );
                 addComments(fnDeclararion);
