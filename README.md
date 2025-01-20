@@ -1,1 +1,0 @@
-# @moccona/openapi-generator

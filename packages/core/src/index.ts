@@ -1,3 +1,2 @@
-export default function Add(a: number, b: number) {
-  return a + b;
-}
+export * from "~/Adaptor";
+export * from "~/Provider";
