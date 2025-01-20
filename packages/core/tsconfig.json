@@ -2,7 +2,7 @@
   "extends": "@moccona/preset-config/tsconfig/node.json",
   "compilerOptions": {
     "paths": {
-      "@/*": ["./src/*"]
+      "~/*": ["./src/*"]
     }
   },
   "include": ["src", "__tests__"]
