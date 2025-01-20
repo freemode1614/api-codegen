@@ -1,55 +1,71 @@
-export type Category = {
-  id?: number;
-  name?: string;
-};
-export type Tag = {
-  id?: number;
-  name?: string;
-};
-export type TagDeprecated = {
-  id?: number;
-  name?: string;
-};
-export type Pet = {
-  id?: number;
-  category?: Category;
-  category_alt?: Category;
-  name: string;
-  photoUrls: string[];
-  tags?: Tag[];
-  tags_alt?: TagDeprecated[];
-  status?: Status;
-  polymorphism?: {
-    oneOf?: StatusWrapper | StatusWrapper;
-    allOf?: StatusWrapper & StatusWrapper;
-    anyOf?: StatusWrapper | StatusWrapper;
-  };
-};
-export type Status = string;
-export type StatusWrapper = {
-  status?: Status;
-};
 /*
- * https://github.com/OAI/OpenAPI-Specification/blob/main/versions/3.0.3.md#operationObject
- * @deprecated
- */
-export async function anythingUsingPost(
-  {
-    filter,
-    filterLegacy,
-    status,
-  }: {
-    filter?: string;
-    filterLegacy?: string;
-    status: string[];
-  },
-  req: Pet,
-) {
-  return fetch(
-    `/anything?filter=${filter}filterLegacy=${filterLegacy}status=${status}`,
-    {
-      method: "POST",
-      body: JSON.stringify(req),
-    },
-  ).then(async (response) => (await response.json()) as Pet[]);
+ * Support and handling of enums on `type: number` schemas.
+
+📚 OpenAPI specification references:
+
+* [3.0.3 Schema Object](https://github.com/OAI/OpenAPI-Specification/blob/main/versions/3.0.3.md#schemaObject)
+
+* [3.1.0 Schema Object](https://github.com/OAI/OpenAPI-Specification/blob/main/versions/3.1.0.md#schemaObject)
+*/
+export async function numberEnumSupportUsingGet(req: {
+  enum_?: number;
+  enum__required: number;
+  enum__with_default_?: number;
+  enum__with_default___required: number;
+  enum__with_example_?: number;
+  enum__with_example___required: number;
+  enum__with_empty_option_?: number;
+  enum__with_duplicate_options_?: number;
+}) {
+  return fetch(`/anything/strings`, {
+    method: "GET",
+    body: JSON.stringify(req),
+  }).then(async (response) => (await response.json()) as unknown);
+}
+/*
+ * Support and handling of enums on `type: boolean` schemas.
+
+📚 OpenAPI specification references:
+
+* [3.0.3 Schema Object](https://github.com/OAI/OpenAPI-Specification/blob/main/versions/3.0.3.md#schemaObject)
+
+* [3.1.0 Schema Object](https://github.com/OAI/OpenAPI-Specification/blob/main/versions/3.1.0.md#schemaObject)
+*/
+export async function booleanEnumSupportUsingPut(req: {
+  enum_?: boolean;
+  enum__required: boolean;
+  enum__with_default_?: boolean;
+  enum__with_default___required: boolean;
+}) {
+  return fetch(`/anything/strings`, {
+    method: "PUT",
+    body: JSON.stringify(req),
+  }).then(async (response) => (await response.json()) as unknown);
+}
+/*
+ * Support and handling of enums on `type: string` schemas.
+
+📚 OpenAPI specification references:
+
+* [3.0.3 Schema Object](https://github.com/OAI/OpenAPI-Specification/blob/main/versions/3.0.3.md#schemaObject)
+
+* [3.1.0 Schema Object](https://github.com/OAI/OpenAPI-Specification/blob/main/versions/3.1.0.md#schemaObject)
+*/
+export async function stringEnumSupportUsingPost(req: {
+  enum_?: string;
+  enum__required: string;
+  enum__with_default_?: string;
+  enum__with_default___required: string;
+  enum__with_example_?: string;
+  enum__with_example___required: string;
+  enum__with_non_value_example_?: string;
+  enum__with_non_value_example___required: string;
+  enum__with_empty_option_?: string;
+  enum__with_duplicate_options_?: string;
+  enum__with_empty_option_and_empty_default_?: string;
+}) {
+  return fetch(`/anything/strings`, {
+    method: "POST",
+    body: JSON.stringify(req),
+  }).then(async (response) => (await response.json()) as unknown);
 }

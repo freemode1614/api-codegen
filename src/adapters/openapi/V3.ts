@@ -238,7 +238,8 @@ export class V3 extends Adaptor<OpenAPIV3.Document> implements Adaptor<OpenAPIV3
                 addSyntheticLeadingComment(
                   node,
                   SyntaxKind.MultiLineCommentTrivia,
-                  [description ? "\n * " + description : "", deprecated ? " * @deprecated \n" : ""].join("\n"), true,
+                  [description ? "\n * " + description : "", deprecated ? " * @deprecated \n" : ""].join("\n"),
+                  true,
                 );
               };
 
