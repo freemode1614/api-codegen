@@ -2,4 +2,3 @@ packages:
   - "packages/core"
   - "packages/adapters/*"
   - "packages/providers/*"
-
