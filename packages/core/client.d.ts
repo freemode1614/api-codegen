@@ -1,7 +1,7 @@
 declare global {
   interface Function {
-    abort: AbortController
+    abort: AbortController;
   }
 }
 
-export {}
+export {};
