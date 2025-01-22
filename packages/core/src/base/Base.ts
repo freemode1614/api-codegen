@@ -4,6 +4,9 @@
  *
  */
 
+/**
+ * Simple represenration for
+ */
 export type JSONValue = {
   [K: string]: string | number | JSONValue | (string | number | JSONValue)[];
 };
@@ -15,9 +18,11 @@ export enum SchemaType {
   requestBodies = "requestBodies",
 }
 
+export type NonArraySchemaType = "object" | "string" | "number" | "boolean";
+
 export type NonArraySchemaObject = {
   name: string;
-  type: string;
+  type: NonArraySchemaType;
   allOf?: SchemaObject[];
   anyOf?: SchemaObject[];
   deprecated?: boolean;
@@ -37,16 +42,13 @@ export type ArraySchemaObject = {
   ref?: string;
 };
 
-export type ReferenceObject = { $ref: string };
+export interface ReferenceObject {
+  $ref: string;
+}
 
-/**
- * Type guard for reference object.
- * @param o
- * @returns {boolean}
- */
 export const isRef = (o: unknown): o is ReferenceObject => {
-  if (!o) return false;
-  if (typeof (o as ReferenceObject).$ref !== "string") return false;
+  if (!o || typeof o !== "object") return false;
+  if (typeof (o as Record<string, unknown>).$ref !== "string") return false;
 
   return true;
 };
@@ -84,4 +86,10 @@ export type RequestBodiesObject = Record<string, RequestObject>;
 
 export abstract class Base {
   abstract name: string;
+
+  protected constructor() {
+    if (new.target === Base) {
+      throw new Error("Cannot instantiate abstract class");
+    }
+  }
 }
