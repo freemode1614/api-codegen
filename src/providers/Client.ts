@@ -15,9 +15,16 @@ import { camelCase, upperCamelCase } from "@/utils/pathToName";
 import reference2name from "@/utils/reference2name";
 
 export type ClientReferenceObject = { $ref: string };
-export type ClientNonArraySchemaObjectType = "boolean" | "object" | "number" | "string" | "integer";
+export type ClientNonArraySchemaObjectType =
+  | "boolean"
+  | "object"
+  | "number"
+  | "string"
+  | "integer";
 export type ClientArraySchemaObjectType = "array";
-export type ClientSchemaObject = ClientArraySchemaObject | ClientNonArraySchemaObject;
+export type ClientSchemaObject =
+  | ClientArraySchemaObject
+  | ClientNonArraySchemaObject;
 
 export interface ClientArraySchemaObject extends ClientBaseSchemaObject {
   type: ClientArraySchemaObjectType;
@@ -55,7 +62,9 @@ export type ClientParameterObject = {
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
-const isClientReferenceObject = (object: any): object is ClientReferenceObject => !!object.$ref;
+const isClientReferenceObject = (
+  object: any
+): object is ClientReferenceObject => !!object.$ref;
 
 export default abstract class Client {
   /**
@@ -70,7 +79,7 @@ export default abstract class Client {
     requestBody?: ClientSchemaObject,
     response?: ClientSchemaObject,
     useFormData?: boolean,
-    useJSONResponse?: boolean,
+    useJSONResponse?: boolean
   ): Statement[];
 
   public isBinary(schema: ClientSchemaObject) {
@@ -78,7 +87,10 @@ export default abstract class Client {
   }
 
   public isArrayBinary(schema: ClientSchemaObject) {
-    return schema.type === "array" && (schema.items as ClientSchemaObject).format === "binary";
+    return (
+      schema.type === "array" &&
+      (schema.items as ClientSchemaObject).format === "binary"
+    );
   }
 
   /**
@@ -86,7 +98,10 @@ export default abstract class Client {
    * FormData statements.
    *
    */
-  public formDataStatement(parameters: ClientParameterObject[], requestBodySchema?: ClientSchemaObject): Statement[] {
+  public formDataStatement(
+    parameters: ClientParameterObject[],
+    requestBodySchema?: ClientSchemaObject
+  ): Statement[] {
     const statements: Statement[] = [];
 
     // const fd = new FormData();
@@ -99,37 +114,52 @@ export default abstract class Client {
               ts.createIdentifier("fd"),
               undefined,
               undefined,
-              ts.createNewExpression(ts.createIdentifier("FormData"), undefined, []),
+              ts.createNewExpression(
+                ts.createIdentifier("FormData"),
+                undefined,
+                []
+              )
             ),
           ],
-          NodeFlags.Const,
-        ),
-      ),
+          NodeFlags.Const
+        )
+      )
     );
 
     parameters
       .filter(
         (p) =>
           !isClientReferenceObject(p) &&
-          (p.in === "formData" || (!isClientReferenceObject(p.schema) && p.schema?.format === "binary")),
+          (p.in === "formData" ||
+            (!isClientReferenceObject(p.schema) &&
+              p.schema?.format === "binary"))
       )
       .forEach((p) => {
         statements.push(
           ts.createExpressionStatement(
             ts.createBinaryExpression(
-              ts.createPropertyAccessExpression(ts.createIdentifier("req"), ts.createIdentifier(p.name)),
+              ts.createPropertyAccessExpression(
+                ts.createIdentifier("req"),
+                ts.createIdentifier(p.name)
+              ),
               ts.createToken(SyntaxKind.AmpersandAmpersandToken),
               ts.createCallExpression(
-                ts.createPropertyAccessExpression(ts.createIdentifier("fd"), ts.createIdentifier("append")),
+                ts.createPropertyAccessExpression(
+                  ts.createIdentifier("fd"),
+                  ts.createIdentifier("append")
+                ),
                 undefined,
-                [ts.createStringLiteral(p.name), ts.createIdentifier(p.name)],
-              ),
-            ),
-          ),
+                [ts.createStringLiteral(p.name), ts.createIdentifier(p.name)]
+              )
+            )
+          )
         );
       });
 
-    if (requestBodySchema?.properties && Object.values(requestBodySchema.properties).length > 0) {
+    if (
+      requestBodySchema?.properties &&
+      Object.values(requestBodySchema.properties).length > 0
+    ) {
       const { required = [] } = requestBodySchema;
       Object.keys(requestBodySchema.properties).forEach((p) => {
         const schemaByKey = requestBodySchema.properties![p];
@@ -138,56 +168,98 @@ export default abstract class Client {
             statements.push(
               ts.createForOfStatement(
                 undefined,
-                ts.createVariableDeclarationList([ts.createVariableDeclaration("file")]),
-                ts.createPropertyAccessExpression(ts.createIdentifier("req"), ts.createIdentifier(p)),
+                ts.createVariableDeclarationList([
+                  ts.createVariableDeclaration("file"),
+                ]),
+                ts.createPropertyAccessExpression(
+                  ts.createIdentifier("req"),
+                  ts.createIdentifier(p)
+                ),
                 ts.createBlock([
                   ts.createExpressionStatement(
                     ts.createCallExpression(
-                      ts.createPropertyAccessExpression(ts.createIdentifier("fd"), ts.createIdentifier("append")),
+                      ts.createPropertyAccessExpression(
+                        ts.createIdentifier("fd"),
+                        ts.createIdentifier("append")
+                      ),
                       [],
                       [
                         ts.createStringLiteral(p),
                         ts.createIdentifier("file"),
-                        ts.createPropertyAccessExpression(ts.createIdentifier("file"), ts.createIdentifier("name")),
-                      ],
-                    ),
+                        ts.createPropertyAccessExpression(
+                          ts.createIdentifier("file"),
+                          ts.createIdentifier("name")
+                        ),
+                      ]
+                    )
                   ),
-                ]),
-              ),
+                ])
+              )
             );
           } else {
             statements.push(
               ts.createExpressionStatement(
                 required.includes(p)
                   ? ts.createCallExpression(
-                      ts.createPropertyAccessExpression(ts.createIdentifier("fd"), ts.createIdentifier("append")),
+                      ts.createPropertyAccessExpression(
+                        ts.createIdentifier("fd"),
+                        ts.createIdentifier("append")
+                      ),
                       undefined,
                       [
                         ts.createStringLiteral(p),
-                        schemaByKey.format === "string" || schemaByKey.type === "string"
-                          ? ts.createPropertyAccessExpression(ts.createIdentifier("req"), ts.createIdentifier(p))
-                          : ts.createCallExpression(ts.createIdentifier("String"), undefined, [
-                              ts.createPropertyAccessExpression(ts.createIdentifier("req"), ts.createIdentifier(p)),
-                            ]),
-                      ],
+                        schemaByKey.format === "string" ||
+                        schemaByKey.type === "string"
+                          ? ts.createPropertyAccessExpression(
+                              ts.createIdentifier("req"),
+                              ts.createIdentifier(p)
+                            )
+                          : ts.createCallExpression(
+                              ts.createIdentifier("String"),
+                              undefined,
+                              [
+                                ts.createPropertyAccessExpression(
+                                  ts.createIdentifier("req"),
+                                  ts.createIdentifier(p)
+                                ),
+                              ]
+                            ),
+                      ]
                     )
                   : ts.createBinaryExpression(
-                      ts.createPropertyAccessExpression(ts.createIdentifier("req"), ts.createIdentifier(p)),
+                      ts.createPropertyAccessExpression(
+                        ts.createIdentifier("req"),
+                        ts.createIdentifier(p)
+                      ),
                       ts.createToken(SyntaxKind.AmpersandAmpersandToken),
                       ts.createCallExpression(
-                        ts.createPropertyAccessExpression(ts.createIdentifier("fd"), ts.createIdentifier("append")),
+                        ts.createPropertyAccessExpression(
+                          ts.createIdentifier("fd"),
+                          ts.createIdentifier("append")
+                        ),
                         undefined,
                         [
                           ts.createStringLiteral(p),
-                          schemaByKey.format === "string" || schemaByKey.type === "string"
-                            ? ts.createPropertyAccessExpression(ts.createIdentifier("req"), ts.createIdentifier(p))
-                            : ts.createCallExpression(ts.createIdentifier("String"), undefined, [
-                                ts.createPropertyAccessExpression(ts.createIdentifier("req"), ts.createIdentifier(p)),
-                              ]),
-                        ],
-                      ),
-                    ),
-              ),
+                          schemaByKey.format === "string" ||
+                          schemaByKey.type === "string"
+                            ? ts.createPropertyAccessExpression(
+                                ts.createIdentifier("req"),
+                                ts.createIdentifier(p)
+                              )
+                            : ts.createCallExpression(
+                                ts.createIdentifier("String"),
+                                undefined,
+                                [
+                                  ts.createPropertyAccessExpression(
+                                    ts.createIdentifier("req"),
+                                    ts.createIdentifier(p)
+                                  ),
+                                ]
+                              ),
+                        ]
+                      )
+                    )
+              )
             );
           }
         }
@@ -221,17 +293,21 @@ export default abstract class Client {
           ts.createIdentifier(result!.groups!.span),
           !isLastParameter
             ? ts.createTemplateMiddle(result!.groups!.literal)
-            : ts.createTemplateTail(result!.groups!.literal || ""),
+            : ts.createTemplateTail(result!.groups!.literal || "")
         );
-      }),
+      })
     );
   }
 
-  public schemaToTypeNode(schema: ClientSchemaObject | ClientReferenceObject): TypeNode {
+  public schemaToTypeNode(
+    schema: ClientSchemaObject | ClientReferenceObject
+  ): TypeNode {
     if (isClientReferenceObject(schema)) {
       const identify = reference2name(schema.$ref);
       return ts.createTypeReferenceNode(
-        ts.createIdentifier(identify === "unknown" ? identify : upperCamelCase(identify)),
+        ts.createIdentifier(
+          identify === "unknown" ? identify : upperCamelCase(identify)
+        )
       );
     } else {
       if (schema.type === "array") {
@@ -258,10 +334,10 @@ export default abstract class Client {
                         propSchema.items.format === "binary")))
                   ? undefined
                   : ts.createToken(SyntaxKind.QuestionToken),
-                this.schemaToTypeNode(propSchema),
+                this.schemaToTypeNode(propSchema)
               );
             })
-            .filter(Boolean),
+            .filter(Boolean)
         );
       }
 
@@ -289,7 +365,10 @@ export default abstract class Client {
       }
 
       // None array and object schema
-      if (schema.type && ["boolean", "number", "string", "integer"].includes(schema.type)) {
+      if (
+        schema.type &&
+        ["boolean", "number", "string", "integer"].includes(schema.type)
+      ) {
         switch (schema.type) {
           case "boolean":
             return ts.createToken(SyntaxKind.BooleanKeyword);
@@ -307,22 +386,30 @@ export default abstract class Client {
       const { oneOf, allOf, anyOf } = schema;
 
       if (oneOf) {
-        return ts.createUnionTypeNode(oneOf.map((s) => this.schemaToTypeNode(s)));
+        return ts.createUnionTypeNode(
+          oneOf.map((s) => this.schemaToTypeNode(s))
+        );
       }
 
       if (anyOf) {
-        return ts.createUnionTypeNode(anyOf.map((s) => this.schemaToTypeNode(s)));
+        return ts.createUnionTypeNode(
+          anyOf.map((s) => this.schemaToTypeNode(s))
+        );
       }
 
       if (allOf) {
-        return ts.createIntersectionTypeNode(allOf.map((s) => this.schemaToTypeNode(s)));
+        return ts.createIntersectionTypeNode(
+          allOf.map((s) => this.schemaToTypeNode(s))
+        );
       }
     }
 
     return ts.createToken(SyntaxKind.UnknownKeyword);
   }
 
-  public parametersToTsNode(parameters: (ClientParameterObject | ClientReferenceObject)[]): ParameterDeclaration {
+  public parametersToTsNode(
+    parameters: (ClientParameterObject | ClientReferenceObject)[]
+  ): ParameterDeclaration {
     const objectElements: BindingElement[] = [];
     const typeObjectElements: PropertySignature[] = [];
 
@@ -335,7 +422,11 @@ export default abstract class Client {
       const { name, schema, required } = parameter;
 
       objectElements.push(
-        ts.createBindingElement(undefined, undefined, ts.createIdentifier(camelCase(normalizeName(name)))),
+        ts.createBindingElement(
+          undefined,
+          undefined,
+          ts.createIdentifier(camelCase(normalizeName(name)))
+        )
       );
 
       typeObjectElements.push(
@@ -343,8 +434,10 @@ export default abstract class Client {
           [],
           ts.createIdentifier(camelCase(normalizeName(name))),
           required ? undefined : ts.createToken(SyntaxKind.QuestionToken),
-          !schema ? ts.createToken(SyntaxKind.UnknownKeyword) : this.schemaToTypeNode(schema),
-        ),
+          !schema
+            ? ts.createToken(SyntaxKind.UnknownKeyword)
+            : this.schemaToTypeNode(schema)
+        )
       );
     }
 
@@ -355,7 +448,7 @@ export default abstract class Client {
       ts.createObjectBindingPattern(objectElements),
       undefined,
       ts.createTypeLiteralNode(typeObjectElements),
-      undefined,
+      undefined
     );
   }
 }

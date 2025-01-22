@@ -9,18 +9,21 @@ importers:
   .:
     dependencies:
       '@moccona/logger':
-        specifier: ^0.0.2
+        specifier: ^0
         version: 0.0.2
       openapi-types:
-        specifier: ^12.1.3
+        specifier: ^12
         version: 12.1.3
+      typescript:
+        specifier: ^5
+        version: 5.7.3
     devDependencies:
       '@moccona/eslint-config':
         specifier: ^0.3.12
         version: 0.3.12(eslint@8.57.1)(prettier@3.4.2)(tailwindcss@3.4.17)(typescript@5.7.3)
       '@moccona/preset-config':
-        specifier: ^0.0.2
-        version: 0.0.2
+        specifier: ^0.0.3
+        version: 0.0.3
       '@types/node':
         specifier: ^22.10.7
         version: 22.10.7
@@ -33,9 +36,6 @@ importers:
       tsup:
         specifier: ^8.3.5
         version: 8.3.5(jiti@1.21.7)(postcss@8.5.1)(typescript@5.7.3)(yaml@2.7.0)
-      typescript:
-        specifier: ^5.6.2
-        version: 5.7.3
       vite-tsconfig-paths:
         specifier: ^5.1.4
         version: 5.1.4(typescript@5.7.3)(vite@6.0.7(@types/node@22.10.7)(jiti@1.21.7)(yaml@2.7.0))
@@ -287,8 +287,8 @@ packages:
   '@moccona/logger@0.0.2':
     resolution: {integrity: sha512-OMPRcP76LTmgAOYPHjEKQOfi0UJf5G02J62RDmulUMU1LzrxF6iVekQ3Wg50kV+PP8jlC7YyCCs4pcnlVkLCtQ==}
 
-  '@moccona/preset-config@0.0.2':
-    resolution: {integrity: sha512-lSrfN9L1csh2LagLqaXGzMw/rQEzmMIlKDkSIYg+0y9kEBBz1O/hh0Pbty/7E3uFFrjzCgqfrPXgkuKEXM9GpA==}
+  '@moccona/preset-config@0.0.3':
+    resolution: {integrity: sha512-PQEwnV7wS98qm82FoKGZHhPTIQ4S+ku7rxGwbsrZSA+DV0ygwjnnj8eZ1nSxcKKAG3cH70DIX4h7RePMCZaWAA==}
 
   '@nodelib/fs.scandir@2.1.5':
     resolution: {integrity: sha512-vq24Bq3ym5HEQm2NKCr3yXDwjc7vTsEThRDnkp2DK9p1uqLR+DHurm/NOTo0KG7HYHU7eppKZj3MyqYuMBf62g==}
@@ -2741,7 +2741,7 @@ snapshots:
     dependencies:
       chalk: 5.4.1
 
-  '@moccona/preset-config@0.0.2': {}
+  '@moccona/preset-config@0.0.3': {}
 
   '@nodelib/fs.scandir@2.1.5':
     dependencies:

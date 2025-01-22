@@ -1,6 +1,8 @@
 {
   "extends": "@moccona/preset-config/tsconfig/node.json",
   "compilerOptions": {
+    "target": "ES2018",
+    "moduleResolution": "bundler",
     "paths": {
       "@/*": ["./src/*"]
     }

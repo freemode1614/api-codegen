@@ -1,53 +1,12 @@
-import { Base } from "~/base/Base";
+import type {
+  JSONValue,
+  ParameterObject,
+  RequestBodiesObject,
+  ResponsesObject,
+  SchemaObject,
+} from "~/base/Base";
+import { Base, SchemaType } from "~/base/Base";
 
-export type JSONValue = {
-  [K: string]: string | number | JSONValue | (string | number | JSONValue)[];
-};
-
-export enum SchemaType {
-  schemas = "schemas",
-  parameters = "parameters",
-  responses = "responses",
-  requestBodies = "requestBodies",
-}
-
-export type NonArraySchemaObject = {
-  name: string;
-  type: string;
-  format: string;
-};
-
-export type ArraySchemaObject = {
-  name: string;
-  items: SchemaObject;
-};
-
-export type SchemaObject = NonArraySchemaObject | ArraySchemaObject;
-
-export type ParameterObject = {
-  in: string;
-  name: string;
-  required: boolean;
-  schema: SchemaObject;
-};
-
-export type ResponseObject = {
-  schema: SchemaObject;
-};
-
-export type ResponsesObject = Record<string, ResponseObject>;
-
-export type RequestObject = {
-  schema: SchemaObject;
-};
-
-export type RequestBodiesObject = Record<string, RequestObject>;
-
-/**
- *
- * Base provider for tool
- *
- */
 export abstract class Provider extends Base {
   /**
    * A property to store JSON data externally.
@@ -74,10 +33,7 @@ export abstract class Provider extends Base {
     // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     if (!targetSchemas) {
       throw new Error(
-        "Not a valid schema type" +
-          schemaType +
-          ", expect" +
-          Object.keys(schemaType).join(", "),
+        `Not a valid schema type ${schemaType}, expect ${Object.keys(SchemaType).join(", ")}`,
       );
     }
 
