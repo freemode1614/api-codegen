@@ -1,3 +1,4 @@
+import { Adapter } from "~/base/Adaptor";
 import type {
   JSONValue,
   ParameterObject,
@@ -14,16 +15,30 @@ export abstract class Provider extends Base {
    */
   abstract schema: JSONValue;
 
+  /**
+   * Holds acollection of named schema object
+   */
   abstract [SchemaType.schemas]: Record<string, SchemaObject>;
-  abstract [SchemaType.parameters]: Record<string, ParameterObject>;
-  abstract [SchemaType.responses]: Record<string, ResponsesObject>;
-  abstract [SchemaType.requestBodies]: Record<string, RequestBodiesObject>;
 
   /**
-   * Abstract method to be implemented by subclasses.
-   * @returns A boolean indicating some condition.
+   * Holds acollection of named parameter object
    */
-  abstract test(): boolean;
+  abstract [SchemaType.parameters]: Record<string, ParameterObject>;
+
+  /**
+   * Holds acollection of named response object
+   */
+  abstract [SchemaType.responses]: Record<string, ResponsesObject>;
+
+  /**
+   * Holds acollection of named requestBody object
+   */
+  abstract [SchemaType.requestBodies]: Record<string, RequestBodiesObject>;
+
+  protected constructor(adaptor: Adapter) {
+    super();
+    this.init();
+  }
 
   protected getSchemaByType(
     schemaType: keyof typeof SchemaType | SchemaType,
@@ -39,4 +54,6 @@ export abstract class Provider extends Base {
 
     return targetSchemas[refName];
   }
+
+  abstract init(): void;
 }

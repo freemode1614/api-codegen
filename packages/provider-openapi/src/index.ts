@@ -1,6 +1,6 @@
 import { Adapter } from "@moccona/codegen-core";
 
-export class OpenAPI implements Adapter {
+export class OpenAPI extends Adapter {
   name = "openapi";
   methodField = "method";
   bodyField = "body";

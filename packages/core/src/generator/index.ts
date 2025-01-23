@@ -1,6 +1,14 @@
+/* eslint-disable no-case-declarations */
 /* eslint-disable @typescript-eslint/no-extraneous-class */
 
-import type { Node, Statement } from "typescript";
+import type {
+  BindingElement,
+  Node,
+  ParameterDeclaration,
+  PropertySignature,
+  Statement,
+  TypeNode,
+} from "typescript";
 import {
   addSyntheticLeadingComment,
   createPrinter,
@@ -10,10 +18,14 @@ import {
 } from "typescript";
 
 import {
-  ArraySchemaObject,
-  NonArraySchemaObject,
-  ParameterObject,
-  SchemaObject,
+  ArraySchemaType,
+  Base,
+  NonArraySchemaType,
+  ParameterIn,
+  type ParameterObject,
+  SchemaFormatType,
+  type SchemaObject,
+  SingleTypeSchemaObject,
 } from "~/base/Base";
 
 /**
@@ -66,7 +78,9 @@ export class Generator {
     basePath = "",
   ) {
     // Extract query parameters
-    const queryParameters = parameters.filter((p) => p.in === "query");
+    const queryParameters = parameters.filter(
+      (p) => p.in === ParameterIn.query,
+    );
 
     if (queryParameters.length > 0) {
       const queryString = queryParameters
@@ -112,11 +126,8 @@ export class Generator {
    * @param node - The target AST node.
    * @param comments - Array of comment objects to add.
    */
-  static addComments(node: Node, comments: Comments): void {
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-    if (!comments || !Array.isArray(comments)) {
-      return;
-    }
+  static addComments(node: Node, comments: Comments) {
+    if (!Array.isArray(comments)) return;
 
     const formatComment = (comment: CommentObject): string => {
       return comment.tag
@@ -141,11 +152,335 @@ export class Generator {
    */
   static isBinarySchema(schema: SchemaObject): boolean {
     if (schema.type === "array") {
-      const arraySchema = schema as ArraySchemaObject;
+      const arraySchema = schema;
       return this.isBinarySchema(arraySchema.items);
     }
 
-    const nonArraySchema = schema as NonArraySchemaObject;
+    const nonArraySchema = schema;
     return nonArraySchema.format === "binary";
+  }
+
+  static toTypeNode(schema: SchemaObject): TypeNode {
+    const { type, ref } = schema;
+    if (ref) {
+      const identify = Base.ref2name(ref);
+      return t.createTypeReferenceNode(
+        t.createIdentifier(
+          identify === "unknown" ? identify : Base.upperCamelCase(identify),
+        ),
+      );
+    }
+
+    switch (type) {
+      case ArraySchemaType.array:
+        const { items } = schema;
+        return t.createArrayTypeNode(this.toTypeNode(items));
+      case NonArraySchemaType.object:
+        const propsCount = Object.keys(schema.properties ?? {}).length;
+        if (!schema.properties || propsCount === 0) {
+          // Record<string, unknown>
+          return t.createTypeReferenceNode(t.createIdentifier("Record"), [
+            t.createToken(SyntaxKind.StringKeyword),
+            t.createToken(SyntaxKind.UnknownKeyword),
+          ]);
+        }
+
+        const props = Object.keys(schema.properties);
+
+        return t.createTypeLiteralNode(
+          props.map((propKey) => {
+            const propSchema = schema.properties![propKey];
+            return t.createPropertySignature(
+              undefined,
+              t.createStringLiteral(Base.normalize(propKey)),
+              // When field is required, a refrence or binary value, don't add question mark.
+              schema.required || schema.ref || this.isBinarySchema(schema)
+                ? undefined
+                : t.createToken(SyntaxKind.QuestionToken),
+              this.toTypeNode(propSchema),
+            );
+          }),
+        );
+      case NonArraySchemaType.integer:
+      case NonArraySchemaType.number:
+        return t.createToken(SyntaxKind.NumberKeyword);
+      case NonArraySchemaType.string:
+        return t.createToken(SyntaxKind.StringKeyword);
+      case NonArraySchemaType.boolean:
+        return t.createToken(SyntaxKind.BooleanKeyword);
+      default:
+        const { format, oneOf, allOf, anyOf } =
+          schema as SingleTypeSchemaObject;
+        switch (format) {
+          case SchemaFormatType.number:
+            return t.createToken(SyntaxKind.NumberKeyword);
+          case SchemaFormatType.string:
+            return t.createToken(SyntaxKind.StringKeyword);
+          case SchemaFormatType.boolean:
+            return t.createToken(SyntaxKind.BooleanKeyword);
+          case SchemaFormatType.File:
+            return t.createTypeReferenceNode(t.createIdentifier("File"));
+          default:
+            switch (type) {
+              case NonArraySchemaType.integer:
+              case NonArraySchemaType.number:
+                return t.createToken(SyntaxKind.NumberKeyword);
+              case NonArraySchemaType.string:
+                return t.createToken(SyntaxKind.StringKeyword);
+              case NonArraySchemaType.boolean:
+                return t.createToken(SyntaxKind.BooleanKeyword);
+              default:
+            }
+        }
+
+        if (oneOf) {
+          return t.createUnionTypeNode(
+            oneOf.map((schema) => this.toTypeNode(schema)),
+          );
+        }
+
+        if (anyOf) {
+          return t.createUnionTypeNode(
+            anyOf.map((schema) => this.toTypeNode(schema)),
+          );
+        }
+
+        if (allOf) {
+          return t.createIntersectionTypeNode(
+            allOf.map((schema) => this.toTypeNode(schema)),
+          );
+        }
+    }
+
+    return t.createToken(SyntaxKind.UnknownKeyword);
+  }
+
+  static toDeclarationNode(
+    parameters: ParameterObject[],
+  ): ParameterDeclaration {
+    const objectElements: BindingElement[] = [];
+    const typeObjectElements: PropertySignature[] = [];
+
+    for (const parameter of parameters) {
+      if (parameter.ref) {
+        t.createParameterDeclaration(
+          undefined,
+          undefined,
+          t.createIdentifier(
+            Base.camelCase(Base.normalize(Base.ref2name(parameter.ref))),
+          ),
+          undefined,
+          t.createTypeReferenceNode(
+            t.createIdentifier(
+              Base.upperCamelCase(Base.normalize(Base.ref2name(parameter.ref))),
+            ),
+          ),
+          undefined,
+        );
+      } else {
+        const { name, schema, required } = parameter;
+        objectElements.push(
+          t.createBindingElement(
+            undefined,
+            undefined,
+            t.createIdentifier(Base.camelCase(Base.normalize(name))),
+          ),
+        );
+
+        typeObjectElements.push(
+          t.createPropertySignature(
+            [],
+            t.createIdentifier(Base.camelCase(Base.normalize(name))),
+            required ? undefined : t.createToken(SyntaxKind.QuestionToken),
+            !schema
+              ? t.createToken(SyntaxKind.UnknownKeyword)
+              : this.toTypeNode(schema),
+          ),
+        );
+      }
+    }
+
+    return t.createParameterDeclaration(
+      undefined,
+      undefined,
+      t.createObjectBindingPattern(objectElements),
+      undefined,
+      t.createTypeLiteralNode(typeObjectElements),
+      undefined,
+    );
+  }
+
+  static toFormDataStatement(
+    parameters: ParameterObject[],
+    requestBody?: SchemaObject,
+  ): Statement[] {
+    const statements: Statement[] = [];
+    const fdDeclaration = t.createVariableStatement(
+      undefined,
+      t.createVariableDeclarationList(
+        [
+          t.createVariableDeclaration(
+            t.createIdentifier("fd"),
+            undefined,
+            undefined,
+            t.createNewExpression(
+              t.createIdentifier("FormData"),
+              undefined,
+              [],
+            ),
+          ),
+        ],
+        NodeFlags.Const,
+      ),
+    );
+
+    statements.push(fdDeclaration);
+
+    parameters
+      .filter(
+        (parameter) =>
+          parameter.ref !== undefined &&
+          (parameter.in === ParameterIn.formData ||
+            (parameter.schema && this.isBinarySchema(parameter.schema))),
+      )
+      .forEach((parameter) => {
+        statements.push(
+          t.createExpressionStatement(
+            t.createBinaryExpression(
+              t.createPropertyAccessExpression(
+                t.createIdentifier("req"),
+                t.createIdentifier(parameter.name),
+              ),
+              t.createToken(SyntaxKind.AmpersandAmpersandToken),
+              t.createCallExpression(
+                t.createPropertyAccessExpression(
+                  t.createIdentifier("fd"),
+                  t.createIdentifier("append"),
+                ),
+                undefined,
+                [
+                  t.createStringLiteral(parameter.name),
+                  t.createIdentifier(parameter.name),
+                ],
+              ),
+            ),
+          ),
+        );
+      });
+
+    if (
+      requestBody &&
+      requestBody.type === "object" &&
+      requestBody.properties &&
+      Object.keys(requestBody.properties).length !== 0
+    ) {
+      Object.keys(requestBody.properties).forEach((key) => {
+        const schemaByKey = requestBody.properties![key];
+        if (this.isBinarySchema(schemaByKey)) {
+          statements.push(
+            t.createForOfStatement(
+              undefined,
+              t.createVariableDeclarationList([
+                t.createVariableDeclaration("file"),
+              ]),
+              t.createPropertyAccessExpression(
+                t.createIdentifier("req"),
+                t.createIdentifier(key),
+              ),
+              t.createBlock([
+                t.createExpressionStatement(
+                  t.createCallExpression(
+                    t.createPropertyAccessExpression(
+                      t.createIdentifier("fd"),
+                      t.createIdentifier("append"),
+                    ),
+                    [],
+                    [
+                      t.createStringLiteral(key),
+                      t.createIdentifier("file"),
+                      t.createPropertyAccessExpression(
+                        t.createIdentifier("file"),
+                        t.createIdentifier("name"),
+                      ),
+                    ],
+                  ),
+                ),
+              ]),
+            ),
+          );
+        } else {
+          if (schemaByKey.required) {
+            statements.push(
+              t.createExpressionStatement(
+                t.createCallExpression(
+                  t.createPropertyAccessExpression(
+                    t.createIdentifier("fd"),
+                    t.createIdentifier("append"),
+                  ),
+                  undefined,
+                  [
+                    t.createStringLiteral(key),
+                    schemaByKey.type === "string"
+                      ? t.createPropertyAccessExpression(
+                          t.createIdentifier("req"),
+                          t.createIdentifier(key),
+                        )
+                      : t.createCallExpression(
+                          t.createIdentifier("String"),
+                          undefined,
+                          [
+                            t.createPropertyAccessExpression(
+                              t.createIdentifier("req"),
+                              t.createIdentifier(key),
+                            ),
+                          ],
+                        ),
+                  ],
+                ),
+              ),
+            );
+          } else {
+            statements.push(
+              t.createExpressionStatement(
+                t.createBinaryExpression(
+                  t.createPropertyAccessExpression(
+                    t.createIdentifier("req"),
+                    t.createIdentifier(key),
+                  ),
+                  t.createToken(SyntaxKind.AmpersandAmpersandToken),
+                  t.createCallExpression(
+                    t.createPropertyAccessExpression(
+                      t.createIdentifier("fd"),
+                      t.createIdentifier("append"),
+                    ),
+                    undefined,
+                    [
+                      t.createStringLiteral(key),
+                      schemaByKey.type === "string"
+                        ? t.createPropertyAccessExpression(
+                            t.createIdentifier("req"),
+                            t.createIdentifier(key),
+                          )
+                        : t.createCallExpression(
+                            t.createIdentifier("String"),
+                            undefined,
+                            [
+                              t.createPropertyAccessExpression(
+                                t.createIdentifier("req"),
+                                t.createIdentifier(key),
+                              ),
+                            ],
+                          ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          }
+        }
+      });
+    }
+
+    return statements;
   }
 }
