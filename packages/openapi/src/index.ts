@@ -6,4 +6,8 @@ export class OpenAPI extends Adapter {
   bodyField = "body";
   headersField = "header";
   queryField = "";
+
+  init() {
+    //
+  }
 }

@@ -1,3 +1,14 @@
+/**
+ *
+ * Provider 主要功能:
+ *
+ *  1. 获取远程文件内容。JSON/yaml
+ *  2. 提供对 schema 的查询操作。
+ *  3. 解析成中间数据结构。
+ *  4. 通过 Adaptor 来生成代码。
+ *
+ */
+
 import { Adapter } from "~/base/Adaptor";
 import type {
   JSONValue,
@@ -35,8 +46,11 @@ export abstract class Provider extends Base {
    */
   abstract [SchemaType.requestBodies]: Record<string, RequestBodiesObject>;
 
+  protected adaptor: Adapter;
+
   protected constructor(adaptor: Adapter) {
     super();
+    this.adaptor = adaptor;
     this.init();
   }
 
