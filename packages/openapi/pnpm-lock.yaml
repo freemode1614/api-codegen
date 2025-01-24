@@ -8,7 +8,7 @@ importers:
 
   .:
     dependencies:
-      '@moccona/codegen-core':
+      '@moccona/codegen':
         specifier: workspace:*
         version: link:../core
       '@moccona/logger':

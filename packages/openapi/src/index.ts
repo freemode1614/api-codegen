@@ -1,13 +1,22 @@
-import { Adapter } from "@moccona/codegen-core";
+import {
+  JSONValue,
+  ParameterObject,
+  Provider,
+  RequestBodiesObject,
+  ResponsesObject,
+  SchemaObject,
+} from "@moccona/codegen";
 
-export class OpenAPI extends Adapter {
+export class OpenAPI extends Provider {
   name = "openapi";
-  methodField = "method";
-  bodyField = "body";
-  headersField = "header";
-  queryField = "";
+  schema: JSONValue = {};
 
-  init() {
-    //
+  schemas: Record<string, SchemaObject> = {};
+  parameters: Record<string, ParameterObject> = {};
+  responses: Record<string, ResponsesObject> = {};
+  requestBodies: Record<string, RequestBodiesObject> = {};
+
+  init(): void {
+    throw new Error("Method not implemented.");
   }
 }
