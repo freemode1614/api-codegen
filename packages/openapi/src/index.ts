@@ -31,7 +31,7 @@ enum OpenAPIVersion {
 export class OpenAPIProvider extends Provider {
   name = "openapi";
   schema: JSONValue = {};
-  doc: JSONValue = {};
+  doc!: OpenAPIV3.Document;
 
   public getDocVersion = (doc: OpenAPI.Document) => {
     const version = (
@@ -56,19 +56,27 @@ export class OpenAPIProvider extends Provider {
     return schema.type === "array";
   }
 
-  private getSchemaByRef(): SchemaObject {
+  private getSchemaByRef(
+    schema: OpenAPIV3.SchemaObject | OpenAPIV3.ReferenceObject,
+  ): SchemaObject {
     //
   }
 
-  private getParameterByRef(): ParameterObject {
+  private getParameterByRef(
+    schema: OpenAPIV3.ParameterObject | OpenAPIV3.ReferenceObject,
+  ): ParameterObject {
     //
   }
 
-  private getResponseByRef(): ResponseObject {
+  private getResponseByRef(
+    schema: OpenAPIV3.ResponseObject | OpenAPIV3.ReferenceObject,
+  ): ResponseObject {
     //
   }
 
-  private getRequestBodyByRef(): RequestBodyObject {
+  private getRequestBodyByRef(
+    schema: OpenAPIV3.RequestBodyObject | OpenAPIV3.ReferenceObject,
+  ): RequestBodyObject {
     //
   }
 
@@ -388,7 +396,6 @@ export class OpenAPIProvider extends Provider {
       process.exit(1);
     }
 
-    // @ts-expect-error Ignore below error
     this.doc = await Base.fetchDoc<OpenAPIV3.Document>(options.docURL);
 
     const version = this.getDocVersion(
