@@ -13,6 +13,8 @@ import { Adapter } from "~/base/Adaptor";
 import type {
   JSONValue,
   ParameterObject,
+  PathsObject,
+  ReferenceObject,
   RequestBodiesObject,
   ResponsesObject,
   SchemaObject,
@@ -33,22 +35,30 @@ export abstract class Provider extends Base {
   /**
    * Holds acollection of named schema object
    */
-  protected schemas: Record<string, SchemaObject> = {};
+  protected schemas: Record<string, SchemaObject | ReferenceObject> = {};
 
   /**
    * Holds acollection of named parameter object
    */
-  protected parameters: Record<string, ParameterObject> = {};
+  protected parameters: Record<string, ParameterObject | ReferenceObject> = {};
 
   /**
    * Holds acollection of named response object
    */
-  protected responses: Record<string, ResponsesObject> = {};
+  protected responses: Record<string, ResponsesObject | ReferenceObject> = {};
 
   /**
    * Holds acollection of named requestBody object
    */
-  protected requestBodies: Record<string, RequestBodiesObject> = {};
+  protected requestBodies: Record<
+    string,
+    RequestBodiesObject | ReferenceObject
+  > = {};
+
+  /**
+   * Holds a collection of named api call
+   */
+  protected apis: Record<string, PathsObject> = {};
 
   /**
    *
@@ -60,18 +70,16 @@ export abstract class Provider extends Base {
   protected constructor(adaptor: Adapter, options: InitOptions) {
     super();
     this.adaptor = adaptor;
-    const { schemas, parameters, responses, requestBodies } =
-      this.init(options);
-    this.schemas = schemas;
-    this.parameters = parameters;
-    this.responses = responses;
-    this.requestBodies = requestBodies;
+  }
+
+  protected isRef(schema: any): schema is ReferenceObject {
+    return "$ref" in schema && typeof schema.$ref === "string";
   }
 
   protected getSchemaByType(
     schemaType: keyof typeof SchemaType | SchemaType,
     refName: string,
-  ) {
+  ): SchemaObject | ParameterObject | ResponsesObject | RequestBodiesObject {
     const targetSchemas = this[schemaType];
     // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     if (!targetSchemas) {
@@ -80,7 +88,13 @@ export abstract class Provider extends Base {
       );
     }
 
-    return targetSchemas[refName];
+    const schema = targetSchemas[refName];
+
+    if (this.isRef(schema)) {
+      return this.getSchemaByType(schemaType, Base.ref2name(schema.$ref));
+    }
+
+    return schema;
   }
 
   protected async init(options: InitOptions): Promise<{

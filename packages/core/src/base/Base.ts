@@ -53,6 +53,10 @@ export enum ParameterIn {
   "formData" = "formData",
 }
 
+export interface ReferenceObject {
+  $ref: string;
+}
+
 export interface SingleTypeSchemaObject {
   name: string;
   type: keyof typeof NonArraySchemaType;
@@ -67,6 +71,7 @@ export interface SingleTypeSchemaObject {
   required?: boolean;
   ref?: string;
 }
+
 export interface ArrayTypeSchemaObject {
   name: string;
   type: keyof typeof ArraySchemaType;
@@ -101,11 +106,46 @@ export type ResponseObject = {
 
 export type ResponsesObject = Record<string, ResponseObject>;
 
-export type RequestBodyObject = {
+export type MediaTypeObject = {
   schema: SchemaObject;
 };
 
-export type RequestBodiesObject = Record<string, RequestBodyObject>;
+export type RequestBodyObject = Record<string, MediaTypeObject>;
+
+enum HttpMethods {
+  GET = "get",
+  PUT = "put",
+  POST = "post",
+  DELETE = "delete",
+  OPTIONS = "options",
+  HEAD = "head",
+  PATCH = "patch",
+  TRACE = "trace",
+}
+
+export type OperationObject = {
+  summary?: string;
+  description?: string;
+  operationId?: string;
+  externalDocs?: { url: string; description?: string }[];
+  parameters?: ParameterObject[];
+  requestBody?: MediaTypeObject;
+  responses: ResponsesObject;
+  deprecated?: boolean;
+};
+
+export type PathObject = {
+  ref?: string;
+  summary?: string;
+  description?: string;
+  parameters?: ParameterObject[];
+} & {
+  [method in HttpMethods]?: OperationObject;
+};
+
+export type PathsObject = {
+  [path: string]: PathObject;
+};
 
 const typescriptKeywords = new Set([
   "break",
