@@ -1,3 +1,8 @@
+import { createScopedLogger } from "@moccona/logger";
+import { request, Agent } from "undici";
+
+const logger = createScopedLogger("Base");
+
 /**
  * Simple represenration for
  */
@@ -224,5 +229,26 @@ export abstract class Base {
       .filter(Boolean)
       .map(this.capitalize)
       .join("");
+  }
+
+  static async fetchDoc<T = unknown>(url: string): Promise<T> {
+    const agent = new Agent({
+      connect: {
+        rejectUnauthorized: false,
+      },
+    });
+    logger.info(`Fetch document from ${url}`);
+
+    try {
+      const { body } = await request(url, {
+        method: "GET",
+        dispatcher: agent,
+      });
+
+      return body.json() as T;
+    } catch (error) {
+      logger.error((error as Error).message);
+      return {} as T;
+    }
   }
 }

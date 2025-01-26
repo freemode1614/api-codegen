@@ -40,7 +40,7 @@
   },
   "prettier": "@moccona/preset-config/prettierrc",
   "packageManager": "pnpm@9.7.1",
-  "browserslist": [
+  "browserlist": [
     "not op_mini"
   ]
 }

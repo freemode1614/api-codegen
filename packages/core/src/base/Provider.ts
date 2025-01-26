@@ -19,6 +19,10 @@ import type {
 } from "~/base/Base";
 import { Base, SchemaType } from "~/base/Base";
 
+export type InitOptions = {
+  docURL: string;
+};
+
 export abstract class Provider extends Base {
   /**
    * A property to store JSON data externally.
@@ -29,29 +33,39 @@ export abstract class Provider extends Base {
   /**
    * Holds acollection of named schema object
    */
-  abstract [SchemaType.schemas]: Record<string, SchemaObject>;
+  protected schemas: Record<string, SchemaObject> = {};
 
   /**
    * Holds acollection of named parameter object
    */
-  abstract [SchemaType.parameters]: Record<string, ParameterObject>;
+  protected parameters: Record<string, ParameterObject> = {};
 
   /**
    * Holds acollection of named response object
    */
-  abstract [SchemaType.responses]: Record<string, ResponsesObject>;
+  protected responses: Record<string, ResponsesObject> = {};
 
   /**
    * Holds acollection of named requestBody object
    */
-  abstract [SchemaType.requestBodies]: Record<string, RequestBodiesObject>;
+  protected requestBodies: Record<string, RequestBodiesObject> = {};
 
+  /**
+   *
+   * Adaptor for client.
+   *
+   */
   protected adaptor: Adapter;
 
-  protected constructor(adaptor: Adapter) {
+  protected constructor(adaptor: Adapter, options: InitOptions) {
     super();
     this.adaptor = adaptor;
-    this.init();
+    const { schemas, parameters, responses, requestBodies } =
+      this.init(options);
+    this.schemas = schemas;
+    this.parameters = parameters;
+    this.responses = responses;
+    this.requestBodies = requestBodies;
   }
 
   protected getSchemaByType(
@@ -69,5 +83,12 @@ export abstract class Provider extends Base {
     return targetSchemas[refName];
   }
 
-  abstract init(): void;
+  protected async init(options: InitOptions): Promise<{
+    schemas: Record<string, SchemaObject>;
+    parameters: Record<string, ParameterObject>;
+    responses: Record<string, ResponsesObject>;
+    requestBodies: Record<string, RequestBodiesObject>;
+  }> {
+    throw new Error(`Please overwrite init method`);
+  }
 }
