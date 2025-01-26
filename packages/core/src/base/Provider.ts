@@ -12,17 +12,26 @@
 import { Adapter } from "~/base/Adaptor";
 import type {
   JSONValue,
+  OperationObject,
   ParameterObject,
   PathsObject,
   ReferenceObject,
-  RequestBodiesObject,
+  RequestBodyObject,
   ResponsesObject,
   SchemaObject,
 } from "~/base/Base";
 import { Base, SchemaType } from "~/base/Base";
 
-export type InitOptions = {
+export type ProviderInitOptions = {
   docURL: string;
+};
+
+export type ProviderInitResult = {
+  schemas: Record<string, SchemaObject>;
+  parameters: Record<string, ParameterObject>;
+  responses: Record<string, ResponsesObject>;
+  requestBodies: Record<string, RequestBodyObject>;
+  apis: Record<string, OperationObject>;
 };
 
 export abstract class Provider extends Base {
@@ -50,15 +59,13 @@ export abstract class Provider extends Base {
   /**
    * Holds acollection of named requestBody object
    */
-  protected requestBodies: Record<
-    string,
-    RequestBodiesObject | ReferenceObject
-  > = {};
+  protected requestBodies: Record<string, RequestBodyObject | ReferenceObject> =
+    {};
 
   /**
    * Holds a collection of named api call
    */
-  protected apis: Record<string, PathsObject> = {};
+  protected apis: Record<string, PathsObject[]> = {};
 
   /**
    *
@@ -67,42 +74,18 @@ export abstract class Provider extends Base {
    */
   protected adaptor: Adapter;
 
-  protected constructor(adaptor: Adapter, options: InitOptions) {
+  constructor(adaptor: Adapter, options: ProviderInitOptions) {
     super();
     this.adaptor = adaptor;
   }
 
-  protected isRef(schema: any): schema is ReferenceObject {
+  public isRef(schema: any): schema is ReferenceObject {
     return "$ref" in schema && typeof schema.$ref === "string";
   }
 
-  protected getSchemaByType(
-    schemaType: keyof typeof SchemaType | SchemaType,
-    refName: string,
-  ): SchemaObject | ParameterObject | ResponsesObject | RequestBodiesObject {
-    const targetSchemas = this[schemaType];
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-    if (!targetSchemas) {
-      throw new Error(
-        `Not a valid schema type ${schemaType}, expect ${Object.keys(SchemaType).join(", ")}`,
-      );
-    }
-
-    const schema = targetSchemas[refName];
-
-    if (this.isRef(schema)) {
-      return this.getSchemaByType(schemaType, Base.ref2name(schema.$ref));
-    }
-
-    return schema;
-  }
-
-  protected async init(options: InitOptions): Promise<{
-    schemas: Record<string, SchemaObject>;
-    parameters: Record<string, ParameterObject>;
-    responses: Record<string, ResponsesObject>;
-    requestBodies: Record<string, RequestBodiesObject>;
-  }> {
+  protected async init(
+    options: ProviderInitOptions,
+  ): Promise<ProviderInitResult> {
     throw new Error(`Please overwrite init method`);
   }
 }

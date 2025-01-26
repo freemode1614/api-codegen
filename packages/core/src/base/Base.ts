@@ -28,7 +28,6 @@ export enum NonArraySchemaType {
   "number" = "number",
   "boolean" = "boolean",
   "integer" = "integer",
-  "null" = "null",
 }
 
 export enum ArraySchemaType {
@@ -40,7 +39,6 @@ export enum SchemaFormatType {
   "number" = "number",
   "boolean" = "boolean",
   "File" = "File",
-  "null" = "null",
   "binary" = "binary",
 }
 
@@ -58,8 +56,8 @@ export interface ReferenceObject {
 }
 
 export interface SingleTypeSchemaObject {
-  name: string;
   type: keyof typeof NonArraySchemaType;
+  description?: string;
   allOf?: SchemaObject[];
   anyOf?: SchemaObject[];
   deprecated?: boolean;
@@ -68,15 +66,15 @@ export interface SingleTypeSchemaObject {
   oneOf?: SchemaObject[];
   properties?: Record<string, SchemaObject>;
   readonly?: boolean;
-  required?: boolean;
+  required?: string[] | boolean;
   ref?: string;
 }
 
 export interface ArrayTypeSchemaObject {
-  name: string;
   type: keyof typeof ArraySchemaType;
   items: SchemaObject;
   required?: boolean;
+  description?: string;
   ref?: string;
 }
 
@@ -91,7 +89,7 @@ export type ParameterObject = {
   ref?: string;
 };
 
-export enum ResponseType {
+export enum MediaTypes {
   JSON = "application/json",
   TEXT = "text",
   IMAGE = "image",
@@ -100,7 +98,7 @@ export enum ResponseType {
 }
 
 export type ResponseObject = {
-  type: ResponseType;
+  type: MediaTypes;
   schema: SchemaObject;
 };
 
@@ -112,7 +110,7 @@ export type MediaTypeObject = {
 
 export type RequestBodyObject = Record<string, MediaTypeObject>;
 
-enum HttpMethods {
+export enum HttpMethods {
   GET = "get",
   PUT = "put",
   POST = "post",
@@ -122,6 +120,19 @@ enum HttpMethods {
   PATCH = "patch",
   TRACE = "trace",
 }
+
+export const SuccessHttpStatusCode = {
+  "200": "200",
+  "201": "201",
+  "202": "202",
+  "203": "203",
+  "204": "204",
+  "205": "205",
+  "206": "206",
+  "207": "207",
+  "208": "208",
+  "226": "226",
+};
 
 export type OperationObject = {
   summary?: string;
@@ -290,5 +301,15 @@ export abstract class Base {
       logger.error((error as Error).message);
       return {} as T;
     }
+  }
+
+  static getMediaType(mediaType: string): MediaTypes | null {
+    for (const type in Object.values(MediaTypes)) {
+      if (new RegExp(type).test(mediaType)) {
+        return type as MediaTypes;
+      }
+    }
+
+    return null;
   }
 }

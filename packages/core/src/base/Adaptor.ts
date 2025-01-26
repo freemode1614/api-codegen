@@ -1,5 +1,4 @@
 import { Base } from "~/base/Base";
-import { Provider } from "~/base/Provider";
 
 /**
  *
@@ -11,10 +10,7 @@ export abstract class Adapter extends Base {
   abstract bodyField: string;
   abstract headersField: string;
   abstract queryField: string;
-  protected provider: Provider;
-
-  protected constructor(provider: Provider) {
+  constructor() {
     super();
-    this.provider = provider;
   }
 }
