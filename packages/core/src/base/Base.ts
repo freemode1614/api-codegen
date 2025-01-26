@@ -86,6 +86,7 @@ export type ParameterObject = {
   schema?: SchemaObject;
   required?: boolean;
   description?: string;
+  deprecated?: boolean;
   ref?: string;
 };
 

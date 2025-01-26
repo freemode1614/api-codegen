@@ -59,25 +59,60 @@ export class OpenAPIProvider extends Provider {
   private getSchemaByRef(
     schema: OpenAPIV3.SchemaObject | OpenAPIV3.ReferenceObject,
   ): SchemaObject {
-    //
+    if (this.isRef(schema)) {
+      schema = this.doc.components?.schemas?.[
+        Base.ref2name(schema.$ref)
+      ] as OpenAPIV3.SchemaObject;
+    }
+    return this.toBaseSchema(schema);
   }
 
   private getParameterByRef(
     schema: OpenAPIV3.ParameterObject | OpenAPIV3.ReferenceObject,
   ): ParameterObject {
-    //
+    if (this.isRef(schema)) {
+      schema = this.doc.components?.parameters?.[
+        Base.ref2name(schema.$ref)
+      ] as OpenAPIV3.ParameterObject;
+    }
+
+    const { name, required, deprecated, description } = schema;
+
+    return {
+      name,
+      required,
+      description,
+      deprecated,
+      in: schema.in as ParameterIn,
+      schema: schema.schema && this.toBaseSchema(schema.schema),
+    };
   }
 
   private getResponseByRef(
     schema: OpenAPIV3.ResponseObject | OpenAPIV3.ReferenceObject,
   ): ResponseObject {
-    //
+    if (this.isRef(schema)) {
+      schema = this.doc.components?.responses?.[
+        Base.ref2name(schema.$ref)
+      ] as OpenAPIV3.ResponseObject;
+    }
+
+    const { description, content = {} } = schema;
+
+    return;
   }
 
   private getRequestBodyByRef(
     schema: OpenAPIV3.RequestBodyObject | OpenAPIV3.ReferenceObject,
   ): RequestBodyObject {
-    //
+    if (this.isRef(schema)) {
+      schema = this.doc.components?.requestBodies?.[
+        Base.ref2name(schema.$ref)
+      ] as OpenAPIV3.RequestBodyObject;
+    }
+
+    const { description, content } = schema;
+    return {};
   }
 
   /**
@@ -87,12 +122,7 @@ export class OpenAPIProvider extends Provider {
     schema: OpenAPIV3.SchemaObject | OpenAPIV3.ReferenceObject,
   ): SchemaObject {
     if (this.isRef(schema)) {
-      return this.toBaseSchema(
-        this.getSchemaByType(
-          SchemaType.schemas,
-          Base.ref2name(schema.$ref),
-        ) as OpenAPIV3.SchemaObject,
-      );
+      return this.getSchemaByRef(schema);
     }
 
     if (this.isOpenAPIArraySchema(schema)) {
