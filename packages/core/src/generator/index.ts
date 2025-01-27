@@ -18,7 +18,7 @@ import {
   SyntaxKind,
 } from "typescript";
 import { Adapter } from "~/base/Adaptor";
-
+import type { ParameterObject, SchemaObject } from "~/base/Base";
 import {
   ArraySchemaType,
   ArrayTypeSchemaObject,
@@ -27,9 +27,7 @@ import {
   MediaTypes,
   NonArraySchemaType,
   ParameterIn,
-  type ParameterObject,
   SchemaFormatType,
-  type SchemaObject,
   SingleTypeSchemaObject,
 } from "~/base/Base";
 import { ProviderInitResult } from "~/base/Provider";
@@ -590,7 +588,7 @@ export class Generator {
               : [],
           )
           .concat(
-            shouldUseFormData || inBody.length > 0 || requestBody
+            shouldUseFormData || inBody.length > 0 || requestBody?.schema
               ? t.createPropertyAssignment(
                   t.createIdentifier(adapter.bodyFieldName),
                   shouldUseFormData

@@ -17,7 +17,7 @@ export abstract class Adapter {
     const schema = await provider.init();
     const statements = Generator.schemaToStatemets(schema, this);
     const code = Generator.toCode(statements);
-    Generator.write(code, "output.ts");
+    // await Generator.write(code, "output.ts");
     return code;
   }
 }
