@@ -19,6 +19,7 @@ import {
 
 import {
   ArraySchemaType,
+  ArrayTypeSchemaObject,
   Base,
   NonArraySchemaType,
   ParameterIn,
@@ -152,11 +153,11 @@ export class Generator {
    */
   static isBinarySchema(schema: SchemaObject): boolean {
     if (schema.type === "array") {
-      const arraySchema = schema;
-      return this.isBinarySchema(arraySchema.items);
+      const arraySchema = schema as ArrayTypeSchemaObject;
+      return this.isBinarySchema(arraySchema.items!);
     }
 
-    const nonArraySchema = schema;
+    const nonArraySchema = schema as SingleTypeSchemaObject;
     return nonArraySchema.format === "binary";
   }
 
@@ -173,8 +174,8 @@ export class Generator {
 
     switch (type) {
       case ArraySchemaType.array:
-        const { items } = schema;
-        return t.createArrayTypeNode(this.toTypeNode(items));
+        const { items } = schema as ArrayTypeSchemaObject;
+        return t.createArrayTypeNode(this.toTypeNode(items!));
       case NonArraySchemaType.object:
         const propsCount = Object.keys(schema.properties ?? {}).length;
         if (!schema.properties || propsCount === 0) {

@@ -152,18 +152,30 @@ export class V3_1 {
         deprecated,
         enum: enum_,
         format: format as unknown as SchemaFormatType,
-        allOf: allOf?.map((s) => this.toBaseSchema(s)),
-        anyOf: anyOf?.map((s) => this.toBaseSchema(s)),
-        oneOf: oneOf?.map((s) => this.toBaseSchema(s)),
+        allOf: allOf?.map((s) =>
+          this.isRef(s)
+            ? { type: Base.ref2name(s.$ref) }
+            : this.toBaseSchema(s),
+        ),
+        anyOf: anyOf?.map((s) =>
+          this.isRef(s)
+            ? { type: Base.ref2name(s.$ref) }
+            : this.toBaseSchema(s),
+        ),
+        oneOf: oneOf?.map((s) =>
+          this.isRef(s)
+            ? { type: Base.ref2name(s.$ref) }
+            : this.toBaseSchema(s),
+        ),
         properties: Object.keys(properties).reduce((acc, p) => {
           const propSchema = properties[p];
-          const schema = this.toBaseSchema(propSchema);
           return {
             ...acc,
-            [p]: {
-              ...schema,
-              required: required.includes(p),
-            },
+            [p]: this.isRef(propSchema)
+              ? {
+                  type: Base.ref2name(propSchema.$ref),
+                }
+              : this.toBaseSchema(propSchema),
           };
         }, {}),
       };

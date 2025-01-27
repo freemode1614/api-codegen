@@ -56,7 +56,7 @@ export interface ReferenceObject {
 }
 
 export interface SingleTypeSchemaObject {
-  type: keyof typeof NonArraySchemaType;
+  type: keyof typeof NonArraySchemaType | string;
   description?: string;
   allOf?: SchemaObject[];
   anyOf?: SchemaObject[];
@@ -78,10 +78,7 @@ export interface ArrayTypeSchemaObject {
   ref?: string;
 }
 
-export type SchemaObject =
-  | SingleTypeSchemaObject
-  | ArrayTypeSchemaObject
-  | ReferenceObject;
+export type SchemaObject = SingleTypeSchemaObject | ArrayTypeSchemaObject;
 
 export type ParameterObject = {
   name: string;

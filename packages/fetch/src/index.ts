@@ -1,3 +1,1 @@
-export default function Add(a: number, b: number) {
-  return a + b;
-}
+import { generator } from "@moccona/codegen";

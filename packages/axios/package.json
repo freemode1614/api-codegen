@@ -1,5 +1,5 @@
 {
-  "name": "@moccona/codegen-adapter-axios",
+  "name": "@moccona/codegen-axios",
   "version": "0.0.0",
   "description": "Code generator base on typescript AST tools",
   "type": "module",
@@ -31,4 +31,3 @@
     "vite-tsconfig-paths": "^5.1.4"
   }
 }
-

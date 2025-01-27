@@ -1,5 +1,5 @@
 import type { ProviderInitOptions, ProviderInitResult } from "@moccona/codegen";
-import { Base, JSONValue, Provider } from "@moccona/codegen";
+import { Base, Provider } from "@moccona/codegen";
 import { createScopedLogger } from "@moccona/logger";
 import { OpenAPI, OpenAPIV2, OpenAPIV3, OpenAPIV3_1 } from "openapi-types";
 
