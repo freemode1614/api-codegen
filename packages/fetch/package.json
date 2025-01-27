@@ -18,6 +18,10 @@
     }
   },
   "license": "MIT",
+  "scripts": {
+    "dev": "cross-env NODE_ENV=development tsup --watch",
+    "build": "cross-env NODE_ENV=production tsup"
+  },
   "dependencies": {
     "@moccona/codegen": "workspace:*",
     "@moccona/logger": "^0.0.2"
@@ -31,3 +35,4 @@
     "typescript": "^5.6.2"
   }
 }
+

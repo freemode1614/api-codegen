@@ -10,15 +10,5 @@ export default defineConfig([
     clean: process.env.NODE_ENV === "production",
     treeshake: true,
     shims: true,
-  },
-  {
-    entry: ["./src/cli.ts"],
-    outDir: "./npm",
-    dts: true,
-    format: ["esm", "cjs"],
-    sourcemap: true,
-    clean: process.env.NODE_ENV === "production",
-    treeshake: true,
-    shims: true,
-  },
+  }
 ]);

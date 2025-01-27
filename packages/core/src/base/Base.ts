@@ -153,7 +153,7 @@ export type PathObject = {
 };
 
 export type PathsObject = {
-  [path: string]: PathObject;
+  [path: string]: OperationObject[];
 };
 
 const typescriptKeywords = new Set([
@@ -234,8 +234,6 @@ const typescriptKeywords = new Set([
 ]);
 
 export abstract class Base {
-  abstract name: string;
-
   protected constructor() {
     if (new.target === Base) {
       throw new Error("Cannot instantiate abstract class");
@@ -248,6 +246,17 @@ export abstract class Base {
     }
 
     return ref.split("/").pop() ?? "unknown";
+  }
+
+  static pathToFnName(path: string, method?: string, operationId?: string) {
+    const name = this.camelCase(path.replace(/^\//, "").replaceAll("/", "_"));
+    const suffix = method
+      ? this.capitalize(this.upperCamelCase(`using_${method}`))
+      : "";
+    return (
+      (operationId ? this.camelCase(this.normalize(operationId)) : name) +
+      suffix
+    );
   }
 
   static normalize(text: string) {

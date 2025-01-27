@@ -10,7 +10,7 @@ importers:
     dependencies:
       '@moccona/codegen':
         specifier: workspace:*
-        version: 'link:'
+        version: link:../core
       '@moccona/logger':
         specifier: ^0.0.2
         version: 0.0.2

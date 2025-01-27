@@ -31,7 +31,7 @@ export class V3_1 {
    * Is array schema.
    */
   private isOpenAPIArraySchema(
-    schema: OpenAPIV3_1.SchemaObject,
+    schema: OpenAPIV3_1.SchemaObject
   ): schema is OpenAPIV3_1.ArraySchemaObject {
     return schema.type === "array";
   }
@@ -40,7 +40,7 @@ export class V3_1 {
    * OpenAPI schema to base schema.
    */
   private getSchemaByRef(
-    schema: OpenAPIV3_1.SchemaObject | OpenAPIV3_1.ReferenceObject,
+    schema: OpenAPIV3_1.SchemaObject | OpenAPIV3_1.ReferenceObject
   ): SchemaObject {
     if (this.isRef(schema)) {
       schema = this.doc.components?.schemas?.[Base.ref2name(schema.$ref)]!;
@@ -52,7 +52,7 @@ export class V3_1 {
    * OpenAPI parameter to base parameter.
    */
   private getParameterByRef(
-    schema: OpenAPIV3_1.ParameterObject | OpenAPIV3_1.ReferenceObject,
+    schema: OpenAPIV3_1.ParameterObject | OpenAPIV3_1.ReferenceObject
   ): ParameterObject {
     if (this.isRef(schema)) {
       schema = this.doc.components?.parameters?.[
@@ -76,7 +76,7 @@ export class V3_1 {
    * OpenAPI schema to base response
    */
   private getResponseByRef(
-    schema: OpenAPIV3_1.ResponseObject | OpenAPIV3_1.ReferenceObject,
+    schema: OpenAPIV3_1.ResponseObject | OpenAPIV3_1.ReferenceObject
   ): MediaTypeObject[] {
     if (this.isRef(schema)) {
       schema = this.doc.components?.responses?.[
@@ -96,7 +96,7 @@ export class V3_1 {
    * OpenAPI schema to requestBody.
    */
   private getRequestBodyByRef(
-    schema: OpenAPIV3_1.RequestBodyObject | OpenAPIV3_1.ReferenceObject,
+    schema: OpenAPIV3_1.RequestBodyObject | OpenAPIV3_1.ReferenceObject
   ): MediaTypeObject[] {
     if (this.isRef(schema)) {
       schema = this.doc.components?.requestBodies?.[
@@ -116,7 +116,7 @@ export class V3_1 {
    * Transform all OpenAPI schema to Base Schema
    */
   private toBaseSchema(
-    schema: OpenAPIV3_1.SchemaObject | OpenAPIV3_1.ReferenceObject,
+    schema: OpenAPIV3_1.SchemaObject | OpenAPIV3_1.ReferenceObject
   ): SchemaObject {
     if (this.isRef(schema)) {
       return this.getSchemaByRef(schema);
@@ -154,18 +154,18 @@ export class V3_1 {
         format: format as unknown as SchemaFormatType,
         allOf: allOf?.map((s) =>
           this.isRef(s)
-            ? { type: Base.ref2name(s.$ref) }
-            : this.toBaseSchema(s),
+            ? { type: Base.capitalize(Base.ref2name(s.$ref)) }
+            : this.toBaseSchema(s)
         ),
         anyOf: anyOf?.map((s) =>
           this.isRef(s)
-            ? { type: Base.ref2name(s.$ref) }
-            : this.toBaseSchema(s),
+            ? { type: Base.capitalize(Base.ref2name(s.$ref)) }
+            : this.toBaseSchema(s)
         ),
         oneOf: oneOf?.map((s) =>
           this.isRef(s)
-            ? { type: Base.ref2name(s.$ref) }
-            : this.toBaseSchema(s),
+            ? { type: Base.capitalize(Base.ref2name(s.$ref)) }
+            : this.toBaseSchema(s)
         ),
         properties: Object.keys(properties).reduce((acc, p) => {
           const propSchema = properties[p];
@@ -173,7 +173,7 @@ export class V3_1 {
             ...acc,
             [p]: this.isRef(propSchema)
               ? {
-                  type: Base.ref2name(propSchema.$ref),
+                  type: Base.capitalize(Base.ref2name(propSchema.$ref)),
                 }
               : this.toBaseSchema(propSchema),
           };
@@ -252,7 +252,7 @@ export class V3_1 {
             } = methodObject;
             const { parameters: parameters_ = [] } = methodObject;
             const baseParameters = [...parameters, ...parameters_].map(
-              this.getParameterByRef.bind(this),
+              this.getParameterByRef.bind(this)
             );
             const baseRequestBody = this.getRequestBodyByRef(requestBody);
             const uniqueParameterName = [
@@ -273,7 +273,7 @@ export class V3_1 {
                     description: description_ ?? description,
                     deprecated: deprecated,
                     parameters: uniqueParameterName.map(
-                      (name) => baseParameters.find((p) => p.name === name)!,
+                      (name) => baseParameters.find((p) => p.name === name)!
                     ),
                     responses: responseSchema,
                     requestBody: baseRequestBody,

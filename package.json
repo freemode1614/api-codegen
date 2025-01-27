@@ -4,7 +4,8 @@
   "description": "",
   "type": "module",
   "scripts": {
-    "dev": "pnpm run dev --filter "
+    "dev": "pnpm run dev --filter ",
+    "prepare": "pnpm i -r --frozen-lockfile"
   },
   "keywords": [],
   "author": "freemode",

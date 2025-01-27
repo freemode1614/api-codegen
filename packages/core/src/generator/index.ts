@@ -3,6 +3,7 @@
 
 import type {
   BindingElement,
+  Block,
   Node,
   ParameterDeclaration,
   PropertySignature,
@@ -16,11 +17,14 @@ import {
   NodeFlags,
   SyntaxKind,
 } from "typescript";
+import { Adapter } from "~/base/Adaptor";
 
 import {
   ArraySchemaType,
   ArrayTypeSchemaObject,
   Base,
+  MediaTypeObject,
+  MediaTypes,
   NonArraySchemaType,
   ParameterIn,
   type ParameterObject,
@@ -28,6 +32,8 @@ import {
   type SchemaObject,
   SingleTypeSchemaObject,
 } from "~/base/Base";
+import { ProviderInitResult } from "~/base/Provider";
+import { writeFile } from "fs/promises";
 
 /**
  * Represents a comment object with optional tag and message.
@@ -62,6 +68,14 @@ export class Generator {
     );
 
     return createPrinter().printFile(sourceFile);
+  }
+
+  static async write(code: string, filepath: string) {
+    try {
+      await writeFile(filepath, code);
+    } catch (error) {
+      console.error(error);
+    }
   }
 
   /**
@@ -222,16 +236,6 @@ export class Generator {
           case SchemaFormatType.File:
             return t.createTypeReferenceNode(t.createIdentifier("File"));
           default:
-            switch (type) {
-              case NonArraySchemaType.integer:
-              case NonArraySchemaType.number:
-                return t.createToken(SyntaxKind.NumberKeyword);
-              case NonArraySchemaType.string:
-                return t.createToken(SyntaxKind.StringKeyword);
-              case NonArraySchemaType.boolean:
-                return t.createToken(SyntaxKind.BooleanKeyword);
-              default:
-            }
         }
 
         if (oneOf) {
@@ -250,6 +254,10 @@ export class Generator {
           return t.createIntersectionTypeNode(
             allOf.map((schema) => this.toTypeNode(schema)),
           );
+        }
+
+        if (type && typeof type === "string") {
+          return t.createTypeReferenceNode(t.createIdentifier(type));
         }
     }
 
@@ -480,6 +488,330 @@ export class Generator {
           }
         }
       });
+    }
+
+    return statements;
+  }
+
+  static bodyBlock(
+    uri: string,
+    method: string,
+    parameters: ParameterObject[],
+    requestBody: MediaTypeObject | undefined,
+    response: MediaTypeObject | undefined,
+    adapter: Adapter,
+  ): Block {
+    const isFormDataRequest =
+      requestBody &&
+      ["multipart/form-data", "application/x-www-form-urlencoded"].includes(
+        requestBody.type,
+      );
+
+    const shouldParseResponseToJSON = "application/json" === response?.type;
+
+    const isRequestBodyBinary =
+      requestBody &&
+      requestBody.schema &&
+      this.isBinarySchema(requestBody.schema);
+
+    const hasBinaryInParameters = parameters.some(
+      (p) => p && p.schema && this.isBinarySchema(p.schema),
+    );
+
+    const shouldPutParametersOrBodyInFormData =
+      isFormDataRequest || isRequestBodyBinary || hasBinaryInParameters;
+
+    return t.createBlock([
+      ...(shouldPutParametersOrBodyInFormData
+        ? this.toFormDataStatement(parameters, requestBody?.schema)
+        : []),
+      ...this.client(
+        uri,
+        method,
+        parameters,
+        requestBody,
+        response,
+        adapter,
+        shouldPutParametersOrBodyInFormData,
+        shouldParseResponseToJSON,
+      ),
+    ]);
+  }
+
+  static client(
+    uri: string,
+    method: string,
+    parameters: ParameterObject[],
+    requestBody: MediaTypeObject | undefined,
+    response: MediaTypeObject | undefined,
+    adapter: Adapter,
+    shouldUseFormData: boolean,
+    shouldUseJSONResponse: boolean,
+  ): Statement[] {
+    const statements: Statement[] = [];
+    const inBody = parameters.filter((p) => !p.in || p.in === "body");
+    const inHeader = parameters.filter((p) => p.in === "header");
+
+    const toLiterlExpression = () => {
+      return t.createObjectLiteralExpression(
+        [
+          t.createPropertyAssignment(
+            t.createIdentifier(adapter.methodFieldName),
+            t.createStringLiteral(method.toUpperCase()),
+          ),
+        ]
+          .concat(
+            inHeader.length > 0
+              ? t.createPropertyAssignment(
+                  t.createIdentifier(adapter.headersFieldName),
+                  t.createObjectLiteralExpression(
+                    inHeader.map((p) =>
+                      t.createPropertyAssignment(
+                        t.createStringLiteral(p.name),
+                        t.createCallExpression(
+                          t.createIdentifier("encodeURIComponent"),
+                          undefined,
+                          [
+                            t.createCallExpression(
+                              t.createIdentifier("String"),
+                              undefined,
+                              [
+                                t.createIdentifier(
+                                  Base.camelCase(Base.normalize(p.name)),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                )
+              : [],
+          )
+          .concat(
+            shouldUseFormData || inBody.length > 0 || requestBody
+              ? t.createPropertyAssignment(
+                  t.createIdentifier(adapter.bodyFieldName),
+                  shouldUseFormData
+                    ? t.createIdentifier("fd")
+                    : inBody.length > 0 ||
+                        (requestBody &&
+                          requestBody.schema &&
+                          !this.isBinarySchema(requestBody.schema))
+                      ? t.createCallExpression(
+                          t.createPropertyAccessExpression(
+                            t.createIdentifier("JSON"),
+                            t.createIdentifier("stringify"),
+                          ),
+                          [],
+                          [
+                            requestBody
+                              ? t.createIdentifier("req")
+                              : t.createObjectLiteralExpression(
+                                  inBody.map((b) =>
+                                    t.createShorthandPropertyAssignment(
+                                      t.createIdentifier(b.name),
+                                    ),
+                                  ),
+                                  true,
+                                ),
+                          ],
+                        )
+                      : // One File parameter
+                        t.createIdentifier("req"),
+                )
+              : [],
+          ),
+        true,
+      );
+    };
+
+    const returnValue = t.createReturnStatement(
+      shouldUseJSONResponse
+        ? t.createCallExpression(
+            t.createPropertyAccessExpression(
+              t.createCallExpression(
+                t.createIdentifier(adapter.name),
+                undefined,
+                [
+                  Generator.toUrlTemplate(uri, parameters),
+                  toLiterlExpression(),
+                ],
+              ),
+              t.createIdentifier("then"),
+            ),
+            undefined,
+            [
+              t.createArrowFunction(
+                [t.createModifier(SyntaxKind.AsyncKeyword)],
+                [],
+                [
+                  t.createParameterDeclaration(
+                    undefined,
+                    undefined,
+                    t.createIdentifier("response"),
+                  ),
+                ],
+                undefined,
+                t.createToken(SyntaxKind.EqualsGreaterThanToken),
+                t.createAsExpression(
+                  t.createParenthesizedExpression(
+                    t.createAwaitExpression(
+                      t.createCallExpression(
+                        t.createPropertyAccessExpression(
+                          t.createIdentifier("response"),
+                          t.createIdentifier("json"),
+                        ),
+                        undefined,
+                        [],
+                      ),
+                    ),
+                  ),
+                  response && response.schema
+                    ? this.toTypeNode(response.schema)
+                    : t.createToken(SyntaxKind.UnknownKeyword),
+                ),
+              ),
+            ],
+          )
+        : t.createCallExpression(t.createIdentifier(adapter.name), undefined, [
+            Generator.toUrlTemplate(uri, parameters),
+            toLiterlExpression(),
+          ]),
+    );
+
+    statements.push(returnValue);
+
+    return statements;
+  }
+
+  static schemaToStatemets(
+    parsedDoc: ProviderInitResult,
+    adaptor: Adapter,
+  ): Statement[] {
+    const statements = [] as Statement[];
+    const { parameters, apis, schemas = {} } = parsedDoc;
+
+    for (const schemaKey in schemas) {
+      if (Object.hasOwnProperty.call(schemas, schemaKey)) {
+        const schema = schemas[schemaKey];
+        statements.push(
+          t.createTypeAliasDeclaration(
+            [t.createModifier(SyntaxKind.ExportKeyword)],
+            t.createIdentifier(Base.upperCamelCase(schemaKey)),
+            undefined,
+            this.toTypeNode(schema),
+          ),
+        );
+      }
+    }
+
+    for (const uri in apis) {
+      const operations = apis[uri];
+      for (const operation of operations) {
+        const {
+          method,
+          operationId,
+          requestBody = [],
+          responses = [],
+          summary,
+          deprecated,
+          description,
+          parameters = [],
+        } = operation;
+
+        // Add a default request, with no schema.
+        if (requestBody.length === 0) {
+          requestBody.push({
+            type: MediaTypes.JSON,
+          });
+        }
+
+        const shouldAddExtraMethodNameSuffix = requestBody.length > 1;
+
+        if (requestBody.length > 0) {
+          for (const req of requestBody) {
+            const statement = t.createFunctionDeclaration(
+              [
+                t.createModifier(SyntaxKind.ExportKeyword),
+                t.createModifier(SyntaxKind.AsyncKeyword),
+              ],
+              undefined,
+              Base.pathToFnName(uri, method, operationId) +
+                (shouldAddExtraMethodNameSuffix
+                  ? Base.capitalize(req.type.split("/")[1])
+                  : ""),
+              undefined,
+              parameters.length > 0
+                ? [Generator.toDeclarationNode(parameters)]
+                : [],
+              undefined,
+              this.bodyBlock(
+                uri,
+                method,
+                parameters,
+                req,
+                responses[0],
+                adaptor,
+              ),
+            );
+
+            // this.addComments(
+            //   statement,
+            //   [
+            //     description && {
+            //       comment: description,
+            //     },
+            //     summary && {
+            //       comment: summary,
+            //     },
+            //     deprecated && {
+            //       tag: "deprecated",
+            //     },
+            //   ].filter(Boolean) as CommentObject[],
+            // );
+            statements.push(statement);
+          }
+        } else {
+          const statement = t.createFunctionDeclaration(
+            [
+              t.createModifier(SyntaxKind.ExportKeyword),
+              t.createModifier(SyntaxKind.AsyncKeyword),
+            ],
+            undefined,
+            Base.pathToFnName(uri, method, operationId),
+            undefined,
+            parameters.length > 0
+              ? [Generator.toDeclarationNode(parameters)]
+              : [],
+            undefined,
+            this.bodyBlock(
+              uri,
+              method,
+              parameters,
+              undefined,
+              responses[0],
+              adaptor,
+            ),
+          );
+          // this.addComments(
+          //   statement,
+          //   [
+          //     description && {
+          //       comment: description,
+          //     },
+          //     summary && {
+          //       comment: summary,
+          //     },
+          //     deprecated && {
+          //       tag: "deprecated",
+          //     },
+          //   ].filter(Boolean) as CommentObject[],
+          // );
+          statements.push(statement);
+        }
+      }
     }
 
     return statements;

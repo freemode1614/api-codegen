@@ -1,5 +1,6 @@
 import type { ProviderInitOptions, ProviderInitResult } from "@moccona/codegen";
 import { Base, Provider } from "@moccona/codegen";
+import { FetchAdapter } from "@moccona/codegen-fetch";
 import { createScopedLogger } from "@moccona/logger";
 import { OpenAPI, OpenAPIV2, OpenAPIV3, OpenAPIV3_1 } from "openapi-types";
 
@@ -16,7 +17,6 @@ enum OpenAPIVersion {
 
 export class OpenAPIProvider extends Provider {
   readonly name = "openapi";
-
   readonly docURL!: string;
 
   constructor(initOptions: ProviderInitOptions) {
@@ -75,4 +75,11 @@ export class OpenAPIProvider extends Provider {
 
     return returnValue!;
   }
+}
+
+export async function codeGen(initOptions: ProviderInitOptions) {
+  const provider = new OpenAPIProvider(initOptions);
+  const adapter = new FetchAdapter();
+  const code = await adapter.gen(provider);
+  console.log(code);
 }

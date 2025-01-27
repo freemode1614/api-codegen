@@ -9,9 +9,8 @@
  *
  */
 
-import { Adapter } from "~/base/Adaptor";
 import type {
-  JSONValue,
+  OperationObject,
   ParameterObject,
   PathsObject,
   ReferenceObject,
@@ -30,45 +29,43 @@ export type ProviderInitResult = {
   parameters: Record<string, ParameterObject>;
   responses: Record<string, ResponsesObject>;
   requestBodies: Record<string, RequestBodyObject>;
-  apis: Record<string, PathsObject[]>;
+  apis: PathsObject;
 };
 
-export class Provider extends Base {
-  public readonly name!: string;
-
+export class Provider {
   /**
    * Holds acollection of named schema object
    */
-  protected schemas: Record<string, SchemaObject | ReferenceObject> = {};
+  schemas!: Record<string, SchemaObject>;
 
   /**
    * Holds acollection of named parameter object
    */
-  protected parameters: Record<string, ParameterObject | ReferenceObject> = {};
+  parameters!: Record<string, ParameterObject>;
 
   /**
    * Holds acollection of named response object
    */
-  protected responses: Record<string, ResponsesObject | ReferenceObject> = {};
+  responses!: Record<string, ResponsesObject>;
 
   /**
    * Holds acollection of named requestBody object
    */
-  protected requestBodies: Record<string, RequestBodyObject | ReferenceObject> =
-    {};
+  requestBodies!: Record<string, RequestBodyObject>;
 
   /**
    * Holds a collection of named api call
    */
-  protected apis: Record<string, PathsObject[]> = {};
+  apis!: Record<string, OperationObject[]>;
 
   public isRef(schema: any): schema is ReferenceObject {
     return "$ref" in schema && typeof schema.$ref === "string";
   }
 
-  protected async init(
-    options: ProviderInitOptions,
-  ): Promise<ProviderInitResult> {
+  /**
+   * Override this method.
+   */
+  async init(): Promise<ProviderInitResult> {
     throw new Error(`Please overwrite init method`);
   }
 }

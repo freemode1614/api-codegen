@@ -29,7 +29,7 @@ export class V3 {
    * Is array schema.
    */
   private isOpenAPIArraySchema(
-    schema: OpenAPIV3.SchemaObject,
+    schema: OpenAPIV3.SchemaObject
   ): schema is OpenAPIV3.ArraySchemaObject {
     return schema.type === "array";
   }
@@ -38,7 +38,7 @@ export class V3 {
    * OpenAPI schema to base schema.
    */
   private getSchemaByRef(
-    schema: OpenAPIV3.SchemaObject | OpenAPIV3.ReferenceObject,
+    schema: OpenAPIV3.SchemaObject | OpenAPIV3.ReferenceObject
   ): SchemaObject {
     if (this.isRef(schema)) {
       schema = this.doc.components?.schemas?.[
@@ -52,7 +52,7 @@ export class V3 {
    * OpenAPI parameter to base parameter.
    */
   private getParameterByRef(
-    schema: OpenAPIV3.ParameterObject | OpenAPIV3.ReferenceObject,
+    schema: OpenAPIV3.ParameterObject | OpenAPIV3.ReferenceObject
   ): ParameterObject {
     if (this.isRef(schema)) {
       schema = this.doc.components?.parameters?.[
@@ -76,7 +76,7 @@ export class V3 {
    * OpenAPI schema to base response
    */
   private getResponseByRef(
-    schema: OpenAPIV3.ResponseObject | OpenAPIV3.ReferenceObject,
+    schema: OpenAPIV3.ResponseObject | OpenAPIV3.ReferenceObject
   ): MediaTypeObject[] {
     if (this.isRef(schema)) {
       schema = this.doc.components?.responses?.[
@@ -96,7 +96,7 @@ export class V3 {
    * OpenAPI schema to requestBody.
    */
   private getRequestBodyByRef(
-    schema: OpenAPIV3.RequestBodyObject | OpenAPIV3.ReferenceObject,
+    schema: OpenAPIV3.RequestBodyObject | OpenAPIV3.ReferenceObject
   ): MediaTypeObject[] {
     if (this.isRef(schema)) {
       schema = this.doc.components?.requestBodies?.[
@@ -116,7 +116,7 @@ export class V3 {
    * Transform all OpenAPI schema to Base Schema
    */
   private toBaseSchema(
-    schema: OpenAPIV3.SchemaObject | OpenAPIV3.ReferenceObject,
+    schema: OpenAPIV3.SchemaObject | OpenAPIV3.ReferenceObject
   ): SchemaObject {
     if (this.isRef(schema)) {
       return this.getSchemaByRef(schema);
@@ -133,7 +133,6 @@ export class V3 {
       };
     } else {
       const {
-        type,
         required = [],
         allOf,
         anyOf,
@@ -144,6 +143,11 @@ export class V3 {
         oneOf,
         properties = {},
       } = schema;
+      let { type } = schema;
+
+      if (type === undefined && Object.keys(properties).length > 0) {
+        type = "object";
+      }
 
       return {
         type: type as unknown as NonArraySchemaType,
@@ -154,18 +158,18 @@ export class V3 {
         format: format as unknown as SchemaFormatType,
         allOf: allOf?.map((s) =>
           this.isRef(s)
-            ? { type: Base.ref2name(s.$ref) }
-            : this.toBaseSchema(s),
+            ? { type: Base.capitalize(Base.ref2name(s.$ref)) }
+            : this.toBaseSchema(s)
         ),
         anyOf: anyOf?.map((s) =>
           this.isRef(s)
-            ? { type: Base.ref2name(s.$ref) }
-            : this.toBaseSchema(s),
+            ? { type: Base.capitalize(Base.ref2name(s.$ref)) }
+            : this.toBaseSchema(s)
         ),
         oneOf: oneOf?.map((s) =>
           this.isRef(s)
-            ? { type: Base.ref2name(s.$ref) }
-            : this.toBaseSchema(s),
+            ? { type: Base.capitalize(Base.ref2name(s.$ref)) }
+            : this.toBaseSchema(s)
         ),
         properties: Object.keys(properties).reduce((acc, p) => {
           const propSchema = properties[p];
@@ -173,7 +177,7 @@ export class V3 {
             ...acc,
             [p]: this.isRef(propSchema)
               ? {
-                  type: Base.ref2name(propSchema.$ref),
+                  type: Base.capitalize(Base.ref2name(propSchema.$ref)),
                 }
               : this.toBaseSchema(propSchema),
           };
@@ -233,7 +237,7 @@ export class V3 {
 
       const methodApis: OperationObject[] = [];
       if ($ref) {
-        // TODO: Need to handle
+        // TODO: Need to handle ref senario
       } else {
         const { parameters = [], description, summary } = pathObject;
         Object.values(HttpMethods).forEach((method) => {
@@ -252,7 +256,7 @@ export class V3 {
             } = methodObject;
             const { parameters: parameters_ = [] } = methodObject;
             const baseParameters = [...parameters, ...parameters_].map(
-              this.getParameterByRef.bind(this),
+              this.getParameterByRef.bind(this)
             );
             const baseRequestBody = this.getRequestBodyByRef(requestBody);
             const uniqueParameterName = [
@@ -273,7 +277,7 @@ export class V3 {
                     description: description_ ?? description,
                     deprecated: deprecated,
                     parameters: uniqueParameterName.map(
-                      (name) => baseParameters.find((p) => p.name === name)!,
+                      (name) => baseParameters.find((p) => p.name === name)!
                     ),
                     responses: responseSchema,
                     requestBody: baseRequestBody,
