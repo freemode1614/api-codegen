@@ -12,7 +12,6 @@
 import { Adapter } from "~/base/Adaptor";
 import type {
   JSONValue,
-  OperationObject,
   ParameterObject,
   PathsObject,
   ReferenceObject,
@@ -20,7 +19,7 @@ import type {
   ResponsesObject,
   SchemaObject,
 } from "~/base/Base";
-import { Base, SchemaType } from "~/base/Base";
+import { Base } from "~/base/Base";
 
 export type ProviderInitOptions = {
   docURL: string;
@@ -31,15 +30,11 @@ export type ProviderInitResult = {
   parameters: Record<string, ParameterObject>;
   responses: Record<string, ResponsesObject>;
   requestBodies: Record<string, RequestBodyObject>;
-  apis: Record<string, OperationObject>;
+  apis: Record<string, PathsObject[]>;
 };
 
-export abstract class Provider extends Base {
-  /**
-   * A property to store JSON data externally.
-   * This attribute holds structured data in JSON format, allowing for flexible and dynamic data handling.
-   */
-  abstract schema: JSONValue;
+export class Provider extends Base {
+  public readonly name!: string;
 
   /**
    * Holds acollection of named schema object
@@ -66,18 +61,6 @@ export abstract class Provider extends Base {
    * Holds a collection of named api call
    */
   protected apis: Record<string, PathsObject[]> = {};
-
-  /**
-   *
-   * Adaptor for client.
-   *
-   */
-  protected adaptor: Adapter;
-
-  constructor(adaptor: Adapter, options: ProviderInitOptions) {
-    super();
-    this.adaptor = adaptor;
-  }
 
   public isRef(schema: any): schema is ReferenceObject {
     return "$ref" in schema && typeof schema.$ref === "string";

@@ -72,13 +72,16 @@ export interface SingleTypeSchemaObject {
 
 export interface ArrayTypeSchemaObject {
   type: keyof typeof ArraySchemaType;
-  items: SchemaObject;
+  items?: SchemaObject;
   required?: boolean;
   description?: string;
   ref?: string;
 }
 
-export type SchemaObject = SingleTypeSchemaObject | ArrayTypeSchemaObject;
+export type SchemaObject =
+  | SingleTypeSchemaObject
+  | ArrayTypeSchemaObject
+  | ReferenceObject;
 
 export type ParameterObject = {
   name: string;
@@ -98,18 +101,14 @@ export enum MediaTypes {
   VIDEO = "video",
 }
 
-export type ResponseObject = {
-  type: MediaTypes;
-  schema: SchemaObject;
-};
-
-export type ResponsesObject = Record<string, ResponseObject>;
-
 export type MediaTypeObject = {
-  schema: SchemaObject;
+  type: MediaTypes | keyof typeof MediaTypes;
+  schema?: SchemaObject;
 };
 
-export type RequestBodyObject = Record<string, MediaTypeObject>;
+export type ResponsesObject = Record<string, MediaTypeObject[]>;
+
+export type RequestBodyObject = ResponsesObject;
 
 export enum HttpMethods {
   GET = "get",
@@ -136,13 +135,14 @@ export const SuccessHttpStatusCode = {
 };
 
 export type OperationObject = {
+  method: string;
   summary?: string;
   description?: string;
   operationId?: string;
   externalDocs?: { url: string; description?: string }[];
   parameters?: ParameterObject[];
-  requestBody?: MediaTypeObject;
-  responses: ResponsesObject;
+  requestBody?: MediaTypeObject[];
+  responses: MediaTypeObject[];
   deprecated?: boolean;
 };
 
