@@ -1,5 +1,5 @@
 import type { ProviderInitOptions, ProviderInitResult } from "@moccona/codegen";
-import { Base, Provider } from "@moccona/codegen";
+import { Base, Generator, Provider } from "@moccona/codegen";
 import { FetchAdapter } from "@moccona/codegen-fetch";
 import { createScopedLogger } from "@moccona/logger";
 import { OpenAPI, OpenAPIV2, OpenAPIV3, OpenAPIV3_1 } from "openapi-types";
@@ -73,6 +73,8 @@ export class OpenAPIProvider extends Provider {
     this.requestBodies = requestBodies;
     this.apis = apis;
 
+    console.log(apis);
+
     return returnValue!;
   }
 }
@@ -82,4 +84,5 @@ export async function codeGen(initOptions: ProviderInitOptions) {
   const adapter = new FetchAdapter();
   const code = await adapter.gen(provider);
   console.log(code);
+  await Generator.write(code, "output.ts");
 }

@@ -18,7 +18,11 @@ import {
   SyntaxKind,
 } from "typescript";
 import { Adapter } from "~/base/Adaptor";
-import type { ParameterObject, SchemaObject } from "~/base/Base";
+import type {
+  ParameterObject,
+  ReferenceObject,
+  SchemaObject,
+} from "~/base/Base";
 import {
   ArraySchemaType,
   ArrayTypeSchemaObject,
@@ -171,6 +175,16 @@ export class Generator {
 
     const nonArraySchema = schema as SingleTypeSchemaObject;
     return nonArraySchema.format === "binary";
+  }
+
+  static toRequestBodyTypeNode(schema: SchemaObject) {
+    return t.createParameterDeclaration(
+      undefined,
+      undefined,
+      t.createIdentifier("req"),
+      undefined,
+      this.toTypeNode(schema),
+    );
   }
 
   static toTypeNode(schema: SchemaObject): TypeNode {
@@ -721,78 +735,35 @@ export class Generator {
 
         // Add a default request, with no schema.
         if (requestBody.length === 0) {
-          requestBody.push({
-            type: MediaTypes.JSON,
-          });
+          requestBody.push({ type: MediaTypes.JSON });
         }
 
         const shouldAddExtraMethodNameSuffix = requestBody.length > 1;
 
-        if (requestBody.length > 0) {
-          for (const req of requestBody) {
-            const statement = t.createFunctionDeclaration(
-              [
-                t.createModifier(SyntaxKind.ExportKeyword),
-                t.createModifier(SyntaxKind.AsyncKeyword),
-              ],
-              undefined,
-              Base.pathToFnName(uri, method, operationId) +
-                (shouldAddExtraMethodNameSuffix
-                  ? Base.capitalize(req.type.split("/")[1])
-                  : ""),
-              undefined,
-              parameters.length > 0
-                ? [Generator.toDeclarationNode(parameters)]
-                : [],
-              undefined,
-              this.bodyBlock(
-                uri,
-                method,
-                parameters,
-                req,
-                responses[0],
-                adaptor,
-              ),
-            );
-
-            // this.addComments(
-            //   statement,
-            //   [
-            //     description && {
-            //       comment: description,
-            //     },
-            //     summary && {
-            //       comment: summary,
-            //     },
-            //     deprecated && {
-            //       tag: "deprecated",
-            //     },
-            //   ].filter(Boolean) as CommentObject[],
-            // );
-            statements.push(statement);
-          }
-        } else {
+        for (const req of requestBody) {
           const statement = t.createFunctionDeclaration(
             [
               t.createModifier(SyntaxKind.ExportKeyword),
               t.createModifier(SyntaxKind.AsyncKeyword),
             ],
             undefined,
-            Base.pathToFnName(uri, method, operationId),
+            Base.pathToFnName(uri, method, operationId) +
+              (shouldAddExtraMethodNameSuffix
+                ? Base.capitalize(req.type.split("/")[1])
+                : ""),
             undefined,
-            parameters.length > 0
-              ? [Generator.toDeclarationNode(parameters)]
-              : [],
+            [
+              parameters.length > 0
+                ? Generator.toDeclarationNode(parameters)
+                : undefined,
+              req && req.schema
+                ? Generator.toRequestBodyTypeNode(req.schema)
+                : undefined,
+            ].filter(Boolean) as ParameterDeclaration[],
             undefined,
-            this.bodyBlock(
-              uri,
-              method,
-              parameters,
-              undefined,
-              responses[0],
-              adaptor,
-            ),
+            this.bodyBlock(uri, method, parameters, req, responses[0], adaptor),
           );
+
           // this.addComments(
           //   statement,
           //   [

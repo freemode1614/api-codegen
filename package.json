@@ -4,8 +4,7 @@
   "description": "",
   "type": "module",
   "scripts": {
-    "dev": "pnpm run dev --filter ",
-    "prepare": "pnpm i -r --frozen-lockfile"
+    "dev": "pnpm run -r --parallel dev"
   },
   "keywords": [],
   "author": "freemode",

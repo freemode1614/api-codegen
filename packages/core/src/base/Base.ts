@@ -240,12 +240,26 @@ export abstract class Base {
     }
   }
 
-  static ref2name(ref: string) {
-    if (ref.includes("~")) {
+  static ref2name(ref: string, doc?: any): string {
+    const paths = ref.replace(/^#/, "").split("/").filter(Boolean);
+
+    if (!doc) {
+      return paths.slice(-1)[0];
+    }
+
+    let temp = doc;
+    let lastPath = "";
+    for (let path of paths) {
+      path = path.replace("~1", "/");
+      temp = temp[path];
+      lastPath = path;
+    }
+
+    if (!temp) {
       return "unknown";
     }
 
-    return ref.split("/").pop() ?? "unknown";
+    return temp["$ref"] ? this.ref2name(temp["$ref"], doc) : lastPath;
   }
 
   static pathToFnName(path: string, method?: string, operationId?: string) {
