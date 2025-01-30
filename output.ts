@@ -1,48 +1,19 @@
-export type DateTime = string;
-export type Offset = {
-    "id": string;
-    "rules": Rules;
+export type Token = {
+  access_token: number;
+  token_type: string;
+  expires_in: number;
 };
-export type OffsetTransition = {
-    "dateTime": string;
-    "offsetAfter": Offset;
-    "offsetBefore": Offset;
-};
-export type Rules = {
-    "transitions": {
-        "dateTime": string;
-        "offsetAfter": Offset;
-        "offsetBefore": Offset;
-    }[];
-};
-export type SalesLine = {
-    "stock": ProductStock;
-};
-export type ProductStock = {
-    "test_param": {
-        "stock": ProductStock;
-    }[];
-};
-export async function anythingUsingGet() { return fetch(`/anything`, {
-    method: "GET"
-}).then(async (response) => (await response.json()) as {
-    "dateTime": string;
-    "offsetAfter": Offset;
-    "offsetBefore": Offset;
-}); }
-export async function anythingUsingPut({ content }: {
-    content?: {
-        "stock": ProductStock;
-    }[];
-}) { return fetch(`/anything`, {
-    method: "PUT",
-    headers: { "content": encodeURIComponent(String(content)) }
-}).then(async (response) => (await response.json()) as {
-    "stock": ProductStock;
-}[]); }
-export async function anythingUsingPost(req: {
-    "circular": Offset;
-}) { return fetch(`/anything`, {
+export async function demoFormDataUsingPost(req: {
+  client_id: string;
+  client_secret: string;
+  scope: number;
+}) {
+  const fd = new FormData();
+  fd.append("client_id", req.client_id);
+  fd.append("client_secret", req.client_secret);
+  fd.append("scope", String(req.scope));
+  return fetch(`/anything`, {
     method: "POST",
-    body: JSON.stringify(req)
-}); }
+    body: fd,
+  }).then(async (response) => (await response.json()) as Token);
+}

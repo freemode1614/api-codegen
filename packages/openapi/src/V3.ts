@@ -39,8 +39,14 @@ export class V3 {
    */
   private getSchemaByRef(
     schema: OpenAPIV3.SchemaObject | OpenAPIV3.ReferenceObject,
+    reserveRef = false,
   ): SchemaObject {
     if (this.isRef(schema)) {
+      if (reserveRef) {
+        return {
+          type: Base.ref2name(schema.$ref),
+        };
+      }
       schema = this.doc.components?.schemas?.[
         Base.ref2name(schema.$ref, this.doc)
       ] as OpenAPIV3.SchemaObject;
@@ -88,7 +94,7 @@ export class V3 {
 
     return Object.keys(content).map((c) => ({
       type: c as MediaTypes,
-      schema: content[c].schema && this.getSchemaByRef(content[c].schema),
+      schema: content[c].schema && this.getSchemaByRef(content[c].schema, true),
     }));
   }
 

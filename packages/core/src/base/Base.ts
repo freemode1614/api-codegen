@@ -38,7 +38,7 @@ export enum SchemaFormatType {
   "string" = "string",
   "number" = "number",
   "boolean" = "boolean",
-  "File" = "File",
+  "file" = "file",
   "binary" = "binary",
 }
 
@@ -263,7 +263,7 @@ export abstract class Base {
   }
 
   static pathToFnName(path: string, method?: string, operationId?: string) {
-    const name = this.camelCase(path.replace(/^\//, "").replaceAll("/", "_"));
+    const name = this.camelCase(this.normalize(path));
     const suffix = method
       ? this.capitalize(this.upperCamelCase(`using_${method}`))
       : "";

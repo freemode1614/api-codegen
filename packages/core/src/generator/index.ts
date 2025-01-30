@@ -18,11 +18,7 @@ import {
   SyntaxKind,
 } from "typescript";
 import { Adapter } from "~/base/Adaptor";
-import type {
-  ParameterObject,
-  ReferenceObject,
-  SchemaObject,
-} from "~/base/Base";
+import type { ParameterObject, SchemaObject } from "~/base/Base";
 import {
   ArraySchemaType,
   ArrayTypeSchemaObject,
@@ -32,10 +28,12 @@ import {
   NonArraySchemaType,
   ParameterIn,
   SchemaFormatType,
+  SchemaType,
   SingleTypeSchemaObject,
 } from "~/base/Base";
 import { ProviderInitResult } from "~/base/Provider";
 import { writeFile } from "fs/promises";
+import { s } from "vitest/dist/chunks/reporters.Y8BYiXBN.js";
 
 /**
  * Represents a comment object with optional tag and message.
@@ -219,7 +217,7 @@ export class Generator {
             const propSchema = schema.properties![propKey];
             return t.createPropertySignature(
               undefined,
-              t.createStringLiteral(Base.normalize(propKey)),
+              t.createStringLiteral(propKey),
               // When field is required, a refrence or binary value, don't add question mark.
               schema.required || schema.ref || this.isBinarySchema(schema)
                 ? undefined
@@ -230,8 +228,25 @@ export class Generator {
         );
       case NonArraySchemaType.integer:
       case NonArraySchemaType.number:
+        if (schema.enum) {
+          return t.createUnionTypeNode(
+            schema.enum.map((e) =>
+              t.createLiteralTypeNode(t.createNumericLiteral(e)),
+            ),
+          );
+        }
         return t.createToken(SyntaxKind.NumberKeyword);
       case NonArraySchemaType.string:
+        if (schema.format === SchemaFormatType.binary) {
+          return t.createTypeReferenceNode(t.createIdentifier("File"));
+        }
+        if (schema.enum) {
+          return t.createUnionTypeNode(
+            schema.enum.map((e) =>
+              t.createLiteralTypeNode(t.createStringLiteral(e as string)),
+            ),
+          );
+        }
         return t.createToken(SyntaxKind.StringKeyword);
       case NonArraySchemaType.boolean:
         return t.createToken(SyntaxKind.BooleanKeyword);
@@ -245,7 +260,7 @@ export class Generator {
             return t.createToken(SyntaxKind.StringKeyword);
           case SchemaFormatType.boolean:
             return t.createToken(SyntaxKind.BooleanKeyword);
-          case SchemaFormatType.File:
+          case SchemaFormatType.binary:
             return t.createTypeReferenceNode(t.createIdentifier("File"));
           default:
         }
@@ -311,7 +326,7 @@ export class Generator {
         typeObjectElements.push(
           t.createPropertySignature(
             [],
-            t.createIdentifier(Base.camelCase(Base.normalize(name))),
+            t.createIdentifier(Base.camelCase(name)),
             required ? undefined : t.createToken(SyntaxKind.QuestionToken),
             !schema
               ? t.createToken(SyntaxKind.UnknownKeyword)
@@ -397,7 +412,10 @@ export class Generator {
     ) {
       Object.keys(requestBody.properties).forEach((key) => {
         const schemaByKey = requestBody.properties![key];
-        if (this.isBinarySchema(schemaByKey)) {
+        if (
+          schemaByKey.type === ArraySchemaType.array &&
+          this.isBinarySchema(schemaByKey)
+        ) {
           statements.push(
             t.createForOfStatement(
               undefined,
@@ -521,9 +539,11 @@ export class Generator {
 
     const shouldParseResponseToJSON = "application/json" === response?.type;
 
+    // Ignore one and only blob parameter.
     const isRequestBodyBinary =
       requestBody &&
       requestBody.schema &&
+      requestBody.schema.type === ArraySchemaType.array &&
       this.isBinarySchema(requestBody.schema);
 
     const hasBinaryInParameters = parameters.some(
