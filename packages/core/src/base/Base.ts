@@ -28,6 +28,7 @@ export enum NonArraySchemaType {
   "number" = "number",
   "boolean" = "boolean",
   "integer" = "integer",
+  "enum" = "enum",
 }
 
 export enum ArraySchemaType {
@@ -53,6 +54,11 @@ export enum ParameterIn {
 
 export interface ReferenceObject {
   $ref: string;
+}
+
+export interface EnumSchemaObject {
+  name: string;
+  enum: (string | number)[];
 }
 
 export interface SingleTypeSchemaObject {

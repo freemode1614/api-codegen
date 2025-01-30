@@ -1,19 +1,39 @@
-export type Token = {
-  access_token: number;
-  token_type: string;
-  expires_in: number;
+export type Pet = {
+  id: number;
+  name: string;
+  status: "available" | "pending" | "sold";
 };
-export async function demoFormDataUsingPost(req: {
-  client_id: string;
-  client_secret: string;
-  scope: number;
-}) {
-  const fd = new FormData();
-  fd.append("client_id", req.client_id);
-  fd.append("client_secret", req.client_secret);
-  fd.append("scope", String(req.scope));
-  return fetch(`/anything`, {
-    method: "POST",
-    body: fd,
-  }).then(async (response) => (await response.json()) as Token);
+export async function anythingAllParamTypesIdId2UsingPost(
+  {
+    id,
+    id2,
+    queryParam,
+    queryParam2,
+    xHeaderValue,
+    xHeaderData,
+  }: {
+    id: number;
+    id2: number;
+    queryParam?: string;
+    queryParam2?: string;
+    xHeaderValue?: string;
+    xHeaderData?: string;
+  },
+  req: {
+    id: number;
+    name: string;
+    status: "available" | "pending" | "sold";
+  }
+) {
+  return fetch(
+    `/anything/all-param-types/${id}/${id2}?queryParam=${queryParam}&queryParam2=${queryParam2}`,
+    {
+      method: "POST",
+      headers: {
+        "x-header-value": encodeURIComponent(String(xHeaderValue)),
+        "x-header-data": encodeURIComponent(String(xHeaderData)),
+      },
+      body: JSON.stringify(req),
+    }
+  );
 }

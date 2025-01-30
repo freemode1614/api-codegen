@@ -326,7 +326,7 @@ export class Generator {
         typeObjectElements.push(
           t.createPropertySignature(
             [],
-            t.createIdentifier(Base.camelCase(name)),
+            t.createIdentifier(Base.camelCase(Base.normalize(name))),
             required ? undefined : t.createToken(SyntaxKind.QuestionToken),
             !schema
               ? t.createToken(SyntaxKind.UnknownKeyword)
@@ -750,8 +750,11 @@ export class Generator {
           summary,
           deprecated,
           description,
-          parameters = [],
         } = operation;
+
+        let { parameters = [] } = operation;
+
+        parameters = parameters.filter((p) => p.in !== "cookie");
 
         // Add a default request, with no schema.
         if (requestBody.length === 0) {

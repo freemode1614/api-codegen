@@ -2,6 +2,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import {
   Base,
+  EnumSchemaObject,
   HttpMethods,
   MediaTypeObject,
   MediaTypes,
@@ -40,18 +41,19 @@ export class V3 {
   private getSchemaByRef(
     schema: OpenAPIV3.SchemaObject | OpenAPIV3.ReferenceObject,
     reserveRef = false,
+    enums: EnumSchemaObject[] = [],
   ): SchemaObject {
     if (this.isRef(schema)) {
       if (reserveRef) {
         return {
-          type: Base.ref2name(schema.$ref),
+          type: Base.capitalize(Base.ref2name(schema.$ref)),
         };
       }
       schema = this.doc.components?.schemas?.[
         Base.ref2name(schema.$ref, this.doc)
       ] as OpenAPIV3.SchemaObject;
     }
-    return this.toBaseSchema(schema);
+    return this.toBaseSchema(schema, enums);
   }
 
   /**
@@ -59,6 +61,7 @@ export class V3 {
    */
   private getParameterByRef(
     schema: OpenAPIV3.ParameterObject | OpenAPIV3.ReferenceObject,
+    enums: EnumSchemaObject[] = [],
   ): ParameterObject {
     if (this.isRef(schema)) {
       schema = this.doc.components?.parameters?.[
@@ -68,13 +71,31 @@ export class V3 {
 
     const { name, required, deprecated, description } = schema;
 
+    if (schema.schema && !this.isRef(schema.schema) && schema.schema.enum) {
+      enums.push({
+        name,
+        enum: schema.schema.enum,
+      });
+
+      return {
+        name,
+        required,
+        description,
+        deprecated,
+        in: schema.in as ParameterIn,
+        schema: {
+          type: Base.capitalize(name),
+        },
+      };
+    }
+
     return {
       name,
       required,
       description,
       deprecated,
       in: schema.in as ParameterIn,
-      schema: schema.schema && this.getSchemaByRef(schema.schema),
+      schema: schema.schema && this.getSchemaByRef(schema.schema, false, enums),
     };
   }
 
@@ -103,6 +124,7 @@ export class V3 {
    */
   private getRequestBodyByRef(
     schema: OpenAPIV3.RequestBodyObject | OpenAPIV3.ReferenceObject,
+    enums: EnumSchemaObject[] = [],
   ): MediaTypeObject[] {
     if (this.isRef(schema)) {
       schema = this.doc.components?.requestBodies?.[
@@ -114,7 +136,9 @@ export class V3 {
 
     return Object.keys(content).map((c) => ({
       type: c as MediaTypes,
-      schema: content[c].schema && this.getSchemaByRef(content[c].schema),
+      schema:
+        content[c].schema &&
+        this.getSchemaByRef(content[c].schema, false, enums),
     }));
   }
 
@@ -123,6 +147,7 @@ export class V3 {
    */
   private toBaseSchema(
     schema: OpenAPIV3.SchemaObject | OpenAPIV3.ReferenceObject,
+    enums: EnumSchemaObject[] = [],
   ): SchemaObject {
     if (this.isRef(schema)) {
       return this.getSchemaByRef(schema);
@@ -151,8 +176,14 @@ export class V3 {
       } = schema;
       let { type } = schema;
 
+      if (enum_) {
+        enums.push({
+          enum: enum_,
+        } as EnumSchemaObject);
+      }
+
       if (type === undefined && Object.keys(properties).length > 0) {
-        type = "object";
+        type = NonArraySchemaType.object;
       }
 
       return {
@@ -196,6 +227,7 @@ export class V3 {
 
   public init() {
     const { components = {}, paths = {} } = this.doc;
+    const enums: EnumSchemaObject[] = [];
     const {
       requestBodies = {},
       responses = {},
@@ -208,7 +240,7 @@ export class V3 {
 
       return {
         ...acc,
-        [key]: this.getSchemaByRef(schema),
+        [key]: this.getSchemaByRef(schema, false, enums),
       };
     }, {});
 
@@ -217,7 +249,7 @@ export class V3 {
 
       return {
         ...acc,
-        [key]: this.getParameterByRef(parameter),
+        [key]: this.getParameterByRef(parameter, enums),
       };
     }, {});
 
@@ -235,7 +267,7 @@ export class V3 {
 
       return {
         ...acc,
-        [key]: this.getRequestBodyByRef(requestBody),
+        [key]: this.getRequestBodyByRef(requestBody, enums),
       };
     }, {});
 
@@ -264,9 +296,12 @@ export class V3 {
             } = methodObject;
             const { parameters: parameters_ = [] } = methodObject;
             const baseParameters = [...parameters, ...parameters_].map(
-              this.getParameterByRef.bind(this),
+              (parameter) => this.getParameterByRef(parameter, enums),
             );
-            const baseRequestBody = this.getRequestBodyByRef(requestBody);
+            const baseRequestBody = this.getRequestBodyByRef(
+              requestBody,
+              enums,
+            );
             const uniqueParameterName = [
               ...new Set(baseParameters.map((p) => p.name)),
             ];
