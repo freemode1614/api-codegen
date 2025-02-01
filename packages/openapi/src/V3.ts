@@ -74,7 +74,7 @@ export class V3 {
     if (schema.schema && !this.isRef(schema.schema) && schema.schema.enum) {
       enums.push({
         name,
-        enum: schema.schema.enum,
+        enum: schema.schema.enum as (string | number)[],
       });
 
       return {
@@ -148,6 +148,7 @@ export class V3 {
   private toBaseSchema(
     schema: OpenAPIV3.SchemaObject | OpenAPIV3.ReferenceObject,
     enums: EnumSchemaObject[] = [],
+    schemaKey = "",
   ): SchemaObject {
     if (this.isRef(schema)) {
       return this.getSchemaByRef(schema);
@@ -160,7 +161,7 @@ export class V3 {
         type,
         required: !!required,
         description,
-        items: this.toBaseSchema(items),
+        items: this.toBaseSchema(items, enums, schemaKey),
       };
     } else {
       const {
@@ -178,8 +179,16 @@ export class V3 {
 
       if (enum_) {
         enums.push({
-          enum: enum_,
+          name: schemaKey,
+          enum: enum_ as (string | number)[],
         } as EnumSchemaObject);
+
+        return {
+          type: Base.capitalize(schemaKey as unknown as NonArraySchemaType),
+          required,
+          description,
+          deprecated,
+        };
       }
 
       if (type === undefined && Object.keys(properties).length > 0) {
@@ -196,17 +205,17 @@ export class V3 {
         allOf: allOf?.map((s) =>
           this.isRef(s)
             ? { type: Base.capitalize(Base.ref2name(s.$ref, this.doc)) }
-            : this.toBaseSchema(s),
+            : this.toBaseSchema(s, enums),
         ),
         anyOf: anyOf?.map((s) =>
           this.isRef(s)
             ? { type: Base.capitalize(Base.ref2name(s.$ref, this.doc)) }
-            : this.toBaseSchema(s),
+            : this.toBaseSchema(s, enums),
         ),
         oneOf: oneOf?.map((s) =>
           this.isRef(s)
             ? { type: Base.capitalize(Base.ref2name(s.$ref, this.doc)) }
-            : this.toBaseSchema(s),
+            : this.toBaseSchema(s, enums),
         ),
         properties: Object.keys(properties).reduce((acc, p) => {
           const propSchema = properties[p];
@@ -218,7 +227,7 @@ export class V3 {
                     Base.ref2name(propSchema.$ref, this.doc),
                   ),
                 }
-              : this.toBaseSchema(propSchema),
+              : this.toBaseSchema(propSchema, enums, p),
           };
         }, {}),
       };
@@ -340,6 +349,7 @@ export class V3 {
     }, {});
 
     return {
+      enums: Base.uniqueEnums(enums),
       schemas: schemas_,
       responses: responses_,
       parameters: parameters_,

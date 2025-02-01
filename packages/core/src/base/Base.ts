@@ -339,4 +339,26 @@ export abstract class Base {
 
     return null;
   }
+
+  private static isSameEnum(a: EnumSchemaObject, b: EnumSchemaObject) {
+    // Check if arrays have different lengths
+    if (a.enum.length !== b.enum.length || a.name !== b.name) return false;
+    // Sort and compare each element
+    return a.enum.sort().every((v, index) => v === b.enum.sort()[index]);
+  }
+
+  static uniqueEnums(enums: EnumSchemaObject[]) {
+    const enums_: EnumSchemaObject[] = [];
+    for (const enumObject of enums) {
+      if (enums_.length === 0) {
+        enums_.push(enumObject);
+      } else {
+        if (!enums_.some((a) => this.isSameEnum(a, enumObject))) {
+          enums_.push(enumObject);
+        }
+      }
+    }
+
+    return enums_;
+  }
 }

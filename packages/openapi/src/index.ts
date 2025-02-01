@@ -73,8 +73,6 @@ export class OpenAPIProvider extends Provider {
     this.requestBodies = requestBodies;
     this.apis = apis;
 
-    console.log(apis);
-
     return returnValue!;
   }
 }
@@ -83,6 +81,5 @@ export async function codeGen(initOptions: ProviderInitOptions) {
   const provider = new OpenAPIProvider(initOptions);
   const adapter = new FetchAdapter();
   const code = await adapter.gen(provider);
-  console.log(code);
   await Generator.write(code, "output.ts");
 }

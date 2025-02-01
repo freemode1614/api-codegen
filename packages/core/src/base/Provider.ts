@@ -10,6 +10,7 @@
  */
 
 import type {
+  EnumSchemaObject,
   OperationObject,
   ParameterObject,
   PathsObject,
@@ -25,6 +26,7 @@ export type ProviderInitOptions = {
 };
 
 export type ProviderInitResult = {
+  enums: EnumSchemaObject[];
   schemas: Record<string, SchemaObject>;
   parameters: Record<string, ParameterObject>;
   responses: Record<string, ResponsesObject>;

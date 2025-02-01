@@ -284,7 +284,11 @@ export class Generator {
         }
 
         if (type && typeof type === "string") {
-          return t.createTypeReferenceNode(t.createIdentifier(type));
+          return t.createTypeOperatorNode(
+            SyntaxKind.KeyOfKeyword,
+            t.createTypeQueryNode(t.createIdentifier(type)),
+          );
+          // t.createTypeReferenceNode(t.createIdentifier(type));
         }
     }
 
@@ -723,7 +727,24 @@ export class Generator {
     adaptor: Adapter,
   ): Statement[] {
     const statements = [] as Statement[];
-    const { parameters, apis, schemas = {} } = parsedDoc;
+    const { parameters, apis, schemas = {}, enums } = parsedDoc;
+
+    for (const enumObject of enums) {
+      statements.push(
+        t.createEnumDeclaration(
+          [t.createToken(SyntaxKind.ExportKeyword)],
+          t.createIdentifier(Base.capitalize(enumObject.name)),
+          enumObject.enum.map((member) => {
+            return t.createEnumMember(
+              t.createStringLiteral(member as string),
+              typeof member === "string"
+                ? t.createStringLiteral(member)
+                : t.createNumericLiteral(member),
+            );
+          }),
+        ),
+      );
+    }
 
     for (const schemaKey in schemas) {
       if (Object.hasOwnProperty.call(schemas, schemaKey)) {
@@ -731,7 +752,7 @@ export class Generator {
         statements.push(
           t.createTypeAliasDeclaration(
             [t.createModifier(SyntaxKind.ExportKeyword)],
-            t.createIdentifier(Base.upperCamelCase(schemaKey)),
+            t.createIdentifier(Base.capitalize(schemaKey)),
             undefined,
             this.toTypeNode(schema),
           ),
