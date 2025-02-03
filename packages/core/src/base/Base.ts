@@ -341,10 +341,11 @@ export abstract class Base {
   }
 
   private static isSameEnum(a: EnumSchemaObject, b: EnumSchemaObject) {
-    // Check if arrays have different lengths
-    if (a.enum.length !== b.enum.length || a.name !== b.name) return false;
     // Sort and compare each element
-    return a.enum.sort().every((v, index) => v === b.enum.sort()[index]);
+    return (
+      a.enum.length === b.enum.length &&
+      a.enum.sort().every((v, index) => v === b.enum.sort()[index])
+    );
   }
 
   static uniqueEnums(enums: EnumSchemaObject[]) {
@@ -360,5 +361,9 @@ export abstract class Base {
     }
 
     return enums_;
+  }
+
+  static findSameSchema(a: EnumSchemaObject, enums: EnumSchemaObject[]) {
+    return enums.find((b) => this.isSameEnum(b, a));
   }
 }

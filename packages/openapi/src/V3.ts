@@ -42,18 +42,22 @@ export class V3 {
     schema: OpenAPIV3.SchemaObject | OpenAPIV3.ReferenceObject,
     reserveRef = false,
     enums: EnumSchemaObject[] = [],
+    upLevelSchemaKey = "",
   ): SchemaObject {
+    let refName = "";
     if (this.isRef(schema)) {
+      refName = Base.capitalize(Base.ref2name(schema.$ref));
       if (reserveRef) {
         return {
-          type: Base.capitalize(Base.ref2name(schema.$ref)),
+          type: upLevelSchemaKey + refName,
         };
       }
       schema = this.doc.components?.schemas?.[
         Base.ref2name(schema.$ref, this.doc)
       ] as OpenAPIV3.SchemaObject;
     }
-    return this.toBaseSchema(schema, enums);
+
+    return this.toBaseSchema(schema, enums, "", upLevelSchemaKey + refName);
   }
 
   /**
@@ -62,6 +66,7 @@ export class V3 {
   private getParameterByRef(
     schema: OpenAPIV3.ParameterObject | OpenAPIV3.ReferenceObject,
     enums: EnumSchemaObject[] = [],
+    upLevelSchemaKey = "",
   ): ParameterObject {
     if (this.isRef(schema)) {
       schema = this.doc.components?.parameters?.[
@@ -69,13 +74,33 @@ export class V3 {
       ] as OpenAPIV3.ParameterObject;
     }
 
-    const { name, required, deprecated, description } = schema;
+    const {
+      name,
+      required,
+      deprecated,
+      description,
+      schema: parameterSchema,
+    } = schema;
 
-    if (schema.schema && !this.isRef(schema.schema) && schema.schema.enum) {
-      enums.push({
-        name,
-        enum: schema.schema.enum as (string | number)[],
-      });
+    if (
+      parameterSchema &&
+      !this.isRef(parameterSchema) &&
+      parameterSchema.enum
+    ) {
+      const type = upLevelSchemaKey + Base.capitalize(name);
+      const enumSchema = {
+        name: type,
+        enum: parameterSchema.enum as (string | number)[],
+      };
+
+      const sameEnum = Base.findSameSchema(enumSchema, enums);
+
+      if (!sameEnum) {
+        enums.push({
+          name: type,
+          enum: parameterSchema.enum as (string | number)[],
+        });
+      }
 
       return {
         name,
@@ -84,7 +109,7 @@ export class V3 {
         deprecated,
         in: schema.in as ParameterIn,
         schema: {
-          type: Base.capitalize(name),
+          type: sameEnum?.name ?? type,
         },
       };
     }
@@ -95,7 +120,14 @@ export class V3 {
       description,
       deprecated,
       in: schema.in as ParameterIn,
-      schema: schema.schema && this.getSchemaByRef(schema.schema, false, enums),
+      schema:
+        schema.schema &&
+        this.getSchemaByRef(
+          schema.schema,
+          false,
+          enums,
+          upLevelSchemaKey + Base.capitalize(name),
+        ),
     };
   }
 
@@ -149,6 +181,7 @@ export class V3 {
     schema: OpenAPIV3.SchemaObject | OpenAPIV3.ReferenceObject,
     enums: EnumSchemaObject[] = [],
     schemaKey = "",
+    upLevelSchemaKey = "",
   ): SchemaObject {
     if (this.isRef(schema)) {
       return this.getSchemaByRef(schema);
@@ -161,7 +194,7 @@ export class V3 {
         type,
         required: !!required,
         description,
-        items: this.toBaseSchema(items, enums, schemaKey),
+        items: this.toBaseSchema(items, enums, schemaKey, upLevelSchemaKey),
       };
     } else {
       const {
@@ -178,13 +211,21 @@ export class V3 {
       let { type } = schema;
 
       if (enum_) {
-        enums.push({
-          name: schemaKey,
+        const name =
+          Base.capitalize(upLevelSchemaKey) + Base.capitalize(schemaKey);
+
+        const enumObject = {
+          name: name,
           enum: enum_ as (string | number)[],
-        } as EnumSchemaObject);
+        };
+
+        const sameObject = Base.findSameSchema(enumObject, enums);
+        if (!sameObject) {
+          enums.push(enumObject);
+        }
 
         return {
-          type: Base.capitalize(schemaKey as unknown as NonArraySchemaType),
+          type: sameObject?.name ?? name,
           required,
           description,
           deprecated,
@@ -227,7 +268,7 @@ export class V3 {
                     Base.ref2name(propSchema.$ref, this.doc),
                   ),
                 }
-              : this.toBaseSchema(propSchema, enums, p),
+              : this.toBaseSchema(propSchema, enums, p, upLevelSchemaKey),
           };
         }, {}),
       };
@@ -249,7 +290,7 @@ export class V3 {
 
       return {
         ...acc,
-        [key]: this.getSchemaByRef(schema, false, enums),
+        [key]: this.getSchemaByRef(schema, false, enums, key),
       };
     }, {});
 
@@ -258,7 +299,7 @@ export class V3 {
 
       return {
         ...acc,
-        [key]: this.getParameterByRef(parameter, enums),
+        [key]: this.getParameterByRef(parameter, enums, key),
       };
     }, {});
 

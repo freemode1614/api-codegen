@@ -28,12 +28,10 @@ import {
   NonArraySchemaType,
   ParameterIn,
   SchemaFormatType,
-  SchemaType,
   SingleTypeSchemaObject,
 } from "~/base/Base";
 import { ProviderInitResult } from "~/base/Provider";
 import { writeFile } from "fs/promises";
-import { s } from "vitest/dist/chunks/reporters.Y8BYiXBN.js";
 
 /**
  * Represents a comment object with optional tag and message.
@@ -284,10 +282,11 @@ export class Generator {
         }
 
         if (type && typeof type === "string") {
-          return t.createTypeOperatorNode(
-            SyntaxKind.KeyOfKeyword,
-            t.createTypeQueryNode(t.createIdentifier(type)),
-          );
+          return t.createTypeReferenceNode(t.createIdentifier(type));
+          // t.createTypeOperatorNode(
+          //   SyntaxKind.KeyOfKeyword,
+          //   t.createTypeQueryNode(t.createIdentifier(type)),
+          // );
           // t.createTypeReferenceNode(t.createIdentifier(type));
         }
     }
