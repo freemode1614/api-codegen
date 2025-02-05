@@ -4,7 +4,7 @@ import { request, Agent } from "undici";
 const logger = createScopedLogger("Base");
 
 /**
- * Simple represenration for
+ * Simple represenration for JSON object
  */
 export type JSONValue = {
   [K: string]:
