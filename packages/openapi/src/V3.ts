@@ -12,7 +12,7 @@ import {
   ParameterObject,
   SchemaFormatType,
   SchemaObject,
-} from "@moccona/codegen";
+} from "@moccona/api-codegen";
 import { OpenAPIV3 } from "openapi-types";
 
 export class V3 {
@@ -30,7 +30,7 @@ export class V3 {
    * Is array schema.
    */
   private isOpenAPIArraySchema(
-    schema: OpenAPIV3.SchemaObject,
+    schema: OpenAPIV3.SchemaObject
   ): schema is OpenAPIV3.ArraySchemaObject {
     return schema.type === "array";
   }
@@ -42,7 +42,7 @@ export class V3 {
     schema: OpenAPIV3.SchemaObject | OpenAPIV3.ReferenceObject,
     reserveRef = false,
     enums: EnumSchemaObject[] = [],
-    upLevelSchemaKey = "",
+    upLevelSchemaKey = ""
   ): SchemaObject {
     let refName = "";
     if (this.isRef(schema)) {
@@ -66,7 +66,7 @@ export class V3 {
   private getParameterByRef(
     schema: OpenAPIV3.ParameterObject | OpenAPIV3.ReferenceObject,
     enums: EnumSchemaObject[] = [],
-    upLevelSchemaKey = "",
+    upLevelSchemaKey = ""
   ): ParameterObject {
     if (this.isRef(schema)) {
       schema = this.doc.components?.parameters?.[
@@ -126,7 +126,7 @@ export class V3 {
           schema.schema,
           false,
           enums,
-          upLevelSchemaKey + Base.capitalize(name),
+          upLevelSchemaKey + Base.capitalize(name)
         ),
     };
   }
@@ -135,7 +135,7 @@ export class V3 {
    * OpenAPI schema to base response
    */
   private getResponseByRef(
-    schema: OpenAPIV3.ResponseObject | OpenAPIV3.ReferenceObject,
+    schema: OpenAPIV3.ResponseObject | OpenAPIV3.ReferenceObject
   ): MediaTypeObject[] {
     if (this.isRef(schema)) {
       schema = this.doc.components?.responses?.[
@@ -156,7 +156,7 @@ export class V3 {
    */
   private getRequestBodyByRef(
     schema: OpenAPIV3.RequestBodyObject | OpenAPIV3.ReferenceObject,
-    enums: EnumSchemaObject[] = [],
+    enums: EnumSchemaObject[] = []
   ): MediaTypeObject[] {
     if (this.isRef(schema)) {
       schema = this.doc.components?.requestBodies?.[
@@ -181,7 +181,7 @@ export class V3 {
     schema: OpenAPIV3.SchemaObject | OpenAPIV3.ReferenceObject,
     enums: EnumSchemaObject[] = [],
     schemaKey = "",
-    upLevelSchemaKey = "",
+    upLevelSchemaKey = ""
   ): SchemaObject {
     if (this.isRef(schema)) {
       return this.getSchemaByRef(schema);
@@ -246,17 +246,17 @@ export class V3 {
         allOf: allOf?.map((s) =>
           this.isRef(s)
             ? { type: Base.capitalize(Base.ref2name(s.$ref, this.doc)) }
-            : this.toBaseSchema(s, enums),
+            : this.toBaseSchema(s, enums)
         ),
         anyOf: anyOf?.map((s) =>
           this.isRef(s)
             ? { type: Base.capitalize(Base.ref2name(s.$ref, this.doc)) }
-            : this.toBaseSchema(s, enums),
+            : this.toBaseSchema(s, enums)
         ),
         oneOf: oneOf?.map((s) =>
           this.isRef(s)
             ? { type: Base.capitalize(Base.ref2name(s.$ref, this.doc)) }
-            : this.toBaseSchema(s, enums),
+            : this.toBaseSchema(s, enums)
         ),
         properties: Object.keys(properties).reduce((acc, p) => {
           const propSchema = properties[p];
@@ -265,7 +265,7 @@ export class V3 {
             [p]: this.isRef(propSchema)
               ? {
                   type: Base.capitalize(
-                    Base.ref2name(propSchema.$ref, this.doc),
+                    Base.ref2name(propSchema.$ref, this.doc)
                   ),
                 }
               : this.toBaseSchema(propSchema, enums, p, upLevelSchemaKey),
@@ -346,11 +346,11 @@ export class V3 {
             } = methodObject;
             const { parameters: parameters_ = [] } = methodObject;
             const baseParameters = [...parameters, ...parameters_].map(
-              (parameter) => this.getParameterByRef(parameter, enums),
+              (parameter) => this.getParameterByRef(parameter, enums)
             );
             const baseRequestBody = this.getRequestBodyByRef(
               requestBody,
-              enums,
+              enums
             );
             const uniqueParameterName = [
               ...new Set(baseParameters.map((p) => p.name)),
@@ -370,7 +370,7 @@ export class V3 {
                     description: description_ ?? description,
                     deprecated: deprecated,
                     parameters: uniqueParameterName.map(
-                      (name) => baseParameters.find((p) => p.name === name)!,
+                      (name) => baseParameters.find((p) => p.name === name)!
                     ),
                     responses: responseSchema,
                     requestBody: baseRequestBody,

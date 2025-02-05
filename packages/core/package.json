@@ -1,5 +1,5 @@
 {
-  "name": "@moccona/codegen",
+  "name": "@moccona/api-codegen",
   "version": "0.0.0",
   "description": "Code generator base on typescript AST tools",
   "type": "module",

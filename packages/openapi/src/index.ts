@@ -1,6 +1,9 @@
-import type { ProviderInitOptions, ProviderInitResult } from "@moccona/codegen";
-import { Base, Generator, Provider } from "@moccona/codegen";
-import { FetchAdapter } from "@moccona/codegen-fetch";
+import type {
+  ProviderInitOptions,
+  ProviderInitResult,
+} from "@moccona/api-codegen";
+import { Base, Generator, Provider } from "@moccona/api-codegen";
+import { FetchAdapter } from "@moccona/api-codegen-fetch";
 import { createScopedLogger } from "@moccona/logger";
 import { OpenAPI, OpenAPIV2, OpenAPIV3, OpenAPIV3_1 } from "openapi-types";
 

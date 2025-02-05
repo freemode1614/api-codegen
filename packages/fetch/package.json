@@ -1,5 +1,5 @@
 {
-  "name": "@moccona/codegen-fetch",
+  "name": "@moccona/api-codegen-fetch",
   "version": "0.0.0",
   "description": "Code generator base on typescript AST tools",
   "type": "module",
@@ -23,7 +23,7 @@
     "build": "cross-env NODE_ENV=production tsup"
   },
   "dependencies": {
-    "@moccona/codegen": "workspace:*",
+    "@moccona/api-codegen": "workspace:*",
     "@moccona/logger": "^0.0.2"
   },
   "devDependencies": {
@@ -35,4 +35,3 @@
     "typescript": "^5.6.2"
   }
 }
-

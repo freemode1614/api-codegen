@@ -1,5 +1,5 @@
 {
-  "name": "@moccona/codegen-postman",
+  "name": "@moccona/api-codegen-postman",
   "version": "0.0.0",
   "description": "Code generator base on typescript AST tools",
   "type": "module",

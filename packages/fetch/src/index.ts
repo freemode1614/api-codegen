@@ -1,4 +1,4 @@
-import { Adapter } from "@moccona/codegen";
+import { Adapter } from "@moccona/api-codegen";
 
 export class FetchAdapter extends Adapter {
   readonly methodFieldName = "method";
