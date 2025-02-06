@@ -315,6 +315,7 @@ export abstract class Base {
         rejectUnauthorized: false,
       },
     });
+
     logger.info(`Fetch document from ${url}`);
 
     try {
@@ -326,7 +327,7 @@ export abstract class Base {
       return body.json() as T;
     } catch (error) {
       logger.error((error as Error).message);
-      return {} as T;
+      throw error;
     }
   }
 
@@ -338,6 +339,10 @@ export abstract class Base {
     }
 
     return null;
+  }
+
+  static isValidEnumType(a: SchemaObject) {
+    return ["string", "number"].includes(a.type);
   }
 
   private static isSameEnum(a: EnumSchemaObject, b: EnumSchemaObject) {

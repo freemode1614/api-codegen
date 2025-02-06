@@ -8,15 +8,15 @@ importers:
 
   .:
     dependencies:
+      '@moccona/api-codegen':
+        specifier: workspace:*
+        version: link:../core
       '@moccona/api-codegen-axios':
         specifier: workspace:*
         version: link:../axios
       '@moccona/api-codegen-fetch':
         specifier: workspace:*
         version: link:../fetch
-      '@moccona/api-codegen':
-        specifier: workspace:*
-        version: link:../core
       '@moccona/logger':
         specifier: ^0.0.2
         version: 0.0.2
@@ -36,6 +36,9 @@ importers:
       cross-env:
         specifier: ^7.0.3
         version: 7.0.3
+      fast-glob:
+        specifier: ^3.3.3
+        version: 3.3.3
       tsup:
         specifier: ^8.3.5
         version: 8.3.5(jiti@1.21.7)(postcss@8.5.1)(typescript@5.7.3)(yaml@2.7.0)

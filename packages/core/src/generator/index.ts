@@ -32,6 +32,9 @@ import {
 } from "~/base/Base";
 import { ProviderInitResult } from "~/base/Provider";
 import { writeFile } from "fs/promises";
+import { createScopedLogger } from "@moccona/logger";
+
+const logger = createScopedLogger("generator");
 
 /**
  * Represents a comment object with optional tag and message.
@@ -56,7 +59,8 @@ export class Generator {
    */
   static toCode(statements: Statement[]): string {
     if (statements.length === 0) {
-      throw new Error("No statements provided.");
+      logger.error("No api declaration found.");
+      return "// No api declaration found.";
     }
 
     const sourceFile = t.createSourceFile(
@@ -735,7 +739,9 @@ export class Generator {
           t.createIdentifier(Base.capitalize(enumObject.name)),
           enumObject.enum.map((member) => {
             return t.createEnumMember(
-              t.createStringLiteral(member as string),
+              t.createStringLiteral(
+                typeof member === "string" ? member : member + "_",
+              ),
               typeof member === "string"
                 ? t.createStringLiteral(member)
                 : t.createNumericLiteral(member),

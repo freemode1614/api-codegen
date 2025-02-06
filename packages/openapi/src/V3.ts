@@ -23,7 +23,11 @@ export class V3 {
   }
 
   private isRef(schema: any): schema is OpenAPIV3.ReferenceObject {
-    return "$ref" in schema && typeof schema.$ref === "string";
+    return (
+      typeof schema === "object" &&
+      "$ref" in schema &&
+      typeof schema.$ref === "string"
+    );
   }
 
   /**
@@ -32,7 +36,7 @@ export class V3 {
   private isOpenAPIArraySchema(
     schema: OpenAPIV3.SchemaObject
   ): schema is OpenAPIV3.ArraySchemaObject {
-    return schema.type === "array";
+    return typeof schema === "object" && schema.type === "array";
   }
 
   /**
@@ -95,11 +99,11 @@ export class V3 {
 
       const sameEnum = Base.findSameSchema(enumSchema, enums);
 
-      if (!sameEnum) {
-        enums.push({
-          name: type,
-          enum: parameterSchema.enum as (string | number)[],
-        });
+      if (
+        !sameEnum &&
+        Base.isValidEnumType(enumSchema as unknown as SchemaObject)
+      ) {
+        enums.push(enumSchema);
       }
 
       return {
@@ -178,13 +182,19 @@ export class V3 {
    * Transform all OpenAPI schema to Base Schema
    */
   private toBaseSchema(
-    schema: OpenAPIV3.SchemaObject | OpenAPIV3.ReferenceObject,
+    schema: OpenAPIV3.SchemaObject | OpenAPIV3.ReferenceObject | undefined,
     enums: EnumSchemaObject[] = [],
     schemaKey = "",
     upLevelSchemaKey = ""
   ): SchemaObject {
+    if (!schema) {
+      return {
+        type: "unknown",
+      };
+    }
+
     if (this.isRef(schema)) {
-      return this.getSchemaByRef(schema);
+      return this.getSchemaByRef(schema, true);
     }
 
     if (this.isOpenAPIArraySchema(schema)) {
@@ -210,7 +220,7 @@ export class V3 {
       } = schema;
       let { type } = schema;
 
-      if (enum_) {
+      if (enum_ && type !== "boolean") {
         const name =
           Base.capitalize(upLevelSchemaKey) + Base.capitalize(schemaKey);
 
@@ -220,12 +230,16 @@ export class V3 {
         };
 
         const sameObject = Base.findSameSchema(enumObject, enums);
-        if (!sameObject) {
+
+        if (
+          !sameObject &&
+          Base.isValidEnumType(enumObject as unknown as SchemaObject)
+        ) {
           enums.push(enumObject);
         }
 
         return {
-          type: sameObject?.name ?? name,
+          type: enumObject.name,
           required,
           description,
           deprecated,
@@ -358,6 +372,13 @@ export class V3 {
 
             // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
             if (responses) {
+              if (Object.keys(responses).length === 0) {
+                Object.assign(responses, {
+                  200: {
+                    description: "Successful response",
+                  },
+                });
+              }
               const httpCodes = Object.keys(responses);
               for (const code of httpCodes) {
                 if (code in responses) {
