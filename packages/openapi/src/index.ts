@@ -84,5 +84,7 @@ export async function codeGen(initOptions: ProviderInitOptions) {
   const provider = new OpenAPIProvider(initOptions);
   const adapter = new FetchAdapter();
   const code = await adapter.gen(provider);
-  await Generator.write(code, "output.ts");
+  if (process.env.NODE_ENV === "test") {
+    await Generator.write(code, "output.ts");
+  }
 }
