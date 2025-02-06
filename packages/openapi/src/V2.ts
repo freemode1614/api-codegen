@@ -30,7 +30,7 @@ export class V3 {
    * OpenAPI schema to base schema.
    */
   private getSchemaByRef(
-    schema: OpenAPIV2.SchemaObject | OpenAPIV2.ReferenceObject
+    schema: OpenAPIV2.SchemaObject | OpenAPIV2.ReferenceObject,
   ): SchemaObject {
     if (this.isRef(schema)) {
       schema = this.doc.definitions?.schemas?.[
@@ -44,7 +44,7 @@ export class V3 {
    * OpenAPI parameter to base parameter.
    */
   private getParameterByRef(
-    schema: OpenAPIV2.ParameterObject | OpenAPIV2.ReferenceObject
+    schema: OpenAPIV2.ParameterObject | OpenAPIV2.ReferenceObject,
   ): ParameterObject {
     if (this.isRef(schema)) {
       schema = this.doc.definitions?.parameters?.[
@@ -67,7 +67,7 @@ export class V3 {
    * OpenAPI schema to base response
    */
   private getResponseByRef(
-    schema: OpenAPIV2.ResponseObject | OpenAPIV2.ReferenceObject
+    schema: OpenAPIV2.ResponseObject | OpenAPIV2.ReferenceObject,
   ): MediaTypeObject[] {
     if (this.isRef(schema)) {
       schema = this.doc.definitions?.responses?.[
@@ -89,7 +89,7 @@ export class V3 {
    * OpenAPI schema to requestBody.
    */
   private getRequestBodyByRef(
-    schema: OpenAPIV3.RequestBodyObject | OpenAPIV2.ReferenceObject
+    schema: OpenAPIV3.RequestBodyObject | OpenAPIV2.ReferenceObject,
   ): MediaTypeObject[] {
     if (this.isRef(schema)) {
       schema = this.doc.definitions?.requestBodies?.[
@@ -111,7 +111,7 @@ export class V3 {
    * Transform all OpenAPI schema to Base Schema
    */
   private toBaseSchema(
-    schema: OpenAPIV2.SchemaObject | OpenAPIV2.ReferenceObject
+    schema: OpenAPIV2.SchemaObject | OpenAPIV2.ReferenceObject,
   ): SchemaObject {
     if (this.isRef(schema)) {
       return this.getSchemaByRef(schema);
@@ -148,17 +148,17 @@ export class V3 {
         allOf: allOf.map((s) =>
           this.isRef(s)
             ? { type: Base.ref2name(s.$ref) }
-            : this.toBaseSchema(s as OpenAPIV2.SchemaObject)
+            : this.toBaseSchema(s as OpenAPIV2.SchemaObject),
         ),
         anyOf: anyOf.map((s) =>
           this.isRef(s)
             ? { type: Base.ref2name(s.$ref) }
-            : this.toBaseSchema(s as OpenAPIV2.SchemaObject)
+            : this.toBaseSchema(s as OpenAPIV2.SchemaObject),
         ),
         oneOf: oneOf.map((s) =>
           this.isRef(s)
             ? { type: Base.ref2name(s.$ref) }
-            : this.toBaseSchema(s as OpenAPIV2.SchemaObject)
+            : this.toBaseSchema(s as OpenAPIV2.SchemaObject),
         ),
         properties: Object.keys(properties).reduce((acc, p) => {
           const propSchema = properties[p];
@@ -243,7 +243,7 @@ export class V3 {
             } = methodObject;
             const { parameters: parameters_ = [] } = methodObject;
             const baseParameters = [...parameters, ...parameters_].map(
-              this.getParameterByRef.bind(this)
+              this.getParameterByRef.bind(this),
             );
             const baseRequestBody = this.getRequestBodyByRef(requestBody);
             const uniqueParameterName = [
@@ -264,7 +264,7 @@ export class V3 {
                     description: description_ ?? description,
                     deprecated: deprecated,
                     parameters: uniqueParameterName.map(
-                      (name) => baseParameters.find((p) => p.name === name)!
+                      (name) => baseParameters.find((p) => p.name === name)!,
                     ),
                     responses: responseSchema,
                     requestBody: baseRequestBody,
