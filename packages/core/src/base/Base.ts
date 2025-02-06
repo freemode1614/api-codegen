@@ -29,6 +29,7 @@ export enum NonArraySchemaType {
   "boolean" = "boolean",
   "integer" = "integer",
   "enum" = "enum",
+  "blob" = "blob",
 }
 
 export enum ArraySchemaType {
@@ -41,6 +42,7 @@ export enum SchemaFormatType {
   "boolean" = "boolean",
   "file" = "file",
   "binary" = "binary",
+  "blob" = "blob",
 }
 
 export enum ParameterIn {
@@ -342,7 +344,10 @@ export abstract class Base {
   }
 
   static isValidEnumType(a: SchemaObject) {
-    return ["string", "number"].includes(a.type);
+    return (
+      a.type !== "boolean" &&
+      !(a as SingleTypeSchemaObject).enum?.some((en) => typeof en === "boolean")
+    );
   }
 
   private static isSameEnum(a: EnumSchemaObject, b: EnumSchemaObject) {

@@ -252,6 +252,8 @@ export class Generator {
         return t.createToken(SyntaxKind.StringKeyword);
       case NonArraySchemaType.boolean:
         return t.createToken(SyntaxKind.BooleanKeyword);
+      case NonArraySchemaType.blob:
+        return t.createTypeReferenceNode(t.createIdentifier("File"));
       default:
         const { format, oneOf, allOf, anyOf } =
           schema as SingleTypeSchemaObject;
@@ -262,6 +264,7 @@ export class Generator {
             return t.createToken(SyntaxKind.StringKeyword);
           case SchemaFormatType.boolean:
             return t.createToken(SyntaxKind.BooleanKeyword);
+          case SchemaFormatType.blob:
           case SchemaFormatType.binary:
             return t.createTypeReferenceNode(t.createIdentifier("File"));
           default:
