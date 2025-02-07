@@ -20,7 +20,7 @@ export type Circular = {
 export async function stringFormatSupportUsingPut(req: {
     "binary": File;
     "binary (with default)": File;
-    "blob": string;
+    "blob": File;
     "date": string;
     "date (with pattern)": string;
     "date-time": string;

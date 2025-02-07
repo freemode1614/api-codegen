@@ -24,7 +24,6 @@ export enum NonArraySchemaType {
   "boolean" = "boolean",
   "integer" = "integer",
   "enum" = "enum",
-  "blob" = "blob",
 }
 
 export enum ArraySchemaType {

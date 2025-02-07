@@ -11,12 +11,6 @@ importers:
       '@moccona/api-codegen':
         specifier: workspace:*
         version: link:../core
-      '@moccona/api-codegen-axios':
-        specifier: workspace:*
-        version: link:../axios
-      '@moccona/api-codegen-fetch':
-        specifier: workspace:*
-        version: link:../fetch
       '@moccona/logger':
         specifier: ^0.0.2
         version: 0.0.2

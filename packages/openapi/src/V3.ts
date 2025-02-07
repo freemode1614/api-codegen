@@ -1,16 +1,14 @@
-import {
-  Base,
+import type {
   EnumSchemaObject,
-  HttpMethods,
   MediaTypeObject,
   MediaTypes,
-  NonArraySchemaType,
   OperationObject,
   ParameterIn,
   ParameterObject,
   SchemaFormatType,
   SchemaObject,
 } from "@moccona/api-codegen";
+import { Base, HttpMethods, NonArraySchemaType } from "@moccona/api-codegen";
 import { OpenAPIV3 } from "openapi-types";
 
 export class V3 {

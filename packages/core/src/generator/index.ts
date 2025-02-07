@@ -176,7 +176,10 @@ export class Generator {
     }
 
     const nonArraySchema = schema as SingleTypeSchemaObject;
-    return nonArraySchema.format === "binary";
+    return (
+      nonArraySchema.format === SchemaFormatType.blob ||
+      nonArraySchema.format === SchemaFormatType.binary
+    );
   }
 
   static toRequestBodyTypeNode(schema: SchemaObject) {
@@ -240,25 +243,19 @@ export class Generator {
           );
         }
         return t.createToken(SyntaxKind.NumberKeyword);
-      case NonArraySchemaType.string:
-        if (schema.format === SchemaFormatType.binary) {
-          return t.createTypeReferenceNode(t.createIdentifier("File"));
-        }
-        if (schema.enum) {
-          return t.createUnionTypeNode(
-            schema.enum.map((e) =>
-              t.createLiteralTypeNode(t.createStringLiteral(e as string)),
-            ),
-          );
-        }
-        return t.createToken(SyntaxKind.StringKeyword);
+      // case NonArraySchemaType.string:
       case NonArraySchemaType.boolean:
         return t.createToken(SyntaxKind.BooleanKeyword);
-      case NonArraySchemaType.blob:
-        return t.createTypeReferenceNode(t.createIdentifier("File"));
       default:
-        const { format, oneOf, allOf, anyOf } =
-          schema as SingleTypeSchemaObject;
+        const {
+          format,
+          oneOf,
+          allOf,
+          anyOf,
+          type,
+          enum: enum_,
+        } = schema as SingleTypeSchemaObject;
+
         switch (format) {
           case SchemaFormatType.number:
             return t.createToken(SyntaxKind.NumberKeyword);
@@ -270,6 +267,18 @@ export class Generator {
           case SchemaFormatType.binary:
             return t.createTypeReferenceNode(t.createIdentifier("File"));
           default:
+        }
+
+        if (enum_) {
+          return t.createUnionTypeNode(
+            enum_.map((e) =>
+              t.createLiteralTypeNode(t.createStringLiteral(e as string)),
+            ),
+          );
+        }
+
+        if (type === NonArraySchemaType.string) {
+          return t.createToken(SyntaxKind.StringKeyword);
         }
 
         if (oneOf) {
@@ -569,176 +578,17 @@ export class Generator {
       ...(shouldPutParametersOrBodyInFormData
         ? this.toFormDataStatement(parameters, requestBody?.schema)
         : []),
-      ...(adapter.client
-        ? adapter.client(
-            uri,
-            method,
-            parameters,
-            requestBody,
-            response,
-            adapter,
-            shouldPutParametersOrBodyInFormData,
-            shouldParseResponseToJSON,
-          )
-        : this.client(
-            uri,
-            method,
-            parameters,
-            requestBody,
-            response,
-            adapter,
-            shouldPutParametersOrBodyInFormData,
-            shouldParseResponseToJSON,
-          )),
+      ...adapter.client(
+        uri,
+        method,
+        parameters,
+        requestBody,
+        response,
+        adapter,
+        shouldPutParametersOrBodyInFormData,
+        shouldParseResponseToJSON,
+      ),
     ]);
-  }
-
-  static client(
-    uri: string,
-    method: string,
-    parameters: ParameterObject[],
-    requestBody: MediaTypeObject | undefined,
-    response: MediaTypeObject | undefined,
-    adapter: Adapter,
-    shouldUseFormData: boolean,
-    shouldUseJSONResponse: boolean,
-  ): Statement[] {
-    const statements: Statement[] = [];
-    const inBody = parameters.filter((p) => !p.in || p.in === "body");
-    const inHeader = parameters.filter((p) => p.in === "header");
-
-    const toLiterlExpression = () => {
-      return t.createObjectLiteralExpression(
-        [
-          t.createPropertyAssignment(
-            t.createIdentifier(adapter.methodFieldName),
-            t.createStringLiteral(method.toUpperCase()),
-          ),
-        ]
-          .concat(
-            inHeader.length > 0
-              ? t.createPropertyAssignment(
-                  t.createIdentifier(adapter.headersFieldName),
-                  t.createObjectLiteralExpression(
-                    inHeader.map((p) =>
-                      t.createPropertyAssignment(
-                        t.createStringLiteral(p.name),
-                        t.createCallExpression(
-                          t.createIdentifier("encodeURIComponent"),
-                          undefined,
-                          [
-                            t.createCallExpression(
-                              t.createIdentifier("String"),
-                              undefined,
-                              [
-                                t.createIdentifier(
-                                  Base.camelCase(Base.normalize(p.name)),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                )
-              : [],
-          )
-          .concat(
-            shouldUseFormData || inBody.length > 0 || requestBody?.schema
-              ? t.createPropertyAssignment(
-                  t.createIdentifier(adapter.bodyFieldName),
-                  shouldUseFormData
-                    ? t.createIdentifier("fd")
-                    : inBody.length > 0 ||
-                        (requestBody &&
-                          requestBody.schema &&
-                          !this.isBinarySchema(requestBody.schema))
-                      ? t.createCallExpression(
-                          t.createPropertyAccessExpression(
-                            t.createIdentifier("JSON"),
-                            t.createIdentifier("stringify"),
-                          ),
-                          [],
-                          [
-                            requestBody
-                              ? t.createIdentifier("req")
-                              : t.createObjectLiteralExpression(
-                                  inBody.map((b) =>
-                                    t.createShorthandPropertyAssignment(
-                                      t.createIdentifier(b.name),
-                                    ),
-                                  ),
-                                  true,
-                                ),
-                          ],
-                        )
-                      : // One File parameter
-                        t.createIdentifier("req"),
-                )
-              : [],
-          ),
-        true,
-      );
-    };
-
-    const returnValue = t.createReturnStatement(
-      shouldUseJSONResponse
-        ? t.createCallExpression(
-            t.createPropertyAccessExpression(
-              t.createCallExpression(
-                t.createIdentifier(adapter.name),
-                undefined,
-                [
-                  Generator.toUrlTemplate(uri, parameters),
-                  toLiterlExpression(),
-                ],
-              ),
-              t.createIdentifier("then"),
-            ),
-            undefined,
-            [
-              t.createArrowFunction(
-                [t.createModifier(SyntaxKind.AsyncKeyword)],
-                [],
-                [
-                  t.createParameterDeclaration(
-                    undefined,
-                    undefined,
-                    t.createIdentifier("response"),
-                  ),
-                ],
-                undefined,
-                t.createToken(SyntaxKind.EqualsGreaterThanToken),
-                t.createAsExpression(
-                  t.createParenthesizedExpression(
-                    t.createAwaitExpression(
-                      t.createCallExpression(
-                        t.createPropertyAccessExpression(
-                          t.createIdentifier("response"),
-                          t.createIdentifier("json"),
-                        ),
-                        undefined,
-                        [],
-                      ),
-                    ),
-                  ),
-                  response && response.schema
-                    ? this.toTypeNode(response.schema)
-                    : t.createToken(SyntaxKind.UnknownKeyword),
-                ),
-              ),
-            ],
-          )
-        : t.createCallExpression(t.createIdentifier(adapter.name), undefined, [
-            Generator.toUrlTemplate(uri, parameters),
-            toLiterlExpression(),
-          ]),
-    );
-
-    statements.push(returnValue);
-
-    return statements;
   }
 
   static schemaToStatemets(
