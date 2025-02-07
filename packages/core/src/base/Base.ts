@@ -214,7 +214,7 @@ export abstract class Base {
   static isBooleanEnum(a: SchemaObject) {
     return (
       a.type === "boolean" ||
-      (a as SingleTypeSchemaObject).enum?.some(
+      !!(a as SingleTypeSchemaObject).enum?.some(
         (member) => typeof member === "boolean",
       )
     );
