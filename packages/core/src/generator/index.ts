@@ -18,25 +18,23 @@ import {
   SyntaxKind,
 } from "typescript";
 import { Adapter } from "~/base/Adaptor";
-import type { ParameterObject, SchemaObject } from "~/base/Base";
-import {
-  ArraySchemaType,
-  ArrayTypeSchemaObject,
-  Base,
-  MediaTypeObject,
-  MediaTypes,
-  NonArraySchemaType,
-  ParameterIn,
-  SchemaFormatType,
-  SingleTypeSchemaObject,
-} from "~/base/Base";
-import {
-  Provider,
-  ProviderInitOptions,
-  ProviderInitResult,
-} from "~/base/Provider";
+import { Base } from "~/base/Base";
 import { writeFile } from "fs/promises";
 import { createScopedLogger } from "@moccona/logger";
+import {
+  ParameterObject,
+  ParameterIn,
+  SchemaObject,
+  ArrayTypeSchemaObject,
+  SingleTypeSchemaObject,
+  ArraySchemaType,
+  NonArraySchemaType,
+  SchemaFormatType,
+  MediaTypeObject,
+  ProviderInitResult,
+  ProviderInitOptions,
+  MediaTypes,
+} from "~/interface";
 
 const logger = createScopedLogger("generator");
 

@@ -2,29 +2,13 @@ import type {
   EnumSchemaObject,
   OperationObject,
   ParameterObject,
-  PathsObject,
   RequestBodyObject,
   ResponsesObject,
   SchemaObject,
   FetchDocRequestInit,
-} from "~/base/Base";
-
-export type ProviderInitOptions = {
-  docURL: string;
-  output?: string;
-  baseURL?: string;
-  importClientSource?: string;
-  requestOptions?: FetchDocRequestInit;
-};
-
-export interface ProviderInitResult {
-  readonly enums: EnumSchemaObject[];
-  readonly schemas: Record<string, SchemaObject>;
-  readonly parameters: Record<string, ParameterObject>;
-  readonly responses: Record<string, ResponsesObject>;
-  readonly requestBodies: Record<string, RequestBodyObject>;
-  readonly apis: PathsObject;
-}
+  ProviderInitOptions,
+  ProviderInitResult,
+} from "~/interface";
 
 export abstract class Provider
   implements ProviderInitResult, ProviderInitOptions
