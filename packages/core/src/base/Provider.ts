@@ -1,73 +1,66 @@
-/**
- *
- * Provider 主要功能:
- *
- *  1. 获取远程文件内容。JSON/yaml
- *  2. 提供对 schema 的查询操作。
- *  3. 解析成中间数据结构。
- *  4. 通过 Adaptor 来生成代码。
- *
- */
-
 import type {
   EnumSchemaObject,
   OperationObject,
   ParameterObject,
   PathsObject,
-  ReferenceObject,
   RequestBodyObject,
   ResponsesObject,
   SchemaObject,
+  FetchDocRequestInit,
 } from "~/base/Base";
-import { Base } from "~/base/Base";
 
 export type ProviderInitOptions = {
   docURL: string;
+  output?: string;
+  baseURL?: string;
+  importClientSource?: string;
+  requestOptions?: FetchDocRequestInit;
 };
 
-export type ProviderInitResult = {
-  enums: EnumSchemaObject[];
-  schemas: Record<string, SchemaObject>;
-  parameters: Record<string, ParameterObject>;
-  responses: Record<string, ResponsesObject>;
-  requestBodies: Record<string, RequestBodyObject>;
-  apis: PathsObject;
-};
+export interface ProviderInitResult {
+  readonly enums: EnumSchemaObject[];
+  readonly schemas: Record<string, SchemaObject>;
+  readonly parameters: Record<string, ParameterObject>;
+  readonly responses: Record<string, ResponsesObject>;
+  readonly requestBodies: Record<string, RequestBodyObject>;
+  readonly apis: PathsObject;
+}
 
-export class Provider {
-  /**
-   * Holds acollection of named schema object
-   */
-  schemas!: Record<string, SchemaObject>;
+export abstract class Provider
+  implements ProviderInitResult, ProviderInitOptions
+{
+  // Result
+  readonly enums: EnumSchemaObject[] = [];
+  readonly schemas: Record<string, SchemaObject> = {};
+  readonly parameters: Record<string, ParameterObject> = {};
+  readonly responses: Record<string, ResponsesObject> = {};
+  readonly requestBodies: Record<string, RequestBodyObject> = {};
+  readonly apis: Record<string, OperationObject[]> = {};
 
-  /**
-   * Holds acollection of named parameter object
-   */
-  parameters!: Record<string, ParameterObject>;
+  // Init options
+  readonly docURL: string;
+  readonly baseURL: string;
+  readonly output: string;
+  readonly requestOptions: FetchDocRequestInit;
+  readonly importClientSource: string;
 
-  /**
-   * Holds acollection of named response object
-   */
-  responses!: Record<string, ResponsesObject>;
+  constructor(initOptions: ProviderInitOptions, doc: unknown) {
+    this.docURL = initOptions.docURL;
+    this.baseURL = initOptions.baseURL ?? "";
+    this.output = initOptions.output ?? ".";
+    this.requestOptions = initOptions.requestOptions ?? {};
+    this.importClientSource = initOptions.importClientSource ?? "";
 
-  /**
-   * Holds acollection of named requestBody object
-   */
-  requestBodies!: Record<string, RequestBodyObject>;
+    const { enums, schemas, requestBodies, responses, parameters, apis } =
+      this.parse(doc);
 
-  /**
-   * Holds a collection of named api call
-   */
-  apis!: Record<string, OperationObject[]>;
-
-  public isRef(schema: any): schema is ReferenceObject {
-    return "$ref" in schema && typeof schema.$ref === "string";
+    this.enums = enums;
+    this.schemas = schemas;
+    this.responses = responses;
+    this.parameters = parameters;
+    this.requestBodies = requestBodies;
+    this.apis = apis;
   }
 
-  /**
-   * Override this method.
-   */
-  async init(): Promise<ProviderInitResult> {
-    throw new Error(`Please overwrite init method`);
-  }
+  abstract parse(doc: unknown): ProviderInitResult;
 }

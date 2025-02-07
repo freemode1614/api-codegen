@@ -94,7 +94,7 @@ export class V3 {
       const type = upLevelSchemaKey + Base.upperCamelCase(Base.normalize(name));
       const enumSchema = {
         name: type,
-        enum: Array.from(new Set(parameterSchema.enum as (string | number)[])),
+        enum: [...new Set(parameterSchema.enum as (string | number)[])],
       };
 
       const sameEnum = Base.findSameSchema(enumSchema, enums);
@@ -227,7 +227,7 @@ export class V3 {
 
         const enumObject = {
           name,
-          enum: Array.from(new Set(enum_ as (string | number)[])),
+          enum: [...new Set(enum_ as (string | number)[])],
         };
 
         const sameObject = Base.findSameSchema(enumObject, enums);

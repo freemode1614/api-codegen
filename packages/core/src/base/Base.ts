@@ -164,6 +164,12 @@ export type PathsObject = {
   [path: string]: OperationObject[];
 };
 
+export type FetchDocRequestInit = {
+  method?: string;
+  body?: string | FormData;
+  headers?: Record<string, string>;
+};
+
 const typescriptKeywords = new Set([
   "break",
   "case",
@@ -311,7 +317,10 @@ export abstract class Base {
       .join("");
   }
 
-  static async fetchDoc<T = unknown>(url: string): Promise<T> {
+  static async fetchDoc<T = unknown>(
+    url: string,
+    requestInit: FetchDocRequestInit = {},
+  ): Promise<T> {
     const agent = new Agent({
       connect: {
         rejectUnauthorized: false,
@@ -324,6 +333,7 @@ export abstract class Base {
       const { body } = await request(url, {
         method: "GET",
         dispatcher: agent,
+        ...requestInit,
       });
 
       return body.json() as T;
@@ -375,5 +385,9 @@ export abstract class Base {
 
   static findSameSchema(a: EnumSchemaObject, enums: EnumSchemaObject[]) {
     return enums.find((b) => this.isSameEnum(b, a));
+  }
+
+  static isRef(schema: any): schema is ReferenceObject {
+    return "$ref" in schema && typeof schema.$ref === "string";
   }
 }

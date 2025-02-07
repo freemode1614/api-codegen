@@ -30,7 +30,11 @@ import {
   SchemaFormatType,
   SingleTypeSchemaObject,
 } from "~/base/Base";
-import { ProviderInitResult } from "~/base/Provider";
+import {
+  Provider,
+  ProviderInitOptions,
+  ProviderInitResult,
+} from "~/base/Provider";
 import { writeFile } from "fs/promises";
 import { createScopedLogger } from "@moccona/logger";
 
@@ -731,6 +735,7 @@ export class Generator {
   static schemaToStatemets(
     parsedDoc: ProviderInitResult,
     adaptor: Adapter,
+    options: Omit<ProviderInitOptions, "docURL" | "output" | "requestOptions">,
   ): Statement[] {
     const statements = [] as Statement[];
     const { parameters, apis, schemas = {}, enums } = parsedDoc;
@@ -813,7 +818,14 @@ export class Generator {
                 : undefined,
             ].filter(Boolean) as ParameterDeclaration[],
             undefined,
-            this.bodyBlock(uri, method, parameters, req, responses[0], adaptor),
+            this.bodyBlock(
+              options.baseURL + uri,
+              method,
+              parameters,
+              req,
+              responses[0],
+              adaptor,
+            ),
           );
 
           // this.addComments(
@@ -836,5 +848,17 @@ export class Generator {
     }
 
     return statements;
+  }
+
+  static genCode(
+    schema: ProviderInitResult,
+    initOptions: ProviderInitOptions,
+    adaptor: Adapter,
+  ) {
+    const statements = this.schemaToStatemets(schema, adaptor, {
+      baseURL: initOptions.baseURL ?? "",
+    });
+    const code = this.toCode(statements);
+    return code;
   }
 }

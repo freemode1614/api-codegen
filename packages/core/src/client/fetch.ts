@@ -1,6 +1,6 @@
-import { Adapter } from "@moccona/api-codegen";
+import { Adapter } from "~/base/Adaptor";
 
-export class FetchAdapter extends Adapter {
+export class FetchAdapter implements Adapter {
   readonly methodFieldName = "method";
   readonly bodyFieldName = "body";
   readonly headersFieldName = "headers";

@@ -2,8 +2,7 @@ import type {
   ProviderInitOptions,
   ProviderInitResult,
 } from "@moccona/api-codegen";
-import { Base, Generator, Provider } from "@moccona/api-codegen";
-import { FetchAdapter } from "@moccona/api-codegen-fetch";
+import { Base, FetchAdapter, Generator, Provider } from "@moccona/api-codegen";
 import { createScopedLogger } from "@moccona/logger";
 import { OpenAPI, OpenAPIV2, OpenAPIV3, OpenAPIV3_1 } from "openapi-types";
 
@@ -18,39 +17,26 @@ enum OpenAPIVersion {
   v3_1 = "v3_1",
 }
 
-export class OpenAPIProvider extends Provider {
-  readonly name = "openapi";
-  readonly docURL!: string;
+function getDocVersion(doc: OpenAPI.Document) {
+  const version = (
+    (doc as OpenAPIV3.Document).openapi || (doc as OpenAPIV2.Document).swagger
+  ).slice(0, 3);
 
-  constructor(initOptions: ProviderInitOptions) {
-    super();
-    this.docURL = initOptions.docURL;
+  switch (version) {
+    case "2.0":
+      return OpenAPIVersion.v2;
+    case "3.0":
+      return OpenAPIVersion.v3;
+    case "3.1":
+      return OpenAPIVersion.v3_1;
+    default:
+      logger.error(`Unknown openai version ${version}`);
   }
+}
 
-  /**
-   * Get document version
-   */
-  private getDocVersion = (doc: OpenAPI.Document) => {
-    const version = (
-      (doc as OpenAPIV3.Document).openapi || (doc as OpenAPIV2.Document).swagger
-    ).slice(0, 3);
-
-    switch (version) {
-      case "2.0":
-        return OpenAPIVersion.v2;
-      case "3.0":
-        return OpenAPIVersion.v3;
-      case "3.1":
-        return OpenAPIVersion.v3_1;
-      default:
-        logger.error(`Unknown openai version ${version}`);
-    }
-  };
-
-  override async init(): Promise<ProviderInitResult> {
-    const doc = await Base.fetchDoc<OpenAPIV3.Document>(this.docURL);
-
-    const version = this.getDocVersion(doc);
+export class OpenAPIProvider extends Provider {
+  public parse(doc: OpenAPIV3.Document): ProviderInitResult {
+    const version = getDocVersion(doc);
 
     let returnValue: ProviderInitResult;
 
@@ -67,24 +53,34 @@ export class OpenAPIProvider extends Provider {
         process.exit(1);
     }
 
-    const { schemas, responses, parameters, requestBodies, apis } =
-      returnValue!;
-
-    this.schemas = schemas;
-    this.responses = responses;
-    this.parameters = parameters;
-    this.requestBodies = requestBodies;
-    this.apis = apis;
-
     return returnValue!;
   }
 }
 
 export async function codeGen(initOptions: ProviderInitOptions) {
-  const provider = new OpenAPIProvider(initOptions);
-  const adapter = new FetchAdapter();
-  const code = await adapter.gen(provider);
+  const doc = await Base.fetchDoc(
+    initOptions.docURL,
+    initOptions.requestOptions,
+  );
+
+  const provider = new OpenAPIProvider(initOptions, doc);
+  const { enums, schemas, parameters, responses, requestBodies, apis } =
+    provider;
+  const adaptor = new FetchAdapter();
+  const code = Generator.genCode(
+    {
+      enums,
+      schemas,
+      parameters,
+      responses,
+      requestBodies,
+      apis,
+    },
+    initOptions,
+    adaptor,
+  );
+
   if (process.env.NODE_ENV === "test") {
-    await Generator.write(code, "output.ts");
+    await Generator.write(code, initOptions.output ?? "output.ts");
   }
 }
