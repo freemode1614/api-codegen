@@ -21,6 +21,8 @@
     "dev": "cross-env NODE_ENV=development tsup --watch",
     "build": "cross-env NODE_ENV=production tsup"
   },
+  "prettier": "@moccona/preset-config/prettierrc",
+  "packageManager": "pnpm@9.7.1",
   "license": "MIT",
   "dependencies": {
     "@moccona/api-codegen": "workspace:*",
@@ -37,4 +39,3 @@
     "typescript": "^5.7.3"
   }
 }
-
