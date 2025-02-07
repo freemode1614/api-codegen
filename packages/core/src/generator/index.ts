@@ -569,16 +569,27 @@ export class Generator {
       ...(shouldPutParametersOrBodyInFormData
         ? this.toFormDataStatement(parameters, requestBody?.schema)
         : []),
-      ...this.client(
-        uri,
-        method,
-        parameters,
-        requestBody,
-        response,
-        adapter,
-        shouldPutParametersOrBodyInFormData,
-        shouldParseResponseToJSON,
-      ),
+      ...(adapter.client
+        ? adapter.client(
+            uri,
+            method,
+            parameters,
+            requestBody,
+            response,
+            adapter,
+            shouldPutParametersOrBodyInFormData,
+            shouldParseResponseToJSON,
+          )
+        : this.client(
+            uri,
+            method,
+            parameters,
+            requestBody,
+            response,
+            adapter,
+            shouldPutParametersOrBodyInFormData,
+            shouldParseResponseToJSON,
+          )),
     ]);
   }
 
