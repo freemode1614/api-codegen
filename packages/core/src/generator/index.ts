@@ -567,6 +567,13 @@ export class Generator {
       requestBody.schema.type === ArraySchemaType.array &&
       this.isBinarySchema(requestBody.schema);
 
+    // TODO: Need to support binary/blob format properties in requestBody
+    // const isRequestBodyContainsBinary =
+    //   requestBody &&
+    //   requestBody.schema &&
+    //   "properties" in requestBody.schema &&
+    //   requestBody.schema.properties;
+
     const hasBinaryInParameters = parameters.some(
       (p) => p && p.schema && this.isBinarySchema(p.schema),
     );
