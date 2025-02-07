@@ -18,6 +18,7 @@ enum OpenAPIVersion {
 }
 
 function getDocVersion(doc: OpenAPI.Document) {
+  logger.debug("Check openapi verions");
   const version = (
     (doc as OpenAPIV3.Document).openapi || (doc as OpenAPIV2.Document).swagger
   ).slice(0, 3);
@@ -37,6 +38,8 @@ function getDocVersion(doc: OpenAPI.Document) {
 export class OpenAPIProvider extends Provider {
   public parse(doc: OpenAPIV3.Document): ProviderInitResult {
     const version = getDocVersion(doc);
+
+    logger.debug(`openapi version ${version}`);
 
     let returnValue: ProviderInitResult;
 
@@ -66,6 +69,7 @@ export async function codeGen(initOptions: ProviderInitOptions) {
   const provider = new OpenAPIProvider(initOptions, doc);
   const { enums, schemas, parameters, responses, requestBodies, apis } =
     provider;
+
   const adaptor = new FetchAdapter();
   const code = Generator.genCode(
     {
@@ -83,4 +87,6 @@ export async function codeGen(initOptions: ProviderInitOptions) {
   if (process.env.NODE_ENV === "test") {
     await Generator.write(code, initOptions.output ?? "output.ts");
   }
+
+  return code;
 }

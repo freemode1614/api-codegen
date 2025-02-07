@@ -81,7 +81,9 @@ export class V3 {
       !Base.isRef(parameterSchema) &&
       parameterSchema.enum
     ) {
-      const type = upLevelSchemaKey + Base.upperCamelCase(Base.normalize(name));
+      const type =
+        Base.upperCamelCase(Base.normalize(upLevelSchemaKey)) +
+        Base.upperCamelCase(Base.normalize(name));
       const enumSchema = {
         name: type,
         enum: [...new Set(parameterSchema.enum as (string | number)[])],
@@ -212,7 +214,7 @@ export class V3 {
 
       if (enum_ && type !== "boolean") {
         const name =
-          Base.capitalize(upLevelSchemaKey) +
+          Base.upperCamelCase(Base.normalize(upLevelSchemaKey)) +
           Base.upperCamelCase(Base.normalize(schemaKey));
 
         const enumObject = {
@@ -230,7 +232,11 @@ export class V3 {
         }
 
         return {
-          type: enumObject.name,
+          type: sameObject
+            ? sameObject.name
+            : Base.isBooleanEnum(schema as unknown as SchemaObject)
+              ? "boolean"
+              : enumObject.name,
           required,
           description,
           deprecated,

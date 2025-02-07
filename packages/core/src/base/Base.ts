@@ -208,9 +208,15 @@ export abstract class Base {
   }
 
   static isValidEnumType(a: SchemaObject) {
+    return a.type !== "boolean" && !this.isBooleanEnum(a);
+  }
+
+  static isBooleanEnum(a: SchemaObject) {
     return (
-      a.type !== "boolean" &&
-      !(a as SingleTypeSchemaObject).enum?.some((en) => typeof en === "boolean")
+      a.type === "boolean" ||
+      (a as SingleTypeSchemaObject).enum?.some(
+        (member) => typeof member === "boolean",
+      )
     );
   }
 
