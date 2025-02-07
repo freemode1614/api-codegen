@@ -1,6 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unnecessary-condition */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import {
   Base,
   HttpMethods,
@@ -22,18 +19,14 @@ export class V3 {
     this.doc = doc;
   }
 
-  private isRef(schema: any): schema is OpenAPIV2.ReferenceObject {
-    return "$ref" in schema && typeof schema.$ref === "string";
-  }
-
   /**
    * OpenAPI schema to base schema.
    */
   private getSchemaByRef(
     schema: OpenAPIV2.SchemaObject | OpenAPIV2.ReferenceObject,
   ): SchemaObject {
-    if (this.isRef(schema)) {
-      schema = this.doc.definitions?.schemas?.[
+    if (Base.isRef(schema)) {
+      schema = this.doc.definitions?.schemas[
         Base.ref2name(schema.$ref)
       ] as OpenAPIV2.SchemaObject;
     }
@@ -46,8 +39,8 @@ export class V3 {
   private getParameterByRef(
     schema: OpenAPIV2.ParameterObject | OpenAPIV2.ReferenceObject,
   ): ParameterObject {
-    if (this.isRef(schema)) {
-      schema = this.doc.definitions?.parameters?.[
+    if (Base.isRef(schema)) {
+      schema = this.doc.definitions?.parameters[
         Base.ref2name(schema.$ref)
       ] as OpenAPIV2.ParameterObject;
     }
@@ -69,8 +62,8 @@ export class V3 {
   private getResponseByRef(
     schema: OpenAPIV2.ResponseObject | OpenAPIV2.ReferenceObject,
   ): MediaTypeObject[] {
-    if (this.isRef(schema)) {
-      schema = this.doc.definitions?.responses?.[
+    if (Base.isRef(schema)) {
+      schema = this.doc.definitions?.responses[
         Base.ref2name(schema.$ref)
       ] as OpenAPIV2.ResponseObject;
     }
@@ -91,8 +84,8 @@ export class V3 {
   private getRequestBodyByRef(
     schema: OpenAPIV3.RequestBodyObject | OpenAPIV2.ReferenceObject,
   ): MediaTypeObject[] {
-    if (this.isRef(schema)) {
-      schema = this.doc.definitions?.requestBodies?.[
+    if (Base.isRef(schema)) {
+      schema = this.doc.definitions?.requestBodies[
         Base.ref2name(schema.$ref)
       ] as OpenAPIV3.RequestBodyObject;
     }
@@ -113,7 +106,7 @@ export class V3 {
   private toBaseSchema(
     schema: OpenAPIV2.SchemaObject | OpenAPIV2.ReferenceObject,
   ): SchemaObject {
-    if (this.isRef(schema)) {
+    if (Base.isRef(schema)) {
       return this.getSchemaByRef(schema);
     }
 
@@ -146,17 +139,17 @@ export class V3 {
         enum: enum_,
         format: format as unknown as SchemaFormatType,
         allOf: allOf.map((s) =>
-          this.isRef(s)
+          Base.isRef(s)
             ? { type: Base.ref2name(s.$ref) }
             : this.toBaseSchema(s as OpenAPIV2.SchemaObject),
         ),
         anyOf: anyOf.map((s) =>
-          this.isRef(s)
+          Base.isRef(s)
             ? { type: Base.ref2name(s.$ref) }
             : this.toBaseSchema(s as OpenAPIV2.SchemaObject),
         ),
         oneOf: oneOf.map((s) =>
-          this.isRef(s)
+          Base.isRef(s)
             ? { type: Base.ref2name(s.$ref) }
             : this.toBaseSchema(s as OpenAPIV2.SchemaObject),
         ),
@@ -164,7 +157,7 @@ export class V3 {
           const propSchema = properties[p];
           return {
             ...acc,
-            [p]: this.isRef(propSchema)
+            [p]: Base.isRef(propSchema)
               ? { type: Base.ref2name(propSchema.$ref) }
               : this.toBaseSchema(propSchema),
           };

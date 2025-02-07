@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import {
   Base,
   EnumSchemaObject,
@@ -22,14 +20,6 @@ export class V3 {
     this.doc = doc;
   }
 
-  private isRef(schema: any): schema is OpenAPIV3.ReferenceObject {
-    return (
-      typeof schema === "object" &&
-      "$ref" in schema &&
-      typeof schema.$ref === "string"
-    );
-  }
-
   /**
    * Is array schema.
    */
@@ -49,7 +39,7 @@ export class V3 {
     upLevelSchemaKey = "",
   ): SchemaObject {
     let refName = "";
-    if (this.isRef(schema)) {
+    if (Base.isRef(schema)) {
       refName = Base.capitalize(Base.ref2name(schema.$ref));
       if (reserveRef) {
         return {
@@ -72,7 +62,7 @@ export class V3 {
     enums: EnumSchemaObject[] = [],
     upLevelSchemaKey = "",
   ): ParameterObject {
-    if (this.isRef(schema)) {
+    if (Base.isRef(schema)) {
       schema = this.doc.components?.parameters?.[
         Base.ref2name(schema.$ref, this.doc)
       ] as OpenAPIV3.ParameterObject;
@@ -88,7 +78,7 @@ export class V3 {
 
     if (
       parameterSchema &&
-      !this.isRef(parameterSchema) &&
+      !Base.isRef(parameterSchema) &&
       parameterSchema.enum
     ) {
       const type = upLevelSchemaKey + Base.upperCamelCase(Base.normalize(name));
@@ -141,7 +131,7 @@ export class V3 {
   private getResponseByRef(
     schema: OpenAPIV3.ResponseObject | OpenAPIV3.ReferenceObject,
   ): MediaTypeObject[] {
-    if (this.isRef(schema)) {
+    if (Base.isRef(schema)) {
       schema = this.doc.components?.responses?.[
         Base.ref2name(schema.$ref, this.doc)
       ] as OpenAPIV3.ResponseObject;
@@ -162,7 +152,7 @@ export class V3 {
     schema: OpenAPIV3.RequestBodyObject | OpenAPIV3.ReferenceObject,
     enums: EnumSchemaObject[] = [],
   ): MediaTypeObject[] {
-    if (this.isRef(schema)) {
+    if (Base.isRef(schema)) {
       schema = this.doc.components?.requestBodies?.[
         Base.ref2name(schema.$ref, this.doc)
       ] as OpenAPIV3.RequestBodyObject;
@@ -193,7 +183,7 @@ export class V3 {
       };
     }
 
-    if (this.isRef(schema)) {
+    if (Base.isRef(schema)) {
       return this.getSchemaByRef(schema, true);
     }
 
@@ -259,17 +249,17 @@ export class V3 {
         enum: enum_,
         format: format as unknown as SchemaFormatType,
         allOf: allOf?.map((s) =>
-          this.isRef(s)
+          Base.isRef(s)
             ? { type: Base.capitalize(Base.ref2name(s.$ref, this.doc)) }
             : this.toBaseSchema(s, enums),
         ),
         anyOf: anyOf?.map((s) =>
-          this.isRef(s)
+          Base.isRef(s)
             ? { type: Base.capitalize(Base.ref2name(s.$ref, this.doc)) }
             : this.toBaseSchema(s, enums),
         ),
         oneOf: oneOf?.map((s) =>
-          this.isRef(s)
+          Base.isRef(s)
             ? { type: Base.capitalize(Base.ref2name(s.$ref, this.doc)) }
             : this.toBaseSchema(s, enums),
         ),
@@ -277,7 +267,7 @@ export class V3 {
           const propSchema = properties[p];
           return {
             ...acc,
-            [p]: this.isRef(propSchema)
+            [p]: Base.isRef(propSchema)
               ? {
                   type: Base.capitalize(
                     Base.ref2name(propSchema.$ref, this.doc),

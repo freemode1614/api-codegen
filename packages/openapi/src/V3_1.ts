@@ -1,6 +1,3 @@
-/* eslint-disable @typescript-eslint/no-non-null-asserted-optional-chain */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable unicorn/filename-case */
 import {
   Base,
@@ -23,15 +20,11 @@ export class V3_1 {
     this.doc = doc;
   }
 
-  private isRef(schema: any): schema is OpenAPIV3_1.ReferenceObject {
-    return "$ref" in schema && typeof schema.$ref === "string";
-  }
-
   /**
    * Is array schema.
    */
   private isOpenAPIArraySchema(
-    schema: OpenAPIV3_1.SchemaObject
+    schema: OpenAPIV3_1.SchemaObject,
   ): schema is OpenAPIV3_1.ArraySchemaObject {
     return schema.type === "array";
   }
@@ -40,9 +33,10 @@ export class V3_1 {
    * OpenAPI schema to base schema.
    */
   private getSchemaByRef(
-    schema: OpenAPIV3_1.SchemaObject | OpenAPIV3_1.ReferenceObject
+    schema: OpenAPIV3_1.SchemaObject | OpenAPIV3_1.ReferenceObject,
   ): SchemaObject {
-    if (this.isRef(schema)) {
+    if (Base.isRef(schema)) {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-asserted-optional-chain
       schema = this.doc.components?.schemas?.[Base.ref2name(schema.$ref)]!;
     }
     return this.toBaseSchema(schema);
@@ -52,9 +46,9 @@ export class V3_1 {
    * OpenAPI parameter to base parameter.
    */
   private getParameterByRef(
-    schema: OpenAPIV3_1.ParameterObject | OpenAPIV3_1.ReferenceObject
+    schema: OpenAPIV3_1.ParameterObject | OpenAPIV3_1.ReferenceObject,
   ): ParameterObject {
-    if (this.isRef(schema)) {
+    if (Base.isRef(schema)) {
       schema = this.doc.components?.parameters?.[
         Base.ref2name(schema.$ref)
       ] as OpenAPIV3_1.ParameterObject;
@@ -76,9 +70,9 @@ export class V3_1 {
    * OpenAPI schema to base response
    */
   private getResponseByRef(
-    schema: OpenAPIV3_1.ResponseObject | OpenAPIV3_1.ReferenceObject
+    schema: OpenAPIV3_1.ResponseObject | OpenAPIV3_1.ReferenceObject,
   ): MediaTypeObject[] {
-    if (this.isRef(schema)) {
+    if (Base.isRef(schema)) {
       schema = this.doc.components?.responses?.[
         Base.ref2name(schema.$ref)
       ] as OpenAPIV3_1.ResponseObject;
@@ -96,9 +90,9 @@ export class V3_1 {
    * OpenAPI schema to requestBody.
    */
   private getRequestBodyByRef(
-    schema: OpenAPIV3_1.RequestBodyObject | OpenAPIV3_1.ReferenceObject
+    schema: OpenAPIV3_1.RequestBodyObject | OpenAPIV3_1.ReferenceObject,
   ): MediaTypeObject[] {
-    if (this.isRef(schema)) {
+    if (Base.isRef(schema)) {
       schema = this.doc.components?.requestBodies?.[
         Base.ref2name(schema.$ref)
       ] as OpenAPIV3_1.RequestBodyObject;
@@ -116,9 +110,9 @@ export class V3_1 {
    * Transform all OpenAPI schema to Base Schema
    */
   private toBaseSchema(
-    schema: OpenAPIV3_1.SchemaObject | OpenAPIV3_1.ReferenceObject
+    schema: OpenAPIV3_1.SchemaObject | OpenAPIV3_1.ReferenceObject,
   ): SchemaObject {
-    if (this.isRef(schema)) {
+    if (Base.isRef(schema)) {
       return this.getSchemaByRef(schema);
     }
 
@@ -153,25 +147,25 @@ export class V3_1 {
         enum: enum_,
         format: format as unknown as SchemaFormatType,
         allOf: allOf?.map((s) =>
-          this.isRef(s)
+          Base.isRef(s)
             ? { type: Base.capitalize(Base.ref2name(s.$ref)) }
-            : this.toBaseSchema(s)
+            : this.toBaseSchema(s),
         ),
         anyOf: anyOf?.map((s) =>
-          this.isRef(s)
+          Base.isRef(s)
             ? { type: Base.capitalize(Base.ref2name(s.$ref)) }
-            : this.toBaseSchema(s)
+            : this.toBaseSchema(s),
         ),
         oneOf: oneOf?.map((s) =>
-          this.isRef(s)
+          Base.isRef(s)
             ? { type: Base.capitalize(Base.ref2name(s.$ref)) }
-            : this.toBaseSchema(s)
+            : this.toBaseSchema(s),
         ),
         properties: Object.keys(properties).reduce((acc, p) => {
           const propSchema = properties[p];
           return {
             ...acc,
-            [p]: this.isRef(propSchema)
+            [p]: Base.isRef(propSchema)
               ? {
                   type: Base.capitalize(Base.ref2name(propSchema.$ref)),
                 }
@@ -252,7 +246,7 @@ export class V3_1 {
             } = methodObject;
             const { parameters: parameters_ = [] } = methodObject;
             const baseParameters = [...parameters, ...parameters_].map(
-              this.getParameterByRef.bind(this)
+              this.getParameterByRef.bind(this),
             );
             const baseRequestBody = this.getRequestBodyByRef(requestBody);
             const uniqueParameterName = [
@@ -273,7 +267,7 @@ export class V3_1 {
                     description: description_ ?? description,
                     deprecated: deprecated,
                     parameters: uniqueParameterName.map(
-                      (name) => baseParameters.find((p) => p.name === name)!
+                      (name) => baseParameters.find((p) => p.name === name)!,
                     ),
                     responses: responseSchema,
                     requestBody: baseRequestBody,
