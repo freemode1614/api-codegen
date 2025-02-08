@@ -5,7 +5,7 @@ import { Base } from "~/base/Base";
 import { Generator } from "~/generator";
 import { ParameterObject, MediaTypeObject } from "~/interface";
 
-export class FetchAdapter implements Adapter {
+export class FetchAdapter extends Adapter {
   readonly methodFieldName = "method";
   readonly bodyFieldName = "body";
   readonly headersFieldName = "headers";
@@ -101,61 +101,62 @@ export class FetchAdapter implements Adapter {
       );
     };
 
-    const returnValue = t.createReturnStatement(
-      shouldUseJSONResponse
-        ? t.createCallExpression(
-            t.createPropertyAccessExpression(
-              t.createCallExpression(
-                t.createIdentifier(adapter.name),
-                undefined,
-                [
-                  Generator.toUrlTemplate(uri, parameters),
-                  toLiterlExpression(),
-                ],
+    statements.push(
+      t.createReturnStatement(
+        shouldUseJSONResponse
+          ? t.createCallExpression(
+              t.createPropertyAccessExpression(
+                t.createCallExpression(
+                  t.createIdentifier(adapter.name),
+                  undefined,
+                  [
+                    Generator.toUrlTemplate(uri, parameters),
+                    toLiterlExpression(),
+                  ],
+                ),
+                t.createIdentifier("then"),
               ),
-              t.createIdentifier("then"),
-            ),
-            undefined,
-            [
-              t.createArrowFunction(
-                [t.createModifier(SyntaxKind.AsyncKeyword)],
-                [],
-                [
-                  t.createParameterDeclaration(
-                    undefined,
-                    undefined,
-                    t.createIdentifier("response"),
-                  ),
-                ],
-                undefined,
-                t.createToken(SyntaxKind.EqualsGreaterThanToken),
-                t.createAsExpression(
-                  t.createParenthesizedExpression(
-                    t.createAwaitExpression(
-                      t.createCallExpression(
-                        t.createPropertyAccessExpression(
-                          t.createIdentifier("response"),
-                          t.createIdentifier("json"),
+              undefined,
+              [
+                t.createArrowFunction(
+                  [t.createModifier(SyntaxKind.AsyncKeyword)],
+                  [],
+                  [
+                    t.createParameterDeclaration(
+                      undefined,
+                      undefined,
+                      t.createIdentifier("response"),
+                    ),
+                  ],
+                  undefined,
+                  t.createToken(SyntaxKind.EqualsGreaterThanToken),
+                  t.createAsExpression(
+                    t.createParenthesizedExpression(
+                      t.createAwaitExpression(
+                        t.createCallExpression(
+                          t.createPropertyAccessExpression(
+                            t.createIdentifier("response"),
+                            t.createIdentifier("json"),
+                          ),
+                          undefined,
+                          [],
                         ),
-                        undefined,
-                        [],
                       ),
                     ),
+                    response && response.schema
+                      ? Generator.toTypeNode(response.schema)
+                      : t.createToken(SyntaxKind.UnknownKeyword),
                   ),
-                  response && response.schema
-                    ? Generator.toTypeNode(response.schema)
-                    : t.createToken(SyntaxKind.UnknownKeyword),
                 ),
-              ),
-            ],
-          )
-        : t.createCallExpression(t.createIdentifier(adapter.name), undefined, [
-            Generator.toUrlTemplate(uri, parameters),
-            toLiterlExpression(),
-          ]),
+              ],
+            )
+          : t.createCallExpression(
+              t.createIdentifier(adapter.name),
+              undefined,
+              [Generator.toUrlTemplate(uri, parameters), toLiterlExpression()],
+            ),
+      ),
     );
-
-    statements.push(returnValue);
 
     return statements;
   }

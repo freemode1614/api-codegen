@@ -721,10 +721,16 @@ export class Generator {
     initOptions: ProviderInitOptions,
     adaptor: Adapter,
   ) {
+    const { importClientSource } = initOptions;
     const statements = this.schemaToStatemets(schema, adaptor, {
       baseURL: initOptions.baseURL ?? "",
     });
-    const code = this.toCode(statements);
+    let code = this.toCode(statements);
+
+    if (importClientSource) {
+      code = importClientSource + "\n\n" + code;
+    }
+
     return code;
   }
 }
