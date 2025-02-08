@@ -32,7 +32,7 @@ export async function stringFormatSupportUsingPut(req: {
   url: string;
   "unknown-format": string;
 }) {
-  return fetch(`/anything/strings`, {
+  return fetch(`/api/anything/strings`, {
     method: "PUT",
     body: JSON.stringify(req),
   });
@@ -52,19 +52,19 @@ export async function stringSchemaSupportUsingPost(req: {
   "enum (with empty option)": EnumWithEmptyOption;
   "enum (with empty option and empty default)": EnumWithEmptyOptionAndEmptyDefault;
 }) {
-  return fetch(`/anything/strings`, {
+  return fetch(`/api/anything/strings`, {
     method: "POST",
     body: JSON.stringify(req),
   });
 }
 export async function stringTopLevelUsingPost(req: string) {
-  return fetch(`/anything/strings/top-level-payloads`, {
+  return fetch(`/api/anything/strings/top-level-payloads`, {
     method: "POST",
     body: JSON.stringify(req),
   });
 }
 export async function stringTopLevelJSONUsingPatch(req: string) {
-  return fetch(`/anything/strings/top-level-payloads`, {
+  return fetch(`/api/anything/strings/top-level-payloads`, {
     method: "PATCH",
     body: JSON.stringify(req),
   });
@@ -82,7 +82,7 @@ export async function numberFormatSupportUsingPut(req: {
   "number (format: float)": number;
   "number (format: double)": number;
 }) {
-  return fetch(`/anything/numbers`, {
+  return fetch(`/api/anything/numbers`, {
     method: "PUT",
     body: JSON.stringify(req),
   });
@@ -106,13 +106,13 @@ export async function numberSchemaSupportUsingPost(req: {
   "number (default, required)": number;
   "number (nullable)": number;
 }) {
-  return fetch(`/anything/numbers`, {
+  return fetch(`/api/anything/numbers`, {
     method: "POST",
     body: JSON.stringify(req),
   });
 }
 export async function numberTopLevelUsingPatch(req: number) {
-  return fetch(`/anything/numbers`, {
+  return fetch(`/api/anything/numbers`, {
     method: "PATCH",
     body: JSON.stringify(req),
   });
@@ -126,13 +126,13 @@ export async function booleanSchemaSupportUsingPost(req: {
   "default (required)": boolean;
   "inferred from enum": boolean;
 }) {
-  return fetch(`/anything/booleans`, {
+  return fetch(`/api/anything/booleans`, {
     method: "POST",
     body: JSON.stringify(req),
   });
 }
 export async function booleanTopLevelUsingPatch(req: boolean) {
-  return fetch(`/anything/booleans`, {
+  return fetch(`/api/anything/booleans`, {
     method: "PATCH",
     body: JSON.stringify(req),
   });
@@ -160,7 +160,7 @@ export async function arraySchemaSupportUsingPost(req: {
     string: string;
   }[][];
 }) {
-  return fetch(`/anything/arrays`, {
+  return fetch(`/api/anything/arrays`, {
     method: "POST",
     body: JSON.stringify(req),
   });
@@ -175,13 +175,13 @@ export async function arrayTopLevelObjectsUsingPost(
     object: Record<string, unknown>;
   }[],
 ) {
-  return fetch(`/anything/arrays/top-level-payloads`, {
+  return fetch(`/api/anything/arrays/top-level-payloads`, {
     method: "POST",
     body: JSON.stringify(req),
   });
 }
 export async function arrayTopLevelPrimitivesUsingPatch(req: string[]) {
-  return fetch(`/anything/arrays/top-level-payloads`, {
+  return fetch(`/api/anything/arrays/top-level-payloads`, {
     method: "PATCH",
     body: JSON.stringify(req),
   });
@@ -212,13 +212,13 @@ export async function objectSchemaSupportUsingPost(req: {
   "object (additionalProperties)": Record<string, unknown>;
   "object (without `properties`)": Record<string, unknown>;
 }) {
-  return fetch(`/anything/objects`, {
+  return fetch(`/api/anything/objects`, {
     method: "POST",
     body: JSON.stringify(req),
   });
 }
 export async function circularHandlingUsingPost(req: { circular: Circular }) {
-  return fetch(`/anything/circular`, {
+  return fetch(`/api/anything/circular`, {
     method: "POST",
     body: JSON.stringify(req),
   });
@@ -227,19 +227,19 @@ export async function circularTopLevelUsingPatch(req: {
   string: string;
   children: Circular[];
 }) {
-  return fetch(`/anything/circular`, {
+  return fetch(`/api/anything/circular`, {
     method: "PATCH",
     body: JSON.stringify(req),
   });
 }
 export async function rawBodyTopLevelUsingPost(req: { RAW_BODY: string }) {
-  return fetch(`/anything/raw_body/top-level-payloads`, {
+  return fetch(`/api/anything/raw_body/top-level-payloads`, {
     method: "POST",
     body: JSON.stringify(req),
   });
 }
 export async function rawBodyTopLevelJSONUsingPatch(req: { RAW_BODY: string }) {
-  return fetch(`/anything/raw_body/top-level-payloads`, {
+  return fetch(`/api/anything/raw_body/top-level-payloads`, {
     method: "PATCH",
     body: JSON.stringify(req),
   });
@@ -252,7 +252,7 @@ export async function quirksMissingTypeUsingPost(req: {
     name: string;
   };
 }) {
-  return fetch(`/anything/quirks`, {
+  return fetch(`/api/anything/quirks`, {
     method: "POST",
     body: JSON.stringify(req),
   });
@@ -260,7 +260,7 @@ export async function quirksMissingTypeUsingPost(req: {
 export async function quirksEntirelyIncompatibleAllOfUsingPut(
   req: string & number,
 ) {
-  return fetch(`/anything/quirks/polymorphism`, {
+  return fetch(`/api/anything/quirks/polymorphism`, {
     method: "PUT",
     body: JSON.stringify(req),
   });
@@ -273,7 +273,7 @@ export async function quirksIncompatibleNestedAllOfUsingPost(req: {
     name: unknown;
   };
 }) {
-  return fetch(`/anything/quirks/polymorphism`, {
+  return fetch(`/api/anything/quirks/polymorphism`, {
     method: "POST",
     body: JSON.stringify(req),
   });
@@ -281,7 +281,7 @@ export async function quirksIncompatibleNestedAllOfUsingPost(req: {
 export async function quirksPartiallyUsableIncompatibleAllOfUsingPatch(
   req: string & number,
 ) {
-  return fetch(`/anything/quirks/polymorphism`, {
+  return fetch(`/api/anything/quirks/polymorphism`, {
     method: "PATCH",
     body: JSON.stringify(req),
   });

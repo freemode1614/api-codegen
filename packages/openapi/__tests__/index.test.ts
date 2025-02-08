@@ -13,7 +13,8 @@ it("Should parse schema properly", () => {
   expect(async () => {
     await codeGen({
       docURL: apiDoc,
-      importClientSource: `import fetch from "~/utils/fetch"`,
+      baseURL: "/api",
+      // importClientSource: `import fetch from "~/utils/fetch"`,
     });
   }).not.toThrow();
 });
