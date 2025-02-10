@@ -25,8 +25,8 @@ importers:
         specifier: ^0.3.12
         version: 0.3.12(eslint@8.57.1)(prettier@3.5.0)(tailwindcss@3.4.17)(typescript@5.7.3)
       '@moccona/preset-config':
-        specifier: ^0.0.3
-        version: 0.0.3
+        specifier: ^0.0.5
+        version: 0.0.5
       '@types/node':
         specifier: ^22.13.1
         version: 22.13.1
@@ -284,8 +284,8 @@ packages:
   '@moccona/logger@0.0.2':
     resolution: {integrity: sha512-OMPRcP76LTmgAOYPHjEKQOfi0UJf5G02J62RDmulUMU1LzrxF6iVekQ3Wg50kV+PP8jlC7YyCCs4pcnlVkLCtQ==}
 
-  '@moccona/preset-config@0.0.3':
-    resolution: {integrity: sha512-PQEwnV7wS98qm82FoKGZHhPTIQ4S+ku7rxGwbsrZSA+DV0ygwjnnj8eZ1nSxcKKAG3cH70DIX4h7RePMCZaWAA==}
+  '@moccona/preset-config@0.0.5':
+    resolution: {integrity: sha512-U/d7uxglfdOGUBVG5Q91LA09Qe6zT2zQpnTskNuKOZuup0qFxp01CJFha4RW0hQPmBAeltUeVWVDB3bsrxtYDQ==}
 
   '@nodelib/fs.scandir@2.1.5':
     resolution: {integrity: sha512-vq24Bq3ym5HEQm2NKCr3yXDwjc7vTsEThRDnkp2DK9p1uqLR+DHurm/NOTo0KG7HYHU7eppKZj3MyqYuMBf62g==}
@@ -2562,7 +2562,7 @@ snapshots:
     dependencies:
       chalk: 5.4.1
 
-  '@moccona/preset-config@0.0.3': {}
+  '@moccona/preset-config@0.0.5': {}
 
   '@nodelib/fs.scandir@2.1.5':
     dependencies:

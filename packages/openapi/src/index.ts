@@ -11,7 +11,7 @@ import { V3_1 } from "./V3_1";
 
 const logger = createScopedLogger("OpenAPI");
 
-enum OpenAPIVersion {
+export enum OpenAPIVersion {
   v2 = "v2",
   v3 = "v3",
   v3_1 = "v3_1",
@@ -90,3 +90,5 @@ export async function codeGen(initOptions: ProviderInitOptions) {
 
   return code;
 }
+
+export { type ProviderInitOptions } from "@moccona/api-codegen";
