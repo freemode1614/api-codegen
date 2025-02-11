@@ -95,7 +95,7 @@ export async function uploadFileUsingPost({ petId }: {
 }, req: {
     "additionalMetadata"?: string;
     "file"?: File;
-}) { const fd = new FormData(); fd.append("additionalMetadata", req.additionalMetadata); fd.append("file", String(req.file)); return fetch(`/pet/${petId}/uploadImage`, {
+}) { const fd = new FormData(); req.additionalMetadata && fd.append("additionalMetadata", req.additionalMetadata); req.file && fd.append("file", String(req.file)); return fetch(`/pet/${petId}/uploadImage`, {
     method: "POST",
     body: fd
 }).then(async (response) => (await response.json()) as ApiResponse); }
