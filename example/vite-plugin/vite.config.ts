@@ -14,6 +14,14 @@ export default defineConfig({
       {
         docURL: "http://localhost:5500/3.0/json/star-trek.json",
         output: "./src/client/star-trek.ts",
+        verbose: true,
+        baseURL: "/api",
+        proxy: {
+          "/api": {
+            ws: true,
+            target: "",
+          },
+        },
       },
     ]) as PluginOption,
   ],

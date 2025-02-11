@@ -82,6 +82,7 @@ export class V3 {
       const type =
         Base.upperCamelCase(Base.normalize(upLevelSchemaKey)) +
         Base.upperCamelCase(Base.normalize(name));
+
       const enumSchema = {
         name: type,
         enum: [...new Set(parameterSchema.enum as (string | number)[])],

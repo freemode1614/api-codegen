@@ -601,9 +601,12 @@ export class Generator {
     options: Omit<ProviderInitOptions, "docURL" | "output" | "requestOptions">,
   ): Statement[] {
     const statements = [] as Statement[];
-    const { parameters, apis, schemas = {}, enums } = parsedDoc;
+    const { apis, schemas = {}, enums } = parsedDoc;
+
+    const enumNames: string[] = [];
 
     for (const enumObject of enums) {
+      enumNames.push(Base.capitalize(enumObject.name));
       statements.push(
         t.createEnumDeclaration(
           [t.createToken(SyntaxKind.ExportKeyword)],
@@ -623,7 +626,10 @@ export class Generator {
     }
 
     for (const schemaKey in schemas) {
-      if (Object.hasOwnProperty.call(schemas, schemaKey)) {
+      if (
+        Object.hasOwnProperty.call(schemas, schemaKey) &&
+        !enumNames.includes(Base.capitalize(schemaKey))
+      ) {
         const schema = schemas[schemaKey];
         statements.push(
           t.createTypeAliasDeclaration(
