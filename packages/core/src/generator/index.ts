@@ -292,7 +292,7 @@ export class Generator {
         }
 
         if (allOf) {
-          return t.createIntersectionTypeNode(
+          return t.createUnionTypeNode(
             allOf.map((schema) => this.toTypeNode(schema)),
           );
         }
@@ -500,37 +500,30 @@ export class Generator {
           } else {
             statements.push(
               t.createExpressionStatement(
-                t.createBinaryExpression(
+                t.createCallExpression(
                   t.createPropertyAccessExpression(
-                    t.createIdentifier("req"),
-                    t.createIdentifier(key),
+                    t.createIdentifier("fd"),
+                    t.createIdentifier("append"),
                   ),
-                  t.createToken(SyntaxKind.AmpersandAmpersandToken),
-                  t.createCallExpression(
-                    t.createPropertyAccessExpression(
-                      t.createIdentifier("fd"),
-                      t.createIdentifier("append"),
-                    ),
-                    undefined,
-                    [
-                      t.createStringLiteral(key),
-                      schemaByKey.type === "string"
-                        ? t.createPropertyAccessExpression(
-                            t.createIdentifier("req"),
-                            t.createIdentifier(key),
-                          )
-                        : t.createCallExpression(
-                            t.createIdentifier("String"),
-                            undefined,
-                            [
-                              t.createPropertyAccessExpression(
-                                t.createIdentifier("req"),
-                                t.createIdentifier(key),
-                              ),
-                            ],
-                          ),
-                    ],
-                  ),
+                  undefined,
+                  [
+                    t.createStringLiteral(key),
+                    schemaByKey.type === "string"
+                      ? t.createPropertyAccessExpression(
+                          t.createIdentifier("req"),
+                          t.createIdentifier(key),
+                        )
+                      : t.createCallExpression(
+                          t.createIdentifier("String"),
+                          undefined,
+                          [
+                            t.createPropertyAccessExpression(
+                              t.createIdentifier("req"),
+                              t.createIdentifier(key),
+                            ),
+                          ],
+                        ),
+                  ],
                 ),
               ),
             );

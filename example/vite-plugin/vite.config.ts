@@ -27,7 +27,7 @@ export default defineConfig({
       },
       {
         name: "doc-3.1",
-        docURL: "http://localhost:5500/3.1/json/schema-types.json",
+        docURL: "http://localhost:5500/3.1/json/petstore.json",
         output: "./src/client/nesting.3_1.ts",
       },
     ]) as PluginOption,
