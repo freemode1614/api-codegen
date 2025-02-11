@@ -15,10 +15,10 @@ export enum OpenAPIVersion {
   v2 = "v2",
   v3 = "v3",
   v3_1 = "v3_1",
+  unknown = "unknown",
 }
 
 function getDocVersion(doc: OpenAPI.Document) {
-  logger.debug("Check openapi verions");
   const version = (
     (doc as OpenAPIV3.Document).openapi || (doc as OpenAPIV2.Document).swagger
   ).slice(0, 3);
@@ -31,7 +31,7 @@ function getDocVersion(doc: OpenAPI.Document) {
     case "3.1":
       return OpenAPIVersion.v3_1;
     default:
-      logger.error(`Unknown openai version ${version}`);
+      return OpenAPIVersion.unknown;
   }
 }
 
@@ -50,7 +50,6 @@ export class OpenAPIProvider extends Provider {
       case OpenAPIVersion.v3_1:
         returnValue = new V3_1(doc as unknown as OpenAPIV3_1.Document).init();
         break;
-
       default:
         logger.error(`Not a valid OpenAPI version ${version}`);
         process.exit(1);
@@ -61,6 +60,16 @@ export class OpenAPIProvider extends Provider {
 }
 
 export async function codeGen(initOptions: ProviderInitOptions) {
+  const { verbose } = initOptions;
+
+  if (verbose) {
+    logger.setLevel("debug");
+  } else {
+    logger.setLevel("info");
+  }
+
+  logger.info(`Fech document from ${initOptions.docURL}`);
+
   const doc = await Base.fetchDoc(
     initOptions.docURL,
     initOptions.requestOptions,

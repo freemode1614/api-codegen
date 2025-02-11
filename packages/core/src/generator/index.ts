@@ -1,5 +1,4 @@
 /* eslint-disable no-case-declarations */
-/* eslint-disable @typescript-eslint/no-extraneous-class */
 
 import type {
   BindingElement,
@@ -20,23 +19,22 @@ import {
 import { Adapter } from "~/base/Adaptor";
 import { Base } from "~/base/Base";
 import { writeFile } from "fs/promises";
-import { createScopedLogger } from "@moccona/logger";
-import {
+import type {
   ParameterObject,
-  ParameterIn,
   SchemaObject,
   ArrayTypeSchemaObject,
   SingleTypeSchemaObject,
-  ArraySchemaType,
-  NonArraySchemaType,
-  SchemaFormatType,
   MediaTypeObject,
   ProviderInitResult,
   ProviderInitOptions,
-  MediaTypes,
 } from "~/interface";
-
-const logger = createScopedLogger("generator");
+import {
+  MediaTypes,
+  ArraySchemaType,
+  NonArraySchemaType,
+  ParameterIn,
+  SchemaFormatType,
+} from "~/interface";
 
 /**
  * Represents a comment object with optional tag and message.
@@ -61,7 +59,6 @@ export class Generator {
    */
   static toCode(statements: Statement[]): string {
     if (statements.length === 0) {
-      logger.error("No api declaration found.");
       return "// No api declaration found.";
     }
 

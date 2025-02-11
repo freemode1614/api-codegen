@@ -153,10 +153,11 @@ export type FetchDocRequestInit = {
 
 export type ProviderInitOptions = {
   docURL: string;
-  output?: string;
+  output: string;
   baseURL?: string;
   importClientSource?: string;
   requestOptions?: FetchDocRequestInit;
+  verbose?: boolean;
 };
 
 export interface ProviderInitResult {

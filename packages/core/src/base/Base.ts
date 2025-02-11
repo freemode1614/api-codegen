@@ -1,4 +1,3 @@
-import { createScopedLogger } from "@moccona/logger";
 import { request, Agent } from "undici";
 import type {
   FetchDocRequestInit,
@@ -9,8 +8,6 @@ import type {
 } from "~/interface";
 import { MediaTypes } from "~/interface";
 import { typescriptKeywords } from "~/constants/keywords";
-
-const logger = createScopedLogger("Base");
 
 export const SuccessHttpStatusCode = {
   "200": "200",
@@ -105,8 +102,6 @@ export abstract class Base {
       },
     });
 
-    logger.info(`Fetch document from ${url}`);
-
     try {
       const { body } = await request(url, {
         method: "GET",
@@ -116,7 +111,6 @@ export abstract class Base {
 
       return body.json() as T;
     } catch (error) {
-      logger.error((error as Error).message);
       throw error;
     }
   }
