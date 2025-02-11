@@ -175,7 +175,8 @@ export class Generator {
     const nonArraySchema = schema as SingleTypeSchemaObject;
     return (
       nonArraySchema.format === SchemaFormatType.blob ||
-      nonArraySchema.format === SchemaFormatType.binary
+      nonArraySchema.format === SchemaFormatType.binary ||
+      nonArraySchema.type === SchemaFormatType.file
     );
   }
 
@@ -244,6 +245,8 @@ export class Generator {
       // case NonArraySchemaType.string:
       case NonArraySchemaType.boolean:
         return t.createToken(SyntaxKind.BooleanKeyword);
+      case NonArraySchemaType.file:
+        return t.createTypeReferenceNode(t.createIdentifier("File"));
       default:
         const {
           format,
@@ -500,30 +503,37 @@ export class Generator {
           } else {
             statements.push(
               t.createExpressionStatement(
-                t.createCallExpression(
+                t.createBinaryExpression(
                   t.createPropertyAccessExpression(
-                    t.createIdentifier("fd"),
-                    t.createIdentifier("append"),
+                    t.createIdentifier("req"),
+                    t.createIdentifier(key),
                   ),
-                  undefined,
-                  [
-                    t.createStringLiteral(key),
-                    schemaByKey.type === "string"
-                      ? t.createPropertyAccessExpression(
-                          t.createIdentifier("req"),
-                          t.createIdentifier(key),
-                        )
-                      : t.createCallExpression(
-                          t.createIdentifier("String"),
-                          undefined,
-                          [
-                            t.createPropertyAccessExpression(
-                              t.createIdentifier("req"),
-                              t.createIdentifier(key),
-                            ),
-                          ],
-                        ),
-                  ],
+                  t.createToken(SyntaxKind.AmpersandAmpersandToken),
+                  t.createCallExpression(
+                    t.createPropertyAccessExpression(
+                      t.createIdentifier("fd"),
+                      t.createIdentifier("append"),
+                    ),
+                    undefined,
+                    [
+                      t.createStringLiteral(key),
+                      schemaByKey.type === "string"
+                        ? t.createPropertyAccessExpression(
+                            t.createIdentifier("req"),
+                            t.createIdentifier(key),
+                          )
+                        : t.createCallExpression(
+                            t.createIdentifier("String"),
+                            undefined,
+                            [
+                              t.createPropertyAccessExpression(
+                                t.createIdentifier("req"),
+                                t.createIdentifier(key),
+                              ),
+                            ],
+                          ),
+                    ],
+                  ),
                 ),
               ),
             );
@@ -558,28 +568,42 @@ export class Generator {
       requestBody.schema.type === ArraySchemaType.array &&
       this.isBinarySchema(requestBody.schema);
 
-    // TODO: Need to support binary/blob format properties in requestBody
-    // const isRequestBodyContainsBinary =
-    //   requestBody &&
-    //   requestBody.schema &&
-    //   "properties" in requestBody.schema &&
-    //   requestBody.schema.properties;
+    const inFormDataParameters = parameters.filter(
+      (p) => p.in === ParameterIn.formData,
+    );
+
+    const notInFormDataParameters = parameters.filter(
+      (p) => p.in !== ParameterIn.formData,
+    );
+
+    //  TODO: Need to support binary/blob format properties in requestBody
+    const isRequestBodyContainsBinary =
+      requestBody &&
+      requestBody.schema &&
+      "properties" in requestBody.schema &&
+      Object.values(requestBody!.schema!.properties!).some((p) =>
+        this.isBinarySchema(p as SchemaObject),
+      );
 
     const hasBinaryInParameters = parameters.some(
       (p) => p && p.schema && this.isBinarySchema(p.schema),
     );
 
     const shouldPutParametersOrBodyInFormData =
-      isFormDataRequest || isRequestBodyBinary || hasBinaryInParameters;
+      isFormDataRequest ||
+      isRequestBodyBinary ||
+      hasBinaryInParameters ||
+      isRequestBodyContainsBinary ||
+      inFormDataParameters.length > 0;
 
     return t.createBlock([
       ...(shouldPutParametersOrBodyInFormData
-        ? this.toFormDataStatement(parameters, requestBody?.schema)
+        ? this.toFormDataStatement(inFormDataParameters, requestBody?.schema)
         : []),
       ...adapter.client(
         uri,
         method,
-        parameters,
+        notInFormDataParameters,
         requestBody,
         response,
         adapter,

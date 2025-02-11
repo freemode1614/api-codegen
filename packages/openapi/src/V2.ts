@@ -12,7 +12,7 @@ import {
   SchemaObject,
 } from "@moccona/api-codegen";
 import { Base, HttpMethods, NonArraySchemaType } from "@moccona/api-codegen";
-import { IJsonSchema, OpenAPIV2 } from "openapi-types";
+import { OpenAPIV2 } from "openapi-types";
 
 export class V2 {
   doc!: OpenAPIV2.Document;
@@ -90,7 +90,6 @@ export class V2 {
         allOf,
         anyOf,
         description,
-        deprecated,
         enum: enum_,
         format,
         oneOf,
@@ -125,7 +124,6 @@ export class V2 {
               : enumObject.name,
           required,
           description,
-          deprecated,
         };
       }
 
@@ -137,7 +135,6 @@ export class V2 {
         type: type as unknown as NonArraySchemaType,
         required,
         description,
-        deprecated,
         enum: enum_,
         format: format as unknown as SchemaFormatType,
         allOf: allOf?.map((s) =>
@@ -176,42 +173,38 @@ export class V2 {
    * OpenAPI parameter to base parameter.
    */
   private getParameterByRef(
-    schema: OpenAPIV2.ParameterObject | OpenAPIV2.ReferenceObject,
+    parameter: OpenAPIV2.ParameterObject | OpenAPIV2.ReferenceObject,
     enums: EnumSchemaObject[] = [],
     upLevelSchemaKey = "",
   ): ParameterObject {
-    if (Base.isRef(schema)) {
-      schema = this.doc.definitions?.[
-        Base.ref2name(schema.$ref, this.doc)
-      ] as OpenAPIV2.ParameterObject;
+    if (Base.isRef(parameter)) {
+      parameter = this.doc.parameters![Base.ref2name(parameter.$ref, this.doc)];
     }
 
     const {
       name,
       required,
-      deprecated,
       description,
-      schema: parameterSchema,
-    } = schema;
+      type,
+      items,
+      enum: enum_,
+      properties,
+    } = parameter;
 
-    if (
-      parameterSchema &&
-      !Base.isRef(parameterSchema) &&
-      parameterSchema.enum
-    ) {
+    if (enum_) {
       const type =
         Base.upperCamelCase(upLevelSchemaKey) + Base.upperCamelCase(name);
 
       const enumSchema = {
         name: type,
-        enum: [...new Set(parameterSchema.enum as (string | number)[])],
+        enum: [...new Set(enum_ as (string | number)[])],
       };
 
       const sameEnum = Base.findSameSchema(enumSchema, enums);
 
       if (
         !sameEnum &&
-        Base.isValidEnumType(parameterSchema as unknown as SchemaObject)
+        Base.isValidEnumType({ type, enum: enums } as SchemaObject)
       ) {
         enums.push(enumSchema);
       }
@@ -220,8 +213,7 @@ export class V2 {
         name,
         required,
         description,
-        deprecated,
-        in: schema.in as ParameterIn,
+        in: parameter.in as ParameterIn,
         schema: {
           type: sameEnum?.name ?? type,
         },
@@ -232,16 +224,17 @@ export class V2 {
       name,
       required,
       description,
-      deprecated,
-      in: schema.in as ParameterIn,
-      schema:
-        schema.schema &&
-        this.getSchemaByRef(
-          schema.schema,
-          false,
-          enums,
-          upLevelSchemaKey + Base.capitalize(name),
-        ),
+      in: parameter.in as ParameterIn,
+      schema: items
+        ? ({
+            type: type as string,
+            items: items as OpenAPIV2.SchemaObject | undefined,
+          } as ArrayTypeSchemaObject)
+        : ({
+            type: type as string,
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+            properties,
+          } as SchemaObject),
     };
   }
 
@@ -252,9 +245,7 @@ export class V2 {
     schema: OpenAPIV2.ResponseObject | OpenAPIV2.ReferenceObject,
   ): MediaTypeObject[] {
     if (Base.isRef(schema)) {
-      schema = this.doc.responses?.[
-        Base.ref2name(schema.$ref, this.doc)
-      ] as OpenAPIV2.ResponseObject;
+      schema = this.doc.responses![Base.ref2name(schema.$ref, this.doc)]!;
     }
 
     const { schema: responseSchema } = schema;
@@ -316,6 +307,7 @@ export class V2 {
             const uniqueParameterName = [
               ...new Set(baseParameters.map((p) => p.name)),
             ];
+
             if (Object.keys(responses).length === 0) {
               Object.assign(responses, {
                 200: {
@@ -323,6 +315,17 @@ export class V2 {
                 },
               });
             }
+
+            // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+            const inBody = baseParameters.filter(
+              (p) => p.in === "body" || p.in === "formData",
+            );
+
+            // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+            const notInBody = baseParameters.filter(
+              (p) => p.in !== "body" && p.in !== "formData",
+            );
+
             const httpCodes = Object.keys(responses);
             for (const code of httpCodes) {
               if (code in responses) {
@@ -332,13 +335,38 @@ export class V2 {
                   method,
                   operationId,
                   summary: summary_,
-                  description: description_,
                   deprecated: deprecated,
-                  parameters: uniqueParameterName.map(
-                    (name) => baseParameters.find((p) => p.name === name)!,
-                  ),
+                  description: description_,
+                  parameters: uniqueParameterName
+                    .map((name) => notInBody.find((p) => p.name === name)!)
+                    .filter(Boolean),
                   responses: responseSchema,
-                  requestBody: undefined,
+                  requestBody:
+                    inBody.length > 0
+                      ? [
+                          {
+                            type: MediaTypes.JSON,
+                            schema: {
+                              type: NonArraySchemaType.object,
+                              properties: inBody.reduce<
+                                Record<string, SchemaObject>
+                              >((a, p) => {
+                                return {
+                                  ...a,
+                                  [p.name]: {
+                                    type: p.schema?.type ?? "unknown",
+                                    required: p.schema?.required,
+                                    // @ts-expect-error items can be undefined
+                                    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+                                    items: p.schema?.items,
+                                    description: p.schema?.description,
+                                  } as SchemaObject,
+                                };
+                              }, {}),
+                            },
+                          },
+                        ]
+                      : undefined,
                 });
                 break;
               }

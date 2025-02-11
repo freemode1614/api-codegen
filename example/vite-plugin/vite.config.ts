@@ -27,7 +27,7 @@ export default defineConfig({
       },
       {
         name: "doc-2.0",
-        docURL: "http://localhost:5500/3.1/json/petstore.json",
+        docURL: "http://localhost:5500/2.0/json/petstore.json",
         output: "./src/client/openapi2.0.ts",
       },
     ]) as PluginOption,

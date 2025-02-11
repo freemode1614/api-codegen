@@ -6,6 +6,7 @@ import { Base, FetchAdapter, Generator, Provider } from "@moccona/api-codegen";
 import { createScopedLogger } from "@moccona/logger";
 import { OpenAPI, OpenAPIV2, OpenAPIV3, OpenAPIV3_1 } from "openapi-types";
 
+import { V2 } from "./V2";
 import { V3 } from "./V3";
 import { V3_1 } from "./V3_1";
 
@@ -44,6 +45,9 @@ export class OpenAPIProvider extends Provider {
     let returnValue: ProviderInitResult;
 
     switch (version) {
+      case OpenAPIVersion.v2:
+        returnValue = new V2(doc as unknown as OpenAPIV2.Document).init();
+        break;
       case OpenAPIVersion.v3:
         returnValue = new V3(doc as unknown as OpenAPIV3.Document).init();
         break;
