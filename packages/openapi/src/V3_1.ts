@@ -352,14 +352,12 @@ export class V3_1 {
 
           if (methodObject) {
             const {
-              responses,
-              requestBody = {
-                content: {},
-              },
-              description: description_,
-              summary: summary_,
-              operationId,
               deprecated,
+              operationId,
+              summary: summary_,
+              description: description_,
+              responses = {},
+              requestBody = { content: {} },
             } = methodObject;
             const { parameters: parameters_ = [] } = methodObject;
             const baseParameters = [...parameters, ...parameters_].map(
@@ -373,34 +371,31 @@ export class V3_1 {
               ...new Set(baseParameters.map((p) => p.name)),
             ];
 
-            // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-            if (responses) {
-              if (Object.keys(responses).length === 0) {
-                Object.assign(responses, {
-                  200: {
-                    description: "Successful response",
-                  },
+            if (Object.keys(responses).length === 0) {
+              Object.assign(responses, {
+                200: {
+                  description: "Successful response",
+                },
+              });
+            }
+            const httpCodes = Object.keys(responses);
+            for (const code of httpCodes) {
+              if (code in responses) {
+                const response = responses[code];
+                const responseSchema = this.getResponseByRef(response);
+                methodApis.push({
+                  method,
+                  operationId,
+                  summary: summary_ ?? summary,
+                  description: description_ ?? description,
+                  deprecated: deprecated,
+                  parameters: uniqueParameterName.map(
+                    (name) => baseParameters.find((p) => p.name === name)!,
+                  ),
+                  responses: responseSchema,
+                  requestBody: baseRequestBody,
                 });
-              }
-              const httpCodes = Object.keys(responses);
-              for (const code of httpCodes) {
-                if (code in responses) {
-                  const response = responses[code];
-                  const responseSchema = this.getResponseByRef(response);
-                  methodApis.push({
-                    method,
-                    operationId,
-                    summary: summary_ ?? summary,
-                    description: description_ ?? description,
-                    deprecated: deprecated,
-                    parameters: uniqueParameterName.map(
-                      (name) => baseParameters.find((p) => p.name === name)!,
-                    ),
-                    responses: responseSchema,
-                    requestBody: baseRequestBody,
-                  });
-                  break;
-                }
+                break;
               }
             }
           }
