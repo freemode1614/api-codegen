@@ -94,7 +94,7 @@ export async function codeGen(initOptions: ProviderInitOptions) {
   );
 
   if (process.env.NODE_ENV === "test") {
-    await Generator.write(code, initOptions.output ?? "output.ts");
+    await Generator.write(code, initOptions.output);
   }
 
   return code;
