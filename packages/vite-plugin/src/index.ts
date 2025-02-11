@@ -10,6 +10,7 @@ const PLUGIN_NAME = "apiCodeGen";
 const logger = createScopedLogger("api-codegen-vite-plugin");
 
 export type apiCodeGenPluginOptions = ProviderInitOptions & {
+  name: string;
   proxy?: ServerOptions["proxy"];
 };
 
@@ -26,14 +27,14 @@ export default function apiCodeGenPlugin(
       const proxies = await options.reduce(
         async (proxiesPromise_, option) => {
           const proxies_ = await proxiesPromise_;
-          const { proxy = {}, ...codeGenInitOptions } = option;
+          const { proxy = {}, name, ...codeGenInitOptions } = option;
 
           try {
             const code = await codeGen(codeGenInitOptions);
             await fs.createFile(codeGenInitOptions.output!);
             await fs.writeFile(codeGenInitOptions.output!, code);
           } catch (error) {
-            logger.error(`Failed to generate ${codeGenInitOptions.output!}`);
+            logger.error(`Failed to generate api ${name}`);
             console.error(error);
           }
 

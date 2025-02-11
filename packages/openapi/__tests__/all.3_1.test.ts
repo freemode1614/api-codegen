@@ -18,6 +18,10 @@ const docs = globSync("3.1/json/**/*.json", {
 
 it("Should parse v3.1 schema properly", async () => {
   for (const doc of docs) {
-    await codeGen({ docURL: apiDocBaseUrl + doc, output: "output.3_1.ts" });
+    await codeGen({
+      docURL: apiDocBaseUrl + doc,
+      output: "output.3_1.ts",
+      verbose: true,
+    });
   }
 });

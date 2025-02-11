@@ -40,7 +40,7 @@ export class V3_1 {
   ): SchemaObject {
     let refName = "";
     if (Base.isRef(schema)) {
-      refName = Base.capitalize(Base.ref2name(schema.$ref));
+      refName = Base.upperCamelCase(Base.ref2name(schema.$ref));
       if (reserveRef) {
         return {
           type: upLevelSchemaKey + refName,
@@ -88,8 +88,7 @@ export class V3_1 {
       parameterSchema.enum
     ) {
       const type =
-        Base.upperCamelCase(Base.normalize(upLevelSchemaKey)) +
-        Base.upperCamelCase(Base.normalize(name));
+        Base.upperCamelCase(upLevelSchemaKey) + Base.upperCamelCase(name);
 
       const enumSchema = {
         name: type,
@@ -221,8 +220,8 @@ export class V3_1 {
 
       if (enum_ && type !== "boolean") {
         const name =
-          Base.upperCamelCase(Base.normalize(upLevelSchemaKey)) +
-          Base.upperCamelCase(Base.normalize(schemaKey));
+          Base.upperCamelCase(upLevelSchemaKey) +
+          Base.upperCamelCase(schemaKey);
 
         const enumObject = {
           name,
@@ -263,17 +262,17 @@ export class V3_1 {
         format: format as unknown as SchemaFormatType,
         allOf: allOf?.map((s) =>
           Base.isRef(s)
-            ? { type: Base.capitalize(Base.ref2name(s.$ref, this.doc)) }
+            ? { type: Base.upperCamelCase(Base.ref2name(s.$ref, this.doc)) }
             : this.toBaseSchema(s, enums),
         ),
         anyOf: anyOf?.map((s) =>
           Base.isRef(s)
-            ? { type: Base.capitalize(Base.ref2name(s.$ref, this.doc)) }
+            ? { type: Base.upperCamelCase(Base.ref2name(s.$ref, this.doc)) }
             : this.toBaseSchema(s, enums),
         ),
         oneOf: oneOf?.map((s) =>
           Base.isRef(s)
-            ? { type: Base.capitalize(Base.ref2name(s.$ref, this.doc)) }
+            ? { type: Base.upperCamelCase(Base.ref2name(s.$ref, this.doc)) }
             : this.toBaseSchema(s, enums),
         ),
         properties: Object.keys(properties).reduce((acc, p) => {
@@ -282,7 +281,7 @@ export class V3_1 {
             ...acc,
             [p]: Base.isRef(propSchema)
               ? {
-                  type: Base.capitalize(
+                  type: Base.upperCamelCase(
                     Base.ref2name(propSchema.$ref, this.doc),
                   ),
                 }

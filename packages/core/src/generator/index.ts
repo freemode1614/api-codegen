@@ -191,6 +191,7 @@ export class Generator {
 
   static toTypeNode(schema: SchemaObject): TypeNode {
     const { type, ref } = schema;
+
     if (ref) {
       const identify = Base.ref2name(ref);
       return t.createTypeReferenceNode(
@@ -610,7 +611,7 @@ export class Generator {
       statements.push(
         t.createEnumDeclaration(
           [t.createToken(SyntaxKind.ExportKeyword)],
-          t.createIdentifier(Base.capitalize(enumObject.name)),
+          t.createIdentifier(Base.upperCamelCase(enumObject.name)),
           enumObject.enum.map((member) => {
             return t.createEnumMember(
               t.createStringLiteral(
@@ -628,13 +629,13 @@ export class Generator {
     for (const schemaKey in schemas) {
       if (
         Object.hasOwnProperty.call(schemas, schemaKey) &&
-        !enumNames.includes(Base.capitalize(schemaKey))
+        !enumNames.includes(Base.upperCamelCase(schemaKey))
       ) {
         const schema = schemas[schemaKey];
         statements.push(
           t.createTypeAliasDeclaration(
             [t.createModifier(SyntaxKind.ExportKeyword)],
-            t.createIdentifier(Base.capitalize(schemaKey)),
+            t.createIdentifier(Base.upperCamelCase(schemaKey)),
             undefined,
             this.toTypeNode(schema),
           ),

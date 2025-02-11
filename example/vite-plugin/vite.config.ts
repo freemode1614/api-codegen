@@ -8,10 +8,12 @@ export default defineConfig({
     react(),
     apiCodeGenPlugin([
       {
+        name: "doc-3.0",
         docURL: "http://localhost:5500/3.0/json/complex-nesting.json",
         output: "./src/client/nesting.ts",
       },
       {
+        name: "doc-3.0",
         docURL: "http://localhost:5500/3.0/json/star-trek.json",
         output: "./src/client/star-trek.ts",
         verbose: true,
@@ -22,6 +24,11 @@ export default defineConfig({
             target: "",
           },
         },
+      },
+      {
+        name: "doc-3.1",
+        docURL: "http://localhost:5500/3.1/json/train-travel.json",
+        output: "./src/client/nesting.3_1.ts",
       },
     ]) as PluginOption,
   ],
