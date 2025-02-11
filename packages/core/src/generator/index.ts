@@ -147,16 +147,18 @@ export class Generator {
 
     const formatComment = (comment: CommentObject): string => {
       return comment.tag
-        ? `*  @${comment.tag} ${comment.comment}`
+        ? `* @${comment.tag} ${comment.comment ?? ""}`
         : `* ${comment.comment}`;
     };
 
-    const formattedComments = comments.map(formatComment).join("\n").trim();
+    const formattedComments =
+      "*\n" + comments.map(formatComment).join("\n").trim() + "\n";
 
     addSyntheticLeadingComment(
       node,
       SyntaxKind.MultiLineCommentTrivia,
       formattedComments,
+      true,
     );
   }
 
@@ -576,7 +578,6 @@ export class Generator {
       (p) => p.in !== ParameterIn.formData,
     );
 
-    //  TODO: Need to support binary/blob format properties in requestBody
     const isRequestBodyContainsBinary =
       requestBody &&
       requestBody.schema &&
@@ -715,20 +716,20 @@ export class Generator {
             ),
           );
 
-          // this.addComments(
-          //   statement,
-          //   [
-          //     description && {
-          //       comment: description,
-          //     },
-          //     summary && {
-          //       comment: summary,
-          //     },
-          //     deprecated && {
-          //       tag: "deprecated",
-          //     },
-          //   ].filter(Boolean) as CommentObject[],
-          // );
+          this.addComments(
+            statement,
+            [
+              description && {
+                comment: description,
+              },
+              summary && {
+                comment: summary,
+              },
+              deprecated && {
+                tag: "deprecated",
+              },
+            ].filter(Boolean) as CommentObject[],
+          );
           statements.push(statement);
         }
       }

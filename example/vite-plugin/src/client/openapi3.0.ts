@@ -2030,20 +2030,20 @@ export type WeaponBaseResponse = {
 export type WeaponFullResponse = {
     "weapon": WeaponFull;
 };
-export async function animalUsingGet({ uid, apiKey }: {
+/** Retrival of a single animal*/ export async function animalUsingGet({ uid, apiKey }: {
     uid: string;
     apiKey?: string;
 }) { return fetch(`/api/animal?uid=${uid}&apiKey=${apiKey}`, {
     method: "GET"
 }).then(async (response) => (await response.json()) as AnimalFullResponse); }
-export async function animalSearchUsingGet({ pageNumber, pageSize, apiKey }: {
+/** Pagination over animals*/ export async function animalSearchUsingGet({ pageNumber, pageSize, apiKey }: {
     pageNumber?: number;
     pageSize?: number;
     apiKey?: string;
 }) { return fetch(`/api/animal/search?pageNumber=${pageNumber}&pageSize=${pageSize}&apiKey=${apiKey}`, {
     method: "GET"
 }).then(async (response) => (await response.json()) as AnimalBaseResponse); }
-export async function animalSearchUsingPost({ pageNumber, pageSize, sort, apiKey }: {
+/** Searching animals*/ export async function animalSearchUsingPost({ pageNumber, pageSize, sort, apiKey }: {
     pageNumber?: number;
     pageSize?: number;
     sort?: string;
@@ -2059,20 +2059,20 @@ export async function animalSearchUsingPost({ pageNumber, pageSize, sort, apiKey
     method: "POST",
     body: fd
 }).then(async (response) => (await response.json()) as AnimalBaseResponse); }
-export async function astronomicalObjectUsingGet({ uid, apiKey }: {
+/** Retrival of a single astronomical object*/ export async function astronomicalObjectUsingGet({ uid, apiKey }: {
     uid: string;
     apiKey?: string;
 }) { return fetch(`/api/astronomicalObject?uid=${uid}&apiKey=${apiKey}`, {
     method: "GET"
 }).then(async (response) => (await response.json()) as AstronomicalObjectFullResponse); }
-export async function astronomicalObjectSearchUsingGet({ pageNumber, pageSize, apiKey }: {
+/** Pagination over astronomical objects*/ export async function astronomicalObjectSearchUsingGet({ pageNumber, pageSize, apiKey }: {
     pageNumber?: number;
     pageSize?: number;
     apiKey?: string;
 }) { return fetch(`/api/astronomicalObject/search?pageNumber=${pageNumber}&pageSize=${pageSize}&apiKey=${apiKey}`, {
     method: "GET"
 }).then(async (response) => (await response.json()) as AstronomicalObjectBaseResponse); }
-export async function astronomicalObjectSearchUsingPost({ pageNumber, pageSize, sort, apiKey }: {
+/** Searching astronomical objects*/ export async function astronomicalObjectSearchUsingPost({ pageNumber, pageSize, sort, apiKey }: {
     pageNumber?: number;
     pageSize?: number;
     sort?: string;
@@ -2085,20 +2085,20 @@ export async function astronomicalObjectSearchUsingPost({ pageNumber, pageSize, 
     method: "POST",
     body: fd
 }).then(async (response) => (await response.json()) as AstronomicalObjectBaseResponse); }
-export async function bookUsingGet({ uid, apiKey }: {
+/** Retrival of a single book*/ export async function bookUsingGet({ uid, apiKey }: {
     uid: string;
     apiKey?: string;
 }) { return fetch(`/api/book?uid=${uid}&apiKey=${apiKey}`, {
     method: "GET"
 }).then(async (response) => (await response.json()) as BookFullResponse); }
-export async function bookSearchUsingGet({ pageNumber, pageSize, apiKey }: {
+/** Pagination over books*/ export async function bookSearchUsingGet({ pageNumber, pageSize, apiKey }: {
     pageNumber?: number;
     pageSize?: number;
     apiKey?: string;
 }) { return fetch(`/api/book/search?pageNumber=${pageNumber}&pageSize=${pageSize}&apiKey=${apiKey}`, {
     method: "GET"
 }).then(async (response) => (await response.json()) as BookBaseResponse); }
-export async function bookSearchUsingPost({ pageNumber, pageSize, sort, apiKey }: {
+/** Searching books*/ export async function bookSearchUsingPost({ pageNumber, pageSize, sort, apiKey }: {
     pageNumber?: number;
     pageSize?: number;
     sort?: string;
@@ -2130,20 +2130,20 @@ export async function bookSearchUsingPost({ pageNumber, pageSize, sort, apiKey }
     method: "POST",
     body: fd
 }).then(async (response) => (await response.json()) as BookBaseResponse); }
-export async function bookCollectionUsingGet({ uid, apiKey }: {
+/** Retrival of a single book collection*/ export async function bookCollectionUsingGet({ uid, apiKey }: {
     uid: string;
     apiKey?: string;
 }) { return fetch(`/api/bookCollection?uid=${uid}&apiKey=${apiKey}`, {
     method: "GET"
 }).then(async (response) => (await response.json()) as BookCollectionFullResponse); }
-export async function bookCollectionSearchUsingGet({ pageNumber, pageSize, apiKey }: {
+/** Pagination over book collections*/ export async function bookCollectionSearchUsingGet({ pageNumber, pageSize, apiKey }: {
     pageNumber?: number;
     pageSize?: number;
     apiKey?: string;
 }) { return fetch(`/api/bookCollection/search?pageNumber=${pageNumber}&pageSize=${pageSize}&apiKey=${apiKey}`, {
     method: "GET"
 }).then(async (response) => (await response.json()) as BookCollectionBaseResponse); }
-export async function bookCollectionSearchUsingPost({ pageNumber, pageSize, sort, apiKey }: {
+/** Searching book collections*/ export async function bookCollectionSearchUsingPost({ pageNumber, pageSize, sort, apiKey }: {
     pageNumber?: number;
     pageSize?: number;
     sort?: string;
@@ -2162,20 +2162,20 @@ export async function bookCollectionSearchUsingPost({ pageNumber, pageSize, sort
     method: "POST",
     body: fd
 }).then(async (response) => (await response.json()) as BookCollectionBaseResponse); }
-export async function bookSeriesUsingGet({ uid, apiKey }: {
+/** Retrival of a single book series*/ export async function bookSeriesUsingGet({ uid, apiKey }: {
     uid: string;
     apiKey?: string;
 }) { return fetch(`/api/bookSeries?uid=${uid}&apiKey=${apiKey}`, {
     method: "GET"
 }).then(async (response) => (await response.json()) as BookSeriesFullResponse); }
-export async function bookSeriesSearchUsingGet({ pageNumber, pageSize, apiKey }: {
+/** Pagination over book series*/ export async function bookSeriesSearchUsingGet({ pageNumber, pageSize, apiKey }: {
     pageNumber?: number;
     pageSize?: number;
     apiKey?: string;
 }) { return fetch(`/api/bookSeries/search?pageNumber=${pageNumber}&pageSize=${pageSize}&apiKey=${apiKey}`, {
     method: "GET"
 }).then(async (response) => (await response.json()) as BookSeriesBaseResponse); }
-export async function bookSeriesSearchUsingPost({ pageNumber, pageSize, sort, apiKey }: {
+/** Searching book series*/ export async function bookSeriesSearchUsingPost({ pageNumber, pageSize, sort, apiKey }: {
     pageNumber?: number;
     pageSize?: number;
     sort?: string;
@@ -2194,20 +2194,20 @@ export async function bookSeriesSearchUsingPost({ pageNumber, pageSize, sort, ap
     method: "POST",
     body: fd
 }).then(async (response) => (await response.json()) as BookSeriesBaseResponse); }
-export async function characterUsingGet({ uid, apiKey }: {
+/** Retrival of a single character*/ export async function characterUsingGet({ uid, apiKey }: {
     uid: string;
     apiKey?: string;
 }) { return fetch(`/api/character?uid=${uid}&apiKey=${apiKey}`, {
     method: "GET"
 }).then(async (response) => (await response.json()) as CharacterFullResponse); }
-export async function characterSearchUsingGet({ pageNumber, pageSize, apiKey }: {
+/** Pagination over characters*/ export async function characterSearchUsingGet({ pageNumber, pageSize, apiKey }: {
     pageNumber?: number;
     pageSize?: number;
     apiKey?: string;
 }) { return fetch(`/api/character/search?pageNumber=${pageNumber}&pageSize=${pageSize}&apiKey=${apiKey}`, {
     method: "GET"
 }).then(async (response) => (await response.json()) as CharacterBaseResponse); }
-export async function characterSearchUsingPost({ pageNumber, pageSize, sort, apiKey }: {
+/** Searching characters*/ export async function characterSearchUsingPost({ pageNumber, pageSize, sort, apiKey }: {
     pageNumber?: number;
     pageSize?: number;
     sort?: string;
@@ -2224,20 +2224,20 @@ export async function characterSearchUsingPost({ pageNumber, pageSize, sort, api
     method: "POST",
     body: fd
 }).then(async (response) => (await response.json()) as CharacterBaseResponse); }
-export async function comicsUsingGet({ uid, apiKey }: {
+/** Retrival of a single comics*/ export async function comicsUsingGet({ uid, apiKey }: {
     uid: string;
     apiKey?: string;
 }) { return fetch(`/api/comics?uid=${uid}&apiKey=${apiKey}`, {
     method: "GET"
 }).then(async (response) => (await response.json()) as ComicsFullResponse); }
-export async function comicsSearchUsingGet({ pageNumber, pageSize, apiKey }: {
+/** Pagination over comics*/ export async function comicsSearchUsingGet({ pageNumber, pageSize, apiKey }: {
     pageNumber?: number;
     pageSize?: number;
     apiKey?: string;
 }) { return fetch(`/api/comics/search?pageNumber=${pageNumber}&pageSize=${pageSize}&apiKey=${apiKey}`, {
     method: "GET"
 }).then(async (response) => (await response.json()) as ComicsBaseResponse); }
-export async function comicsSearchUsingPost({ pageNumber, pageSize, sort, apiKey }: {
+/** Searching comics*/ export async function comicsSearchUsingPost({ pageNumber, pageSize, sort, apiKey }: {
     pageNumber?: number;
     pageSize?: number;
     sort?: string;
@@ -2258,20 +2258,20 @@ export async function comicsSearchUsingPost({ pageNumber, pageSize, sort, apiKey
     method: "POST",
     body: fd
 }).then(async (response) => (await response.json()) as ComicsBaseResponse); }
-export async function comicCollectionUsingGet({ uid, apiKey }: {
+/** Retrival of a single comic collection*/ export async function comicCollectionUsingGet({ uid, apiKey }: {
     uid: string;
     apiKey?: string;
 }) { return fetch(`/api/comicCollection?uid=${uid}&apiKey=${apiKey}`, {
     method: "GET"
 }).then(async (response) => (await response.json()) as ComicCollectionFullResponse); }
-export async function comicCollectionSearchUsingGet({ pageNumber, pageSize, apiKey }: {
+/** Pagination over comic collections*/ export async function comicCollectionSearchUsingGet({ pageNumber, pageSize, apiKey }: {
     pageNumber?: number;
     pageSize?: number;
     apiKey?: string;
 }) { return fetch(`/api/comicCollection/search?pageNumber=${pageNumber}&pageSize=${pageSize}&apiKey=${apiKey}`, {
     method: "GET"
 }).then(async (response) => (await response.json()) as ComicCollectionBaseResponse); }
-export async function comicCollectionSearchUsingPost({ pageNumber, pageSize, sort, apiKey }: {
+/** Searching comic collections*/ export async function comicCollectionSearchUsingPost({ pageNumber, pageSize, sort, apiKey }: {
     pageNumber?: number;
     pageSize?: number;
     sort?: string;
@@ -2291,20 +2291,20 @@ export async function comicCollectionSearchUsingPost({ pageNumber, pageSize, sor
     method: "POST",
     body: fd
 }).then(async (response) => (await response.json()) as ComicCollectionBaseResponse); }
-export async function comicSeriesUsingGet({ uid, apiKey }: {
+/** Retrival of a single comic series*/ export async function comicSeriesUsingGet({ uid, apiKey }: {
     uid: string;
     apiKey?: string;
 }) { return fetch(`/api/comicSeries?uid=${uid}&apiKey=${apiKey}`, {
     method: "GET"
 }).then(async (response) => (await response.json()) as ComicSeriesFullResponse); }
-export async function comicSeriesSearchUsingGet({ pageNumber, pageSize, apiKey }: {
+/** Pagination over comic series*/ export async function comicSeriesSearchUsingGet({ pageNumber, pageSize, apiKey }: {
     pageNumber?: number;
     pageSize?: number;
     apiKey?: string;
 }) { return fetch(`/api/comicSeries/search?pageNumber=${pageNumber}&pageSize=${pageSize}&apiKey=${apiKey}`, {
     method: "GET"
 }).then(async (response) => (await response.json()) as ComicSeriesBaseResponse); }
-export async function comicSeriesSearchUsingPost({ pageNumber, pageSize, sort, apiKey }: {
+/** Searching comic series*/ export async function comicSeriesSearchUsingPost({ pageNumber, pageSize, sort, apiKey }: {
     pageNumber?: number;
     pageSize?: number;
     sort?: string;
@@ -2325,20 +2325,20 @@ export async function comicSeriesSearchUsingPost({ pageNumber, pageSize, sort, a
     method: "POST",
     body: fd
 }).then(async (response) => (await response.json()) as ComicSeriesBaseResponse); }
-export async function comicStripUsingGet({ uid, apiKey }: {
+/** Retrival of a single comic strip*/ export async function comicStripUsingGet({ uid, apiKey }: {
     uid: string;
     apiKey?: string;
 }) { return fetch(`/api/comicStrip?uid=${uid}&apiKey=${apiKey}`, {
     method: "GET"
 }).then(async (response) => (await response.json()) as ComicStripFullResponse); }
-export async function comicStripSearchUsingGet({ pageNumber, pageSize, apiKey }: {
+/** Pagination over comic strips*/ export async function comicStripSearchUsingGet({ pageNumber, pageSize, apiKey }: {
     pageNumber?: number;
     pageSize?: number;
     apiKey?: string;
 }) { return fetch(`/api/comicStrip/search?pageNumber=${pageNumber}&pageSize=${pageSize}&apiKey=${apiKey}`, {
     method: "GET"
 }).then(async (response) => (await response.json()) as ComicStripBaseResponse); }
-export async function comicStripSearchUsingPost({ pageNumber, pageSize, sort, apiKey }: {
+/** Searching comic strips*/ export async function comicStripSearchUsingPost({ pageNumber, pageSize, sort, apiKey }: {
     pageNumber?: number;
     pageSize?: number;
     sort?: string;
@@ -2355,20 +2355,20 @@ export async function comicStripSearchUsingPost({ pageNumber, pageSize, sort, ap
     method: "POST",
     body: fd
 }).then(async (response) => (await response.json()) as ComicStripBaseResponse); }
-export async function companyUsingGet({ uid, apiKey }: {
+/** Retrival of a single company*/ export async function companyUsingGet({ uid, apiKey }: {
     uid: string;
     apiKey?: string;
 }) { return fetch(`/api/company?uid=${uid}&apiKey=${apiKey}`, {
     method: "GET"
 }).then(async (response) => (await response.json()) as CompanyFullResponse); }
-export async function companySearchUsingGet({ pageNumber, pageSize, apiKey }: {
+/** Pagination over companies*/ export async function companySearchUsingGet({ pageNumber, pageSize, apiKey }: {
     pageNumber?: number;
     pageSize?: number;
     apiKey?: string;
 }) { return fetch(`/api/company/search?pageNumber=${pageNumber}&pageSize=${pageSize}&apiKey=${apiKey}`, {
     method: "GET"
 }).then(async (response) => (await response.json()) as CompanyBaseResponse); }
-export async function companySearchUsingPost({ pageNumber, pageSize, sort, apiKey }: {
+/** Searching companies*/ export async function companySearchUsingPost({ pageNumber, pageSize, sort, apiKey }: {
     pageNumber?: number;
     pageSize?: number;
     sort?: string;
@@ -2396,20 +2396,20 @@ export async function companySearchUsingPost({ pageNumber, pageSize, sort, apiKe
     method: "POST",
     body: fd
 }).then(async (response) => (await response.json()) as CompanyBaseResponse); }
-export async function conflictUsingGet({ uid, apiKey }: {
+/** Retrival of a single conflict*/ export async function conflictUsingGet({ uid, apiKey }: {
     uid: string;
     apiKey?: string;
 }) { return fetch(`/api/conflict?uid=${uid}&apiKey=${apiKey}`, {
     method: "GET"
 }).then(async (response) => (await response.json()) as ConflictFullResponse); }
-export async function conflictSearchUsingGet({ pageNumber, pageSize, apiKey }: {
+/** Pagination over conflicts*/ export async function conflictSearchUsingGet({ pageNumber, pageSize, apiKey }: {
     pageNumber?: number;
     pageSize?: number;
     apiKey?: string;
 }) { return fetch(`/api/conflict/search?pageNumber=${pageNumber}&pageSize=${pageSize}&apiKey=${apiKey}`, {
     method: "GET"
 }).then(async (response) => (await response.json()) as ConflictBaseResponse); }
-export async function conflictSearchUsingPost({ pageNumber, pageSize, sort, apiKey }: {
+/** Searching conflicts*/ export async function conflictSearchUsingPost({ pageNumber, pageSize, sort, apiKey }: {
     pageNumber?: number;
     pageSize?: number;
     sort?: string;
@@ -2427,20 +2427,20 @@ export async function conflictSearchUsingPost({ pageNumber, pageSize, sort, apiK
     method: "POST",
     body: fd
 }).then(async (response) => (await response.json()) as ConflictBaseResponse); }
-export async function elementUsingGet({ uid, apiKey }: {
+/** Retrival of a single element*/ export async function elementUsingGet({ uid, apiKey }: {
     uid: string;
     apiKey?: string;
 }) { return fetch(`/api/element?uid=${uid}&apiKey=${apiKey}`, {
     method: "GET"
 }).then(async (response) => (await response.json()) as ElementFullResponse); }
-export async function elementSearchUsingGet({ pageNumber, pageSize, apiKey }: {
+/** Pagination over elements*/ export async function elementSearchUsingGet({ pageNumber, pageSize, apiKey }: {
     pageNumber?: number;
     pageSize?: number;
     apiKey?: string;
 }) { return fetch(`/api/element/search?pageNumber=${pageNumber}&pageSize=${pageSize}&apiKey=${apiKey}`, {
     method: "GET"
 }).then(async (response) => (await response.json()) as ElementBaseResponse); }
-export async function elementSearchUsingPost({ pageNumber, pageSize, sort, apiKey }: {
+/** Searching elements*/ export async function elementSearchUsingPost({ pageNumber, pageSize, sort, apiKey }: {
     pageNumber?: number;
     pageSize?: number;
     sort?: string;
@@ -2459,20 +2459,20 @@ export async function elementSearchUsingPost({ pageNumber, pageSize, sort, apiKe
     method: "POST",
     body: fd
 }).then(async (response) => (await response.json()) as ElementBaseResponse); }
-export async function episodeUsingGet({ uid, apiKey }: {
+/** Retrival of a single episode*/ export async function episodeUsingGet({ uid, apiKey }: {
     uid: string;
     apiKey?: string;
 }) { return fetch(`/api/episode?uid=${uid}&apiKey=${apiKey}`, {
     method: "GET"
 }).then(async (response) => (await response.json()) as EpisodeFullResponse); }
-export async function episodeSearchUsingGet({ pageNumber, pageSize, apiKey }: {
+/** Pagination over episodes*/ export async function episodeSearchUsingGet({ pageNumber, pageSize, apiKey }: {
     pageNumber?: number;
     pageSize?: number;
     apiKey?: string;
 }) { return fetch(`/api/episode/search?pageNumber=${pageNumber}&pageSize=${pageSize}&apiKey=${apiKey}`, {
     method: "GET"
 }).then(async (response) => (await response.json()) as EpisodeBaseResponse); }
-export async function episodeSearchUsingPost({ pageNumber, pageSize, sort, apiKey }: {
+/** Searching episodes*/ export async function episodeSearchUsingPost({ pageNumber, pageSize, sort, apiKey }: {
     pageNumber?: number;
     pageSize?: number;
     sort?: string;
@@ -2497,20 +2497,20 @@ export async function episodeSearchUsingPost({ pageNumber, pageSize, sort, apiKe
     method: "POST",
     body: fd
 }).then(async (response) => (await response.json()) as EpisodeBaseResponse); }
-export async function foodUsingGet({ uid, apiKey }: {
+/** Retrival of a single food*/ export async function foodUsingGet({ uid, apiKey }: {
     uid: string;
     apiKey?: string;
 }) { return fetch(`/api/food?uid=${uid}&apiKey=${apiKey}`, {
     method: "GET"
 }).then(async (response) => (await response.json()) as FoodFullResponse); }
-export async function foodSearchUsingGet({ pageNumber, pageSize, apiKey }: {
+/** Pagination over foods*/ export async function foodSearchUsingGet({ pageNumber, pageSize, apiKey }: {
     pageNumber?: number;
     pageSize?: number;
     apiKey?: string;
 }) { return fetch(`/api/food/search?pageNumber=${pageNumber}&pageSize=${pageSize}&apiKey=${apiKey}`, {
     method: "GET"
 }).then(async (response) => (await response.json()) as FoodBaseResponse); }
-export async function foodSearchUsingPost({ pageNumber, pageSize, sort, apiKey }: {
+/** Searching foods*/ export async function foodSearchUsingPost({ pageNumber, pageSize, sort, apiKey }: {
     pageNumber?: number;
     pageSize?: number;
     sort?: string;
@@ -2531,20 +2531,20 @@ export async function foodSearchUsingPost({ pageNumber, pageSize, sort, apiKey }
     method: "POST",
     body: fd
 }).then(async (response) => (await response.json()) as FoodBaseResponse); }
-export async function literatureUsingGet({ uid, apiKey }: {
+/** Retrival of a single literature*/ export async function literatureUsingGet({ uid, apiKey }: {
     uid: string;
     apiKey?: string;
 }) { return fetch(`/api/literature?uid=${uid}&apiKey=${apiKey}`, {
     method: "GET"
 }).then(async (response) => (await response.json()) as LiteratureFullResponse); }
-export async function literatureSearchUsingGet({ pageNumber, pageSize, apiKey }: {
+/** Pagination over literature*/ export async function literatureSearchUsingGet({ pageNumber, pageSize, apiKey }: {
     pageNumber?: number;
     pageSize?: number;
     apiKey?: string;
 }) { return fetch(`/api/literature/search?pageNumber=${pageNumber}&pageSize=${pageSize}&apiKey=${apiKey}`, {
     method: "GET"
 }).then(async (response) => (await response.json()) as LiteratureBaseResponse); }
-export async function literatureSearchUsingPost({ pageNumber, pageSize, sort, apiKey }: {
+/** Searching literature*/ export async function literatureSearchUsingPost({ pageNumber, pageSize, sort, apiKey }: {
     pageNumber?: number;
     pageSize?: number;
     sort?: string;
@@ -2561,20 +2561,20 @@ export async function literatureSearchUsingPost({ pageNumber, pageSize, sort, ap
     method: "POST",
     body: fd
 }).then(async (response) => (await response.json()) as LiteratureBaseResponse); }
-export async function locationUsingGet({ uid, apiKey }: {
+/** Retrival of a single location*/ export async function locationUsingGet({ uid, apiKey }: {
     uid: string;
     apiKey?: string;
 }) { return fetch(`/api/location?uid=${uid}&apiKey=${apiKey}`, {
     method: "GET"
 }).then(async (response) => (await response.json()) as LocationFullResponse); }
-export async function locationSearchUsingGet({ pageNumber, pageSize, apiKey }: {
+/** Pagination over locations*/ export async function locationSearchUsingGet({ pageNumber, pageSize, apiKey }: {
     pageNumber?: number;
     pageSize?: number;
     apiKey?: string;
 }) { return fetch(`/api/location/search?pageNumber=${pageNumber}&pageSize=${pageSize}&apiKey=${apiKey}`, {
     method: "GET"
 }).then(async (response) => (await response.json()) as LocationBaseResponse); }
-export async function locationSearchUsingPost({ pageNumber, pageSize, sort, apiKey }: {
+/** Searching locations*/ export async function locationSearchUsingPost({ pageNumber, pageSize, sort, apiKey }: {
     pageNumber?: number;
     pageSize?: number;
     sort?: string;
@@ -2608,20 +2608,20 @@ export async function locationSearchUsingPost({ pageNumber, pageSize, sort, apiK
     method: "POST",
     body: fd
 }).then(async (response) => (await response.json()) as LocationBaseResponse); }
-export async function magazineUsingGet({ uid, apiKey }: {
+/** Retrival of a single magazine*/ export async function magazineUsingGet({ uid, apiKey }: {
     uid: string;
     apiKey?: string;
 }) { return fetch(`/api/magazine?uid=${uid}&apiKey=${apiKey}`, {
     method: "GET"
 }).then(async (response) => (await response.json()) as MagazineFullResponse); }
-export async function magazineSearchUsingGet({ pageNumber, pageSize, apiKey }: {
+/** Pagination over magazines*/ export async function magazineSearchUsingGet({ pageNumber, pageSize, apiKey }: {
     pageNumber?: number;
     pageSize?: number;
     apiKey?: string;
 }) { return fetch(`/api/magazine/search?pageNumber=${pageNumber}&pageSize=${pageSize}&apiKey=${apiKey}`, {
     method: "GET"
 }).then(async (response) => (await response.json()) as MagazineBaseResponse); }
-export async function magazineSearchUsingPost({ pageNumber, pageSize, sort, apiKey }: {
+/** Searching magazines*/ export async function magazineSearchUsingPost({ pageNumber, pageSize, sort, apiKey }: {
     pageNumber?: number;
     pageSize?: number;
     sort?: string;
@@ -2636,20 +2636,20 @@ export async function magazineSearchUsingPost({ pageNumber, pageSize, sort, apiK
     method: "POST",
     body: fd
 }).then(async (response) => (await response.json()) as MagazineBaseResponse); }
-export async function magazineSeriesUsingGet({ uid, apiKey }: {
+/** Retrival of a single magazine series*/ export async function magazineSeriesUsingGet({ uid, apiKey }: {
     uid: string;
     apiKey?: string;
 }) { return fetch(`/api/magazineSeries?uid=${uid}&apiKey=${apiKey}`, {
     method: "GET"
 }).then(async (response) => (await response.json()) as MagazineSeriesFullResponse); }
-export async function magazineSeriesSearchUsingGet({ pageNumber, pageSize, apiKey }: {
+/** Pagination over magazine series*/ export async function magazineSeriesSearchUsingGet({ pageNumber, pageSize, apiKey }: {
     pageNumber?: number;
     pageSize?: number;
     apiKey?: string;
 }) { return fetch(`/api/magazineSeries/search?pageNumber=${pageNumber}&pageSize=${pageSize}&apiKey=${apiKey}`, {
     method: "GET"
 }).then(async (response) => (await response.json()) as MagazineSeriesBaseResponse); }
-export async function magazineSeriesSearchUsingPost({ pageNumber, pageSize, sort, apiKey }: {
+/** Searching magazine series*/ export async function magazineSeriesSearchUsingPost({ pageNumber, pageSize, sort, apiKey }: {
     pageNumber?: number;
     pageSize?: number;
     sort?: string;
@@ -2664,20 +2664,20 @@ export async function magazineSeriesSearchUsingPost({ pageNumber, pageSize, sort
     method: "POST",
     body: fd
 }).then(async (response) => (await response.json()) as MagazineSeriesBaseResponse); }
-export async function materialUsingGet({ uid, apiKey }: {
+/** Retrival of a single material*/ export async function materialUsingGet({ uid, apiKey }: {
     uid: string;
     apiKey?: string;
 }) { return fetch(`/api/material?uid=${uid}&apiKey=${apiKey}`, {
     method: "GET"
 }).then(async (response) => (await response.json()) as MaterialFullResponse); }
-export async function materialSearchUsingGet({ pageNumber, pageSize, apiKey }: {
+/** Pagination over materials*/ export async function materialSearchUsingGet({ pageNumber, pageSize, apiKey }: {
     pageNumber?: number;
     pageSize?: number;
     apiKey?: string;
 }) { return fetch(`/api/material/search?pageNumber=${pageNumber}&pageSize=${pageSize}&apiKey=${apiKey}`, {
     method: "GET"
 }).then(async (response) => (await response.json()) as MaterialBaseResponse); }
-export async function materialSearchUsingPost({ pageNumber, pageSize, sort, apiKey }: {
+/** Searching materials*/ export async function materialSearchUsingPost({ pageNumber, pageSize, sort, apiKey }: {
     pageNumber?: number;
     pageSize?: number;
     sort?: string;
@@ -2698,20 +2698,20 @@ export async function materialSearchUsingPost({ pageNumber, pageSize, sort, apiK
     method: "POST",
     body: fd
 }).then(async (response) => (await response.json()) as MaterialBaseResponse); }
-export async function medicalConditionUsingGet({ uid, apiKey }: {
+/** Retrival of a single medical condition*/ export async function medicalConditionUsingGet({ uid, apiKey }: {
     uid: string;
     apiKey?: string;
 }) { return fetch(`/api/medicalCondition?uid=${uid}&apiKey=${apiKey}`, {
     method: "GET"
 }).then(async (response) => (await response.json()) as MedicalConditionFullResponse); }
-export async function medicalConditionSearchUsingGet({ pageNumber, pageSize, apiKey }: {
+/** Pagination over medical conditions*/ export async function medicalConditionSearchUsingGet({ pageNumber, pageSize, apiKey }: {
     pageNumber?: number;
     pageSize?: number;
     apiKey?: string;
 }) { return fetch(`/api/medicalCondition/search?pageNumber=${pageNumber}&pageSize=${pageSize}&apiKey=${apiKey}`, {
     method: "GET"
 }).then(async (response) => (await response.json()) as MedicalConditionBaseResponse); }
-export async function medicalConditionSearchUsingPost({ pageNumber, pageSize, sort, apiKey }: {
+/** Searching medical conditions*/ export async function medicalConditionSearchUsingPost({ pageNumber, pageSize, sort, apiKey }: {
     pageNumber?: number;
     pageSize?: number;
     sort?: string;
@@ -2723,20 +2723,20 @@ export async function medicalConditionSearchUsingPost({ pageNumber, pageSize, so
     method: "POST",
     body: fd
 }).then(async (response) => (await response.json()) as MedicalConditionBaseResponse); }
-export async function movieUsingGet({ uid, apiKey }: {
+/** Retrival of a single movie*/ export async function movieUsingGet({ uid, apiKey }: {
     uid: string;
     apiKey?: string;
 }) { return fetch(`/api/movie?uid=${uid}&apiKey=${apiKey}`, {
     method: "GET"
 }).then(async (response) => (await response.json()) as MovieFullResponse); }
-export async function movieSearchUsingGet({ pageNumber, pageSize, apiKey }: {
+/** Pagination over movies*/ export async function movieSearchUsingGet({ pageNumber, pageSize, apiKey }: {
     pageNumber?: number;
     pageSize?: number;
     apiKey?: string;
 }) { return fetch(`/api/movie/search?pageNumber=${pageNumber}&pageSize=${pageSize}&apiKey=${apiKey}`, {
     method: "GET"
 }).then(async (response) => (await response.json()) as MovieBaseResponse); }
-export async function movieSearchUsingPost({ pageNumber, pageSize, sort, apiKey }: {
+/** Searching movies*/ export async function movieSearchUsingPost({ pageNumber, pageSize, sort, apiKey }: {
     pageNumber?: number;
     pageSize?: number;
     sort?: string;
@@ -2753,20 +2753,20 @@ export async function movieSearchUsingPost({ pageNumber, pageSize, sort, apiKey 
     method: "POST",
     body: fd
 }).then(async (response) => (await response.json()) as MovieBaseResponse); }
-export async function occupationUsingGet({ uid, apiKey }: {
+/** Retrival of a single occupation*/ export async function occupationUsingGet({ uid, apiKey }: {
     uid: string;
     apiKey?: string;
 }) { return fetch(`/api/occupation?uid=${uid}&apiKey=${apiKey}`, {
     method: "GET"
 }).then(async (response) => (await response.json()) as OccupationFullResponse); }
-export async function occupationSearchUsingGet({ pageNumber, pageSize, apiKey }: {
+/** Pagination over occupations*/ export async function occupationSearchUsingGet({ pageNumber, pageSize, apiKey }: {
     pageNumber?: number;
     pageSize?: number;
     apiKey?: string;
 }) { return fetch(`/api/occupation/search?pageNumber=${pageNumber}&pageSize=${pageSize}&apiKey=${apiKey}`, {
     method: "GET"
 }).then(async (response) => (await response.json()) as OccupationBaseResponse); }
-export async function occupationSearchUsingPost({ pageNumber, pageSize, sort, apiKey }: {
+/** Searching occupations*/ export async function occupationSearchUsingPost({ pageNumber, pageSize, sort, apiKey }: {
     pageNumber?: number;
     pageSize?: number;
     sort?: string;
@@ -2780,20 +2780,20 @@ export async function occupationSearchUsingPost({ pageNumber, pageSize, sort, ap
     method: "POST",
     body: fd
 }).then(async (response) => (await response.json()) as OccupationBaseResponse); }
-export async function organizationUsingGet({ uid, apiKey }: {
+/** Retrival of a single organization*/ export async function organizationUsingGet({ uid, apiKey }: {
     uid: string;
     apiKey?: string;
 }) { return fetch(`/api/organization?uid=${uid}&apiKey=${apiKey}`, {
     method: "GET"
 }).then(async (response) => (await response.json()) as OrganizationFullResponse); }
-export async function organizationSearchUsingGet({ pageNumber, pageSize, apiKey }: {
+/** Pagination over organizations*/ export async function organizationSearchUsingGet({ pageNumber, pageSize, apiKey }: {
     pageNumber?: number;
     pageSize?: number;
     apiKey?: string;
 }) { return fetch(`/api/organization/search?pageNumber=${pageNumber}&pageSize=${pageSize}&apiKey=${apiKey}`, {
     method: "GET"
 }).then(async (response) => (await response.json()) as OrganizationBaseResponse); }
-export async function organizationSearchUsingPost({ pageNumber, pageSize, sort, apiKey }: {
+/** Searching organizations*/ export async function organizationSearchUsingPost({ pageNumber, pageSize, sort, apiKey }: {
     pageNumber?: number;
     pageSize?: number;
     sort?: string;
@@ -2816,20 +2816,20 @@ export async function organizationSearchUsingPost({ pageNumber, pageSize, sort, 
     method: "POST",
     body: fd
 }).then(async (response) => (await response.json()) as OrganizationBaseResponse); }
-export async function performerUsingGet({ uid, apiKey }: {
+/** Retrival of a single performer*/ export async function performerUsingGet({ uid, apiKey }: {
     uid: string;
     apiKey?: string;
 }) { return fetch(`/api/performer?uid=${uid}&apiKey=${apiKey}`, {
     method: "GET"
 }).then(async (response) => (await response.json()) as PerformerFullResponse); }
-export async function performerSearchUsingGet({ pageNumber, pageSize, apiKey }: {
+/** Pagination over performers*/ export async function performerSearchUsingGet({ pageNumber, pageSize, apiKey }: {
     pageNumber?: number;
     pageSize?: number;
     apiKey?: string;
 }) { return fetch(`/api/performer/search?pageNumber=${pageNumber}&pageSize=${pageSize}&apiKey=${apiKey}`, {
     method: "GET"
 }).then(async (response) => (await response.json()) as PerformerBaseResponse); }
-export async function performerSearchUsingPost({ pageNumber, pageSize, sort, apiKey }: {
+/** Searching performers*/ export async function performerSearchUsingPost({ pageNumber, pageSize, sort, apiKey }: {
     pageNumber?: number;
     pageSize?: number;
     sort?: string;
@@ -2861,20 +2861,20 @@ export async function performerSearchUsingPost({ pageNumber, pageSize, sort, api
     method: "POST",
     body: fd
 }).then(async (response) => (await response.json()) as PerformerBaseResponse); }
-export async function seasonUsingGet({ uid, apiKey }: {
+/** Retrival of a single season*/ export async function seasonUsingGet({ uid, apiKey }: {
     uid: string;
     apiKey?: string;
 }) { return fetch(`/api/season?uid=${uid}&apiKey=${apiKey}`, {
     method: "GET"
 }).then(async (response) => (await response.json()) as SeasonFullResponse); }
-export async function seasonSearchUsingGet({ pageNumber, pageSize, apiKey }: {
+/** Pagination over seasons*/ export async function seasonSearchUsingGet({ pageNumber, pageSize, apiKey }: {
     pageNumber?: number;
     pageSize?: number;
     apiKey?: string;
 }) { return fetch(`/api/season/search?pageNumber=${pageNumber}&pageSize=${pageSize}&apiKey=${apiKey}`, {
     method: "GET"
 }).then(async (response) => (await response.json()) as SeasonBaseResponse); }
-export async function seasonSearchUsingPost({ pageNumber, pageSize, sort, apiKey }: {
+/** Searching seasons*/ export async function seasonSearchUsingPost({ pageNumber, pageSize, sort, apiKey }: {
     pageNumber?: number;
     pageSize?: number;
     sort?: string;
@@ -2889,20 +2889,20 @@ export async function seasonSearchUsingPost({ pageNumber, pageSize, sort, apiKey
     method: "POST",
     body: fd
 }).then(async (response) => (await response.json()) as SeasonBaseResponse); }
-export async function seriesUsingGet({ uid, apiKey }: {
+/** Retrival of a single series*/ export async function seriesUsingGet({ uid, apiKey }: {
     uid: string;
     apiKey?: string;
 }) { return fetch(`/api/series?uid=${uid}&apiKey=${apiKey}`, {
     method: "GET"
 }).then(async (response) => (await response.json()) as SeriesFullResponse); }
-export async function seriesSearchUsingGet({ pageNumber, pageSize, apiKey }: {
+/** Pagination over series*/ export async function seriesSearchUsingGet({ pageNumber, pageSize, apiKey }: {
     pageNumber?: number;
     pageSize?: number;
     apiKey?: string;
 }) { return fetch(`/api/series/search?pageNumber=${pageNumber}&pageSize=${pageSize}&apiKey=${apiKey}`, {
     method: "GET"
 }).then(async (response) => (await response.json()) as SeriesBaseResponse); }
-export async function seriesSearchUsingPost({ pageNumber, pageSize, sort, apiKey }: {
+/** Searching series*/ export async function seriesSearchUsingPost({ pageNumber, pageSize, sort, apiKey }: {
     pageNumber?: number;
     pageSize?: number;
     sort?: string;
@@ -2922,20 +2922,20 @@ export async function seriesSearchUsingPost({ pageNumber, pageSize, sort, apiKey
     method: "POST",
     body: fd
 }).then(async (response) => (await response.json()) as SeriesBaseResponse); }
-export async function soundtrackUsingGet({ uid, apiKey }: {
+/** Retrival of a single soundtrack*/ export async function soundtrackUsingGet({ uid, apiKey }: {
     uid: string;
     apiKey?: string;
 }) { return fetch(`/api/soundtrack?uid=${uid}&apiKey=${apiKey}`, {
     method: "GET"
 }).then(async (response) => (await response.json()) as SoundtrackFullResponse); }
-export async function soundtrackSearchUsingGet({ pageNumber, pageSize, apiKey }: {
+/** Pagination over soundtracks*/ export async function soundtrackSearchUsingGet({ pageNumber, pageSize, apiKey }: {
     pageNumber?: number;
     pageSize?: number;
     apiKey?: string;
 }) { return fetch(`/api/soundtrack/search?pageNumber=${pageNumber}&pageSize=${pageSize}&apiKey=${apiKey}`, {
     method: "GET"
 }).then(async (response) => (await response.json()) as SoundtrackBaseResponse); }
-export async function soundtrackSearchUsingPost({ pageNumber, pageSize, sort, apiKey }: {
+/** Searching soundtracks*/ export async function soundtrackSearchUsingPost({ pageNumber, pageSize, sort, apiKey }: {
     pageNumber?: number;
     pageSize?: number;
     sort?: string;
@@ -2950,20 +2950,20 @@ export async function soundtrackSearchUsingPost({ pageNumber, pageSize, sort, ap
     method: "POST",
     body: fd
 }).then(async (response) => (await response.json()) as SoundtrackBaseResponse); }
-export async function spacecraftUsingGet({ uid, apiKey }: {
+/** Retrival of a single spacecraft*/ export async function spacecraftUsingGet({ uid, apiKey }: {
     uid: string;
     apiKey?: string;
 }) { return fetch(`/api/spacecraft?uid=${uid}&apiKey=${apiKey}`, {
     method: "GET"
 }).then(async (response) => (await response.json()) as SpacecraftFullResponse); }
-export async function spacecraftSearchUsingGet({ pageNumber, pageSize, apiKey }: {
+/** Pagination over spacecrafts*/ export async function spacecraftSearchUsingGet({ pageNumber, pageSize, apiKey }: {
     pageNumber?: number;
     pageSize?: number;
     apiKey?: string;
 }) { return fetch(`/api/spacecraft/search?pageNumber=${pageNumber}&pageSize=${pageSize}&apiKey=${apiKey}`, {
     method: "GET"
 }).then(async (response) => (await response.json()) as SpacecraftBaseResponse); }
-export async function spacecraftSearchUsingPost({ pageNumber, pageSize, sort, apiKey }: {
+/** Searching spacecrafts*/ export async function spacecraftSearchUsingPost({ pageNumber, pageSize, sort, apiKey }: {
     pageNumber?: number;
     pageSize?: number;
     sort?: string;
@@ -2974,20 +2974,20 @@ export async function spacecraftSearchUsingPost({ pageNumber, pageSize, sort, ap
     method: "POST",
     body: fd
 }).then(async (response) => (await response.json()) as SpacecraftBaseResponse); }
-export async function spacecraftClassUsingGet({ uid, apiKey }: {
+/** Retrival of a single spacecraft class*/ export async function spacecraftClassUsingGet({ uid, apiKey }: {
     uid: string;
     apiKey?: string;
 }) { return fetch(`/api/spacecraftClass?uid=${uid}&apiKey=${apiKey}`, {
     method: "GET"
 }).then(async (response) => (await response.json()) as SpacecraftClassFullResponse); }
-export async function spacecraftClassSearchUsingGet({ pageNumber, pageSize, apiKey }: {
+/** Pagination over spacecraft classes*/ export async function spacecraftClassSearchUsingGet({ pageNumber, pageSize, apiKey }: {
     pageNumber?: number;
     pageSize?: number;
     apiKey?: string;
 }) { return fetch(`/api/spacecraftClass/search?pageNumber=${pageNumber}&pageSize=${pageSize}&apiKey=${apiKey}`, {
     method: "GET"
 }).then(async (response) => (await response.json()) as SpacecraftClassBaseResponse); }
-export async function spacecraftClassSearchUsingPost({ pageNumber, pageSize, sort, apiKey }: {
+/** Searching spacecraft classes*/ export async function spacecraftClassSearchUsingPost({ pageNumber, pageSize, sort, apiKey }: {
     pageNumber?: number;
     pageSize?: number;
     sort?: string;
@@ -3000,20 +3000,20 @@ export async function spacecraftClassSearchUsingPost({ pageNumber, pageSize, sor
     method: "POST",
     body: fd
 }).then(async (response) => (await response.json()) as SpacecraftClassBaseResponse); }
-export async function speciesUsingGet({ uid, apiKey }: {
+/** Retrival of a single species*/ export async function speciesUsingGet({ uid, apiKey }: {
     uid: string;
     apiKey?: string;
 }) { return fetch(`/api/species?uid=${uid}&apiKey=${apiKey}`, {
     method: "GET"
 }).then(async (response) => (await response.json()) as SpeciesFullResponse); }
-export async function speciesSearchUsingGet({ pageNumber, pageSize, apiKey }: {
+/** Pagination over species*/ export async function speciesSearchUsingGet({ pageNumber, pageSize, apiKey }: {
     pageNumber?: number;
     pageSize?: number;
     apiKey?: string;
 }) { return fetch(`/api/species/search?pageNumber=${pageNumber}&pageSize=${pageSize}&apiKey=${apiKey}`, {
     method: "GET"
 }).then(async (response) => (await response.json()) as SpeciesBaseResponse); }
-export async function speciesSearchUsingPost({ pageNumber, pageSize, sort, apiKey }: {
+/** Searching species*/ export async function speciesSearchUsingPost({ pageNumber, pageSize, sort, apiKey }: {
     pageNumber?: number;
     pageSize?: number;
     sort?: string;
@@ -3036,20 +3036,20 @@ export async function speciesSearchUsingPost({ pageNumber, pageSize, sort, apiKe
     method: "POST",
     body: fd
 }).then(async (response) => (await response.json()) as SpeciesBaseResponse); }
-export async function staffUsingGet({ uid, apiKey }: {
+/** Retrival of a single staff*/ export async function staffUsingGet({ uid, apiKey }: {
     uid: string;
     apiKey?: string;
 }) { return fetch(`/api/staff?uid=${uid}&apiKey=${apiKey}`, {
     method: "GET"
 }).then(async (response) => (await response.json()) as StaffFullResponse); }
-export async function staffSearchUsingGet({ pageNumber, pageSize, apiKey }: {
+/** Pagination over staff*/ export async function staffSearchUsingGet({ pageNumber, pageSize, apiKey }: {
     pageNumber?: number;
     pageSize?: number;
     apiKey?: string;
 }) { return fetch(`/api/staff/search?pageNumber=${pageNumber}&pageSize=${pageSize}&apiKey=${apiKey}`, {
     method: "GET"
 }).then(async (response) => (await response.json()) as StaffBaseResponse); }
-export async function staffSearchUsingPost({ pageNumber, pageSize, sort, apiKey }: {
+/** Searching staff*/ export async function staffSearchUsingPost({ pageNumber, pageSize, sort, apiKey }: {
     pageNumber?: number;
     pageSize?: number;
     sort?: string;
@@ -3123,20 +3123,20 @@ export async function staffSearchUsingPost({ pageNumber, pageSize, sort, apiKey 
     method: "POST",
     body: fd
 }).then(async (response) => (await response.json()) as StaffBaseResponse); }
-export async function technologyUsingGet({ uid, apiKey }: {
+/** Retrival of a single technology*/ export async function technologyUsingGet({ uid, apiKey }: {
     uid: string;
     apiKey?: string;
 }) { return fetch(`/api/technology?uid=${uid}&apiKey=${apiKey}`, {
     method: "GET"
 }).then(async (response) => (await response.json()) as TechnologyFullResponse); }
-export async function technologySearchUsingGet({ pageNumber, pageSize, apiKey }: {
+/** Pagination over technology*/ export async function technologySearchUsingGet({ pageNumber, pageSize, apiKey }: {
     pageNumber?: number;
     pageSize?: number;
     apiKey?: string;
 }) { return fetch(`/api/technology/search?pageNumber=${pageNumber}&pageSize=${pageSize}&apiKey=${apiKey}`, {
     method: "GET"
 }).then(async (response) => (await response.json()) as TechnologyBaseResponse); }
-export async function technologySearchUsingPost({ pageNumber, pageSize, sort, apiKey }: {
+/** Searching technology*/ export async function technologySearchUsingPost({ pageNumber, pageSize, sort, apiKey }: {
     pageNumber?: number;
     pageSize?: number;
     sort?: string;
@@ -3167,20 +3167,20 @@ export async function technologySearchUsingPost({ pageNumber, pageSize, sort, ap
     method: "POST",
     body: fd
 }).then(async (response) => (await response.json()) as TechnologyBaseResponse); }
-export async function titleUsingGet({ uid, apiKey }: {
+/** Retrival of a single title*/ export async function titleUsingGet({ uid, apiKey }: {
     uid: string;
     apiKey?: string;
 }) { return fetch(`/api/title?uid=${uid}&apiKey=${apiKey}`, {
     method: "GET"
 }).then(async (response) => (await response.json()) as TitleFullResponse); }
-export async function titleSearchUsingGet({ pageNumber, pageSize, apiKey }: {
+/** Pagination over titles*/ export async function titleSearchUsingGet({ pageNumber, pageSize, apiKey }: {
     pageNumber?: number;
     pageSize?: number;
     apiKey?: string;
 }) { return fetch(`/api/title/search?pageNumber=${pageNumber}&pageSize=${pageSize}&apiKey=${apiKey}`, {
     method: "GET"
 }).then(async (response) => (await response.json()) as TitleBaseResponse); }
-export async function titleSearchUsingPost({ pageNumber, pageSize, sort, apiKey }: {
+/** Searching titles*/ export async function titleSearchUsingPost({ pageNumber, pageSize, sort, apiKey }: {
     pageNumber?: number;
     pageSize?: number;
     sort?: string;
@@ -3196,20 +3196,20 @@ export async function titleSearchUsingPost({ pageNumber, pageSize, sort, apiKey 
     method: "POST",
     body: fd
 }).then(async (response) => (await response.json()) as TitleBaseResponse); }
-export async function tradingCardUsingGet({ uid, apiKey }: {
+/** Retrival of a single trading card*/ export async function tradingCardUsingGet({ uid, apiKey }: {
     uid: string;
     apiKey?: string;
 }) { return fetch(`/api/tradingCard?uid=${uid}&apiKey=${apiKey}`, {
     method: "GET"
 }).then(async (response) => (await response.json()) as TradingCardFullResponse); }
-export async function tradingCardSearchUsingGet({ pageNumber, pageSize, apiKey }: {
+/** Pagination over trading cards*/ export async function tradingCardSearchUsingGet({ pageNumber, pageSize, apiKey }: {
     pageNumber?: number;
     pageSize?: number;
     apiKey?: string;
 }) { return fetch(`/api/tradingCard/search?pageNumber=${pageNumber}&pageSize=${pageSize}&apiKey=${apiKey}`, {
     method: "GET"
 }).then(async (response) => (await response.json()) as TradingCardBaseResponse); }
-export async function tradingCardSearchUsingPost({ pageNumber, pageSize, sort, apiKey }: {
+/** Searching trading cards*/ export async function tradingCardSearchUsingPost({ pageNumber, pageSize, sort, apiKey }: {
     pageNumber?: number;
     pageSize?: number;
     sort?: string;
@@ -3222,20 +3222,20 @@ export async function tradingCardSearchUsingPost({ pageNumber, pageSize, sort, a
     method: "POST",
     body: fd
 }).then(async (response) => (await response.json()) as TradingCardBaseResponse); }
-export async function tradingCardDeckUsingGet({ uid, apiKey }: {
+/** Retrival of a single trading card deck*/ export async function tradingCardDeckUsingGet({ uid, apiKey }: {
     uid: string;
     apiKey?: string;
 }) { return fetch(`/api/tradingCardDeck?uid=${uid}&apiKey=${apiKey}`, {
     method: "GET"
 }).then(async (response) => (await response.json()) as TradingCardDeckFullResponse); }
-export async function tradingCardDeckSearchUsingGet({ pageNumber, pageSize, apiKey }: {
+/** Pagination over trading card decks*/ export async function tradingCardDeckSearchUsingGet({ pageNumber, pageSize, apiKey }: {
     pageNumber?: number;
     pageSize?: number;
     apiKey?: string;
 }) { return fetch(`/api/tradingCardDeck/search?pageNumber=${pageNumber}&pageSize=${pageSize}&apiKey=${apiKey}`, {
     method: "GET"
 }).then(async (response) => (await response.json()) as TradingCardDeckBaseResponse); }
-export async function tradingCardDeckSearchUsingPost({ pageNumber, pageSize, sort, apiKey }: {
+/** Searching trading card decks*/ export async function tradingCardDeckSearchUsingPost({ pageNumber, pageSize, sort, apiKey }: {
     pageNumber?: number;
     pageSize?: number;
     sort?: string;
@@ -3247,20 +3247,20 @@ export async function tradingCardDeckSearchUsingPost({ pageNumber, pageSize, sor
     method: "POST",
     body: fd
 }).then(async (response) => (await response.json()) as TradingCardDeckBaseResponse); }
-export async function tradingCardSetUsingGet({ uid, apiKey }: {
+/** Retrival of a single trading card set*/ export async function tradingCardSetUsingGet({ uid, apiKey }: {
     uid: string;
     apiKey?: string;
 }) { return fetch(`/api/tradingCardSet?uid=${uid}&apiKey=${apiKey}`, {
     method: "GET"
 }).then(async (response) => (await response.json()) as TradingCardSetFullResponse); }
-export async function tradingCardSetSearchUsingGet({ pageNumber, pageSize, apiKey }: {
+/** Pagination over trading card sets*/ export async function tradingCardSetSearchUsingGet({ pageNumber, pageSize, apiKey }: {
     pageNumber?: number;
     pageSize?: number;
     apiKey?: string;
 }) { return fetch(`/api/tradingCardSet/search?pageNumber=${pageNumber}&pageSize=${pageSize}&apiKey=${apiKey}`, {
     method: "GET"
 }).then(async (response) => (await response.json()) as TradingCardSetBaseResponse); }
-export async function tradingCardSetSearchUsingPost({ pageNumber, pageSize, sort, apiKey }: {
+/** Searching trading card sets*/ export async function tradingCardSetSearchUsingPost({ pageNumber, pageSize, sort, apiKey }: {
     pageNumber?: number;
     pageSize?: number;
     sort?: string;
@@ -3286,20 +3286,20 @@ export async function tradingCardSetSearchUsingPost({ pageNumber, pageSize, sort
     method: "POST",
     body: fd
 }).then(async (response) => (await response.json()) as TradingCardSetBaseResponse); }
-export async function videoGameUsingGet({ uid, apiKey }: {
+/** Retrival of a single video game*/ export async function videoGameUsingGet({ uid, apiKey }: {
     uid: string;
     apiKey?: string;
 }) { return fetch(`/api/videoGame?uid=${uid}&apiKey=${apiKey}`, {
     method: "GET"
 }).then(async (response) => (await response.json()) as VideoGameFullResponse); }
-export async function videoGameSearchUsingGet({ pageNumber, pageSize, apiKey }: {
+/** Pagination over video games*/ export async function videoGameSearchUsingGet({ pageNumber, pageSize, apiKey }: {
     pageNumber?: number;
     pageSize?: number;
     apiKey?: string;
 }) { return fetch(`/api/videoGame/search?pageNumber=${pageNumber}&pageSize=${pageSize}&apiKey=${apiKey}`, {
     method: "GET"
 }).then(async (response) => (await response.json()) as VideoGameBaseResponse); }
-export async function videoGameSearchUsingPost({ pageNumber, pageSize, sort, apiKey }: {
+/** Searching video games*/ export async function videoGameSearchUsingPost({ pageNumber, pageSize, sort, apiKey }: {
     pageNumber?: number;
     pageSize?: number;
     sort?: string;
@@ -3312,20 +3312,20 @@ export async function videoGameSearchUsingPost({ pageNumber, pageSize, sort, api
     method: "POST",
     body: fd
 }).then(async (response) => (await response.json()) as VideoGameBaseResponse); }
-export async function videoReleaseUsingGet({ uid, apiKey }: {
+/** Retrival of a single video release*/ export async function videoReleaseUsingGet({ uid, apiKey }: {
     uid: string;
     apiKey?: string;
 }) { return fetch(`/api/videoRelease?uid=${uid}&apiKey=${apiKey}`, {
     method: "GET"
 }).then(async (response) => (await response.json()) as VideoReleaseFullResponse); }
-export async function videoReleaseSearchUsingGet({ pageNumber, pageSize, apiKey }: {
+/** Pagination over video releases*/ export async function videoReleaseSearchUsingGet({ pageNumber, pageSize, apiKey }: {
     pageNumber?: number;
     pageSize?: number;
     apiKey?: string;
 }) { return fetch(`/api/videoRelease/search?pageNumber=${pageNumber}&pageSize=${pageSize}&apiKey=${apiKey}`, {
     method: "GET"
 }).then(async (response) => (await response.json()) as VideoReleaseBaseResponse); }
-export async function videoReleaseSearchUsingPost({ pageNumber, pageSize, sort, apiKey }: {
+/** Searching video releases*/ export async function videoReleaseSearchUsingPost({ pageNumber, pageSize, sort, apiKey }: {
     pageNumber?: number;
     pageSize?: number;
     sort?: string;
@@ -3340,20 +3340,20 @@ export async function videoReleaseSearchUsingPost({ pageNumber, pageSize, sort, 
     method: "POST",
     body: fd
 }).then(async (response) => (await response.json()) as VideoReleaseBaseResponse); }
-export async function weaponUsingGet({ uid, apiKey }: {
+/** Retrival of a single weapon*/ export async function weaponUsingGet({ uid, apiKey }: {
     uid: string;
     apiKey?: string;
 }) { return fetch(`/api/weapon?uid=${uid}&apiKey=${apiKey}`, {
     method: "GET"
 }).then(async (response) => (await response.json()) as WeaponFullResponse); }
-export async function weaponSearchUsingGet({ pageNumber, pageSize, apiKey }: {
+/** Pagination over weapons*/ export async function weaponSearchUsingGet({ pageNumber, pageSize, apiKey }: {
     pageNumber?: number;
     pageSize?: number;
     apiKey?: string;
 }) { return fetch(`/api/weapon/search?pageNumber=${pageNumber}&pageSize=${pageSize}&apiKey=${apiKey}`, {
     method: "GET"
 }).then(async (response) => (await response.json()) as WeaponBaseResponse); }
-export async function weaponSearchUsingPost({ pageNumber, pageSize, sort, apiKey }: {
+/** Searching weapons*/ export async function weaponSearchUsingPost({ pageNumber, pageSize, sort, apiKey }: {
     pageNumber?: number;
     pageSize?: number;
     sort?: string;
