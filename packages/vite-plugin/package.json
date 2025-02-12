@@ -25,6 +25,7 @@
   "dependencies": {
     "@moccona/api-codegen-openapi": "workspace:*",
     "@moccona/logger": "^0.0.2",
+    "execa": "^9.5.2",
     "fs-extra": "^11.3.0"
   },
   "devDependencies": {

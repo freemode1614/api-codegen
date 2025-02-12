@@ -5,6 +5,7 @@ import {
 import type { ServerOptions, PluginOption } from "vite";
 import fs from "fs-extra";
 import { createScopedLogger } from "@moccona/logger";
+import { execa, execaCommand } from "execa";
 
 const PLUGIN_NAME = "apiCodeGen";
 const logger = createScopedLogger("api-codegen-vite-plugin");
@@ -12,6 +13,10 @@ const logger = createScopedLogger("api-codegen-vite-plugin");
 export type apiCodeGenPluginOptions = ProviderInitOptions & {
   name: string;
   proxy?: ServerOptions["proxy"];
+};
+
+export const tsc = async () => {
+  await execaCommand("npx tsc -b");
 };
 
 export default function apiCodeGenPlugin(
@@ -47,6 +52,10 @@ export default function apiCodeGenPlugin(
       );
 
       logger.info("-------> api code finished <--------");
+
+      try {
+        await tsc();
+      } catch (error) {}
 
       return {
         ...config,

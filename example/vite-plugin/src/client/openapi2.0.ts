@@ -16,6 +16,7 @@ export type Order = {
     "status": OrderStatus;
     "complete": boolean;
 };
+export type Order = Order;
 export type Category = {
     "id": number;
     "name": string;
