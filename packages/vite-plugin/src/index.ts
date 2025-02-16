@@ -26,6 +26,7 @@ export default function apiCodeGenPlugin(
       if (!firstRun) return;
       firstRun = false;
       logger.info("-------> api code start <--------");
+
       const proxies = await options.reduce(
         async (proxiesPromise_, option) => {
           const proxies_ = await proxiesPromise_;
