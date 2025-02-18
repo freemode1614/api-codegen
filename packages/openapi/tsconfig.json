@@ -1,10 +1,8 @@
 {
   "extends": "../../node_modules/@moccona/preset-config/tsconfig/node.json",
   "compilerOptions": {
-    "target": "ES2018",
-    "moduleResolution": "bundler",
     "paths": {
-      "~/*": ["./src/*"]
+      "@/*": ["./src/*"]
     }
   },
   "include": ["src", "__tests__"]

@@ -3,30 +3,21 @@
   "version": "0.0.0",
   "description": "Code generator base on typescript AST tools",
   "type": "module",
-  "author": "freemode",
+  "author": "freemode",  
   "exports": {
     "./package.json": "./package.json",
-    "./*": {
-      "types": "./npm/*.d.ts",
-      "import": "./npm/*.js",
-      "require": "./npm/*.cjs"
-    },
     ".": {
       "types": "./npm/index.d.ts",
-      "import": "./npm/index.js",
-      "require": "./npm/index.cjs"
+      "import": "./npm/index.js"
     }
   },
   "scripts": {
-    "dev": "cross-env NODE_ENV=development tsup --watch",
-    "build": "cross-env NODE_ENV=production tsup"
+    "dev": "../../node_modules/.bin/cross-env NODE_ENV=development ../../node_modules/.bin/tsup --watch",
+    "build": "../../node_modules/.bin/cross-env NODE_ENV=production ../../node_modules/.bin/tsup"
   },
-  "prettier": "@moccona/preset-config/prettierrc",
   "packageManager": "pnpm@9.7.1",
   "license": "MIT",
   "dependencies": {
-    "@apicodegen/core": "workspace:*",
-    "@moccona/logger": "^0.0.2",
-    "openapi-types": "^12.1.3"
+    "@apicodegen/core": "workspace:*"
   }
 }

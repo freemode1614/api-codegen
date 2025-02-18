@@ -7,29 +7,14 @@
   "author": "freemode",
   "exports": {
     "./package.json": "./package.json",
-    "./*": {
-      "types": "./npm/*.d.ts",
-      "import": "./npm/*.js",
-      "require": "./npm/*.cjs"
-    },
     ".": {
       "types": "./npm/index.d.ts",
-      "import": "./npm/index.js",
-      "require": "./npm/index.cjs"
+      "import": "./npm/index.js"
     }
   },
   "scripts": {
-    "dev": "cross-env NODE_ENV=development tsup --watch",
-    "build": "cross-env NODE_ENV=production tsup"
+    "dev": "../../node_modules/.bin/cross-env NODE_ENV=development ../../node_modules/.bin/tsup --watch",
+    "build": "../../node_modules/.bin/cross-env NODE_ENV=production ../../node_modules/.bin/tsup"
   },
-  "prettier": "@moccona/preset-config/prettierrc",
-  "packageManager": "pnpm@9.7.1",
-  "browserlist": [
-    "not op_mini"
-  ],
-  "dependencies": {
-    "openapi-types": "^12.1.3",
-    "typescript": "^5.7.3",
-    "undici": "^7.3.0"
-  }
+  "packageManager": "pnpm@9.7.1"
 }
