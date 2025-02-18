@@ -4,8 +4,8 @@
   "description": "",
   "type": "module",
   "scripts": {
-    "dev": "tsup",
-    "build": "tsup --watch"
+    "dev": "tsup --watch",
+    "build": "tsup"
   },
   "exports": {
     "./package.json": "./package.json",
