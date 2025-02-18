@@ -6,24 +6,24 @@
 
 import type {
   EnumSchemaObject,
+  FetchDocRequestInit,
   OperationObject,
   ParameterObject,
+  ProviderInitOptions,
+  ProviderInitResult,
   RequestBodyObject,
   ResponsesObject,
   SchemaObject,
-  FetchDocRequestInit,
-  ProviderInitOptions,
-  ProviderInitResult,
-} from "~/interface";
+} from "@apicodegen/core/interface";
 
 /**
  * Abstract Provider Class.
- * 
+ *
  * The Provider class is designed to be extended by specific implementations (e.g., OpenAPI 2 provider, OpenAPI 3 provider).
  * It handles the initialization of the provider and the parsing of documentation into structured data.
- * 
- * @example 
- * 
+ *
+ * @example
+ *
  * ```ts
  * /// Example of how this class might be used by a subclass:
  * class OpenAPIProvider extends Provider {
@@ -32,7 +32,7 @@ import type {
  *     /// Implementation details...
  *   }
  * }
- * 
+ *
  * /// Initializing a provider with configuration and documentation data:
  * const initOptions: ProviderInitOptions = {
  *   docURL: "https://example.com/api/swagger.json",
@@ -43,7 +43,7 @@ import type {
  *   },
  *   importClientSource: "generated/client",
  * };
- * 
+ *
  * const docData = fetchSwaggerDoc();
  * const provider = new OpenAPIProvider(initOptions, docData);
  * ```
@@ -103,8 +103,9 @@ export abstract class Provider
    * @abstract
    * @param {unknown} doc - Raw API documentation data.
    * @returns {ProviderInitResult} - Parsed documentation data.
-   * 
+   *
    * This method must be implemented by subclasses to parse the raw documentation into structured data.
    */
   abstract parse(doc: unknown): ProviderInitResult;
 }
+

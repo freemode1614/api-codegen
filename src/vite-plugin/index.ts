@@ -1,8 +1,8 @@
 import { codeGen, type ProviderInitOptions } from "@apicodegen/openapi";
-import type { ServerOptions, PluginOption } from "vite";
-import fs from "fs-extra";
 import { createScopedLogger } from "@moccona/logger";
 import { execaCommand } from "execa";
+import fs from "fs-extra";
+import type { PluginOption, ServerOptions } from "vite";
 
 const PLUGIN_NAME = "apiCodeGen";
 const logger = createScopedLogger("api-codegen-vite-plugin");
@@ -17,7 +17,7 @@ export const tsc = async () => {
 };
 
 export default function apiCodeGenPlugin(
-  options: apiCodeGenPluginOptions[]
+  options: apiCodeGenPluginOptions[],
 ): PluginOption {
   let firstRun = true;
   return {
@@ -34,8 +34,8 @@ export default function apiCodeGenPlugin(
 
           try {
             const code = await codeGen(codeGenInitOptions);
-            await fs.createFile(codeGenInitOptions.output!);
-            await fs.writeFile(codeGenInitOptions.output!, code);
+            await fs.createFile(codeGenInitOptions.output);
+            await fs.writeFile(codeGenInitOptions.output, code);
           } catch (error) {
             logger.error(`Failed to generate api ${name}`);
             console.error(error);
@@ -46,7 +46,7 @@ export default function apiCodeGenPlugin(
             ...proxy,
           };
         },
-        Promise.resolve({} as ServerOptions["proxy"])
+        Promise.resolve({} as ServerOptions["proxy"]),
       );
 
       logger.info("-------> api code finished <--------");

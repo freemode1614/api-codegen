@@ -1,5 +1,27 @@
+/* eslint-disable @typescript-eslint/restrict-plus-operands */
+/* eslint-disable @typescript-eslint/prefer-nullish-coalescing */
+/* eslint-disable @typescript-eslint/no-unsafe-enum-comparison */
 /* eslint-disable no-case-declarations */
 
+import { Adapter } from "@apicodegen/core/base/Adaptor";
+import { Base } from "@apicodegen/core/base/Base";
+import type {
+  ArrayTypeSchemaObject,
+  MediaTypeObject,
+  ParameterObject,
+  ProviderInitOptions,
+  ProviderInitResult,
+  SchemaObject,
+  SingleTypeSchemaObject,
+} from "@apicodegen/core/interface";
+import {
+  ArraySchemaType,
+  MediaTypes,
+  NonArraySchemaType,
+  ParameterIn,
+  SchemaFormatType,
+} from "@apicodegen/core/interface";
+import { writeFile } from "fs/promises";
 import type {
   BindingElement,
   Block,
@@ -16,25 +38,6 @@ import {
   NodeFlags,
   SyntaxKind,
 } from "typescript";
-import { Adapter } from "~/base/Adaptor";
-import { Base } from "~/base/Base";
-import { writeFile } from "fs/promises";
-import type {
-  ParameterObject,
-  SchemaObject,
-  ArrayTypeSchemaObject,
-  SingleTypeSchemaObject,
-  MediaTypeObject,
-  ProviderInitResult,
-  ProviderInitOptions,
-} from "~/interface";
-import {
-  MediaTypes,
-  ArraySchemaType,
-  NonArraySchemaType,
-  ParameterIn,
-  SchemaFormatType,
-} from "~/interface";
 
 /**
  * Represents a comment object with optional tag and message.
@@ -565,8 +568,7 @@ export class Generator {
 
     // Ignore one and only blob parameter.
     const isRequestBodyBinary =
-      requestBody &&
-      requestBody.schema &&
+      requestBody?.schema &&
       requestBody.schema.type === ArraySchemaType.array &&
       this.isBinarySchema(requestBody.schema);
 
@@ -579,15 +581,14 @@ export class Generator {
     );
 
     const isRequestBodyContainsBinary =
-      requestBody &&
-      requestBody.schema &&
+      requestBody?.schema &&
       "properties" in requestBody.schema &&
-      Object.values(requestBody!.schema!.properties!).some((p) =>
-        this.isBinarySchema(p as SchemaObject),
+      Object.values(requestBody.schema.properties!).some((p) =>
+        this.isBinarySchema(p),
       );
 
     const hasBinaryInParameters = parameters.some(
-      (p) => p && p.schema && this.isBinarySchema(p.schema),
+      (p) => p?.schema && this.isBinarySchema(p.schema),
     );
 
     const shouldPutParametersOrBodyInFormData =
@@ -633,7 +634,7 @@ export class Generator {
           enumObject.enum.map((member) => {
             return t.createEnumMember(
               t.createStringLiteral(
-                typeof member === "string" ? member : member + "_",
+                typeof member === "string" ? member : `${member}_`,
               ),
               typeof member === "string"
                 ? t.createStringLiteral(member)
@@ -701,7 +702,7 @@ export class Generator {
               parameters.length > 0
                 ? Generator.toDeclarationNode(parameters)
                 : undefined,
-              req && req.schema
+              req?.schema
                 ? Generator.toRequestBodyTypeNode(req.schema)
                 : undefined,
             ].filter(Boolean) as ParameterDeclaration[],

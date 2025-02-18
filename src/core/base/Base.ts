@@ -4,16 +4,16 @@
  * @description Base utility class providing common methods for code generation and API handling
  */
 
-import { request, Agent } from "undici";
+import { typescriptKeywords } from "@apicodegen/core/constants/keywords";
 import type {
+  EnumSchemaObject,
   FetchDocRequestInit,
+  ReferenceObject,
   SchemaObject,
   SingleTypeSchemaObject,
-  EnumSchemaObject,
-  ReferenceObject,
-} from "~/interface";
-import { MediaTypes } from "~/interface";
-import { typescriptKeywords } from "~/constants/keywords";
+} from "@apicodegen/core/interface";
+import { MediaTypes } from "@apicodegen/core/interface";
+import { Agent, request } from "undici";
 
 /**
  * Represents success HTTP status codes.
@@ -48,6 +48,7 @@ export abstract class Base {
    * @param {any} [doc] - Optional document reference for context.
    * @returns {string} - The processed name.
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   static ref2name(ref: string, doc?: any): string {
     const paths = ref.replace(/^#/, "").split("/").filter(Boolean);
 
@@ -55,19 +56,22 @@ export abstract class Base {
       return paths.slice(-1)[0];
     }
 
-    let temp = doc;
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    let temporary = doc;
     let lastPath = "";
     for (const path of paths) {
       const adjustedPath = path.replace("~/1", "/");
-      temp = temp[adjustedPath];
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+      temporary = temporary[adjustedPath];
       lastPath = adjustedPath;
     }
 
-    if (!temp) {
+    if (!temporary) {
       return "unknown";
     }
 
-    return temp["$ref"] ? this.ref2name(temp["$ref"], doc) : lastPath;
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument
+    return temporary.$ref ? this.ref2name(temporary.$ref, doc) : lastPath;
   }
 
   /**
@@ -84,7 +88,8 @@ export abstract class Base {
       : "";
 
     return (
-      (operationId ? this.camelCase(this.normalize(operationId)) : name) + suffix
+      (operationId ? this.camelCase(this.normalize(operationId)) : name) +
+      suffix
     );
   }
 
@@ -154,6 +159,7 @@ export abstract class Base {
       },
     });
 
+    // eslint-disable-next-line no-useless-catch
     try {
       const { body } = await request(url, {
         method: "GET",
@@ -172,6 +178,7 @@ export abstract class Base {
    * @returns {MediaTypes | null} - The matched MediaTypes or null.
    */
   static getMediaType(mediaType: string): MediaTypes | null {
+    // eslint-disable-next-line @typescript-eslint/no-for-in-array
     for (const type in Object.values(MediaTypes)) {
       if (new RegExp(type).test(mediaType)) {
         return type as MediaTypes;
@@ -198,7 +205,7 @@ export abstract class Base {
     return (
       a.type === "boolean" ||
       !!(a as SingleTypeSchemaObject).enum?.some(
-        (member) => typeof member === "boolean"
+        (member) => typeof member === "boolean",
       )
     );
   }
@@ -250,7 +257,10 @@ export abstract class Base {
    * @param {any} schema - The object to check.
    * @returns {boolean} - True if the object is a reference.
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   static isRef(schema: any): schema is ReferenceObject {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     return "$ref" in schema && typeof schema.$ref === "string";
   }
 }
+

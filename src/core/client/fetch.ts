@@ -1,9 +1,10 @@
+/* eslint-disable unicorn/prefer-spread */
+import { Adapter } from "@apicodegen/core/base/Adaptor";
+import { Base } from "@apicodegen/core/base/Base";
+import { Generator } from "@apicodegen/core/generator";
+import { MediaTypeObject, ParameterObject } from "@apicodegen/core/interface";
 import type { Statement } from "typescript";
-import { SyntaxKind, factory as t } from "typescript";
-import { Adapter } from "~/base/Adaptor";
-import { Base } from "~/base/Base";
-import { Generator } from "~/generator";
-import { ParameterObject, MediaTypeObject } from "~/interface";
+import { factory as t, SyntaxKind } from "typescript";
 
 export class FetchAdapter extends Adapter {
   readonly methodFieldName = "method";
@@ -70,8 +71,7 @@ export class FetchAdapter extends Adapter {
                   shouldUseFormData
                     ? t.createIdentifier("fd")
                     : inBody.length > 0 ||
-                        (requestBody &&
-                          requestBody.schema &&
+                        (requestBody?.schema &&
                           !Generator.isBinarySchema(requestBody.schema))
                       ? t.createCallExpression(
                           t.createPropertyAccessExpression(
@@ -143,7 +143,7 @@ export class FetchAdapter extends Adapter {
                         ),
                       ),
                     ),
-                    response && response.schema
+                    response?.schema
                       ? Generator.toTypeNode(response.schema)
                       : t.createToken(SyntaxKind.UnknownKeyword),
                   ),

@@ -1,6 +1,5 @@
+import { Adapter } from "@apicodegen/core/base/Adaptor";
 import { Statement } from "typescript";
-import { Adapter } from "~/base/Adaptor";
-import { ParameterObject, MediaTypeObject } from "~/interface";
 
 export class AxiosAdapter extends Adapter {
   readonly methodFieldName = "method";

@@ -4,7 +4,8 @@
   "description": "",
   "type": "module",
   "scripts": {
-    "dev": "pnpm run -r --parallel dev"
+    "dev": "tsup",
+    "build": "tsup --watch"
   },
   "exports": {
     "./package.json": "./package.json",
