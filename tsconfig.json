@@ -1,0 +1,3 @@
+{
+  "extends": "@moccona/preset-config/tsconfig/node.json"
+}

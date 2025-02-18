@@ -1,5 +1,5 @@
 {
-  "extends": "@moccona/preset-config/tsconfig/node.json",
+  "extends": "../../node_modules/@moccona/preset-config/tsconfig/node.json",
   "compilerOptions": {
     "paths": {
       "@/*": ["./src/*"]

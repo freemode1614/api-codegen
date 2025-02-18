@@ -1,8 +1,8 @@
 import type {
   ProviderInitOptions,
   ProviderInitResult,
-} from "@moccona/api-codegen";
-import { Base, FetchAdapter, Generator, Provider } from "@moccona/api-codegen";
+} from "@apicodegen/core";
+import { Base, FetchAdapter, Generator, Provider } from "@apicodegen/core";
 import { createScopedLogger } from "@moccona/logger";
 import { OpenAPI, OpenAPIV2, OpenAPIV3, OpenAPIV3_1 } from "openapi-types";
 
@@ -104,4 +104,4 @@ export async function codeGen(initOptions: ProviderInitOptions) {
   return code;
 }
 
-export { type ProviderInitOptions } from "@moccona/api-codegen";
+export { type ProviderInitOptions } from "@apicodegen/core";

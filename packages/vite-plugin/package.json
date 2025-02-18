@@ -1,5 +1,5 @@
 {
-  "name": "@moccona/api-codegen-vite-plugin",
+  "name": "@apicodegen/vite-plugin",
   "version": "0.0.0",
   "description": "Code generator base on typescript AST tools",
   "type": "module",
@@ -23,28 +23,10 @@
     "build": "cross-env NODE_ENV=production tsup"
   },
   "dependencies": {
-    "@moccona/api-codegen-openapi": "workspace:*",
+    "@apicodegen/openapi": "workspace:*",
     "@moccona/logger": "^0.0.2",
     "execa": "^9.5.2",
     "fs-extra": "^11.3.0"
-  },
-  "devDependencies": {
-    "@moccona/eslint-config": "^0.4.0",
-    "@moccona/preset-config": "^0.0.5",
-    "@types/fs-extra": "^11.0.4",
-    "@types/node": "^22.13.1",
-    "cross-env": "^7.0.3",
-    "tsup": "^8.3.6",
-    "typescript": "^5.7.3",
-    "vite": "^6.1.0"
-  },
-  "peerDependencies": {
-    "vite": "^5 || ^6"
-  },
-  "peerDependenciesMeta": {
-    "vite": {
-      "optional": true
-    }
   },
   "browserslist": [
     "modern"

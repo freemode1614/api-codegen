@@ -9,8 +9,8 @@ import type {
   ParameterObject,
   SchemaFormatType,
   SchemaObject,
-} from "@moccona/api-codegen";
-import { Base, HttpMethods, NonArraySchemaType } from "@moccona/api-codegen";
+} from "@apicodegen/core";
+import { Base, HttpMethods, NonArraySchemaType } from "@apicodegen/core";
 import { OpenAPIV3_1 } from "openapi-types";
 
 export class V3_1 {

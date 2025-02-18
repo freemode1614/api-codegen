@@ -1,11 +1,8 @@
-import {
-  codeGen,
-  type ProviderInitOptions,
-} from "@moccona/api-codegen-openapi";
+import { codeGen, type ProviderInitOptions } from "@apicodegen/openapi";
 import type { ServerOptions, PluginOption } from "vite";
 import fs from "fs-extra";
 import { createScopedLogger } from "@moccona/logger";
-import { execa, execaCommand } from "execa";
+import { execaCommand } from "execa";
 
 const PLUGIN_NAME = "apiCodeGen";
 const logger = createScopedLogger("api-codegen-vite-plugin");
@@ -20,7 +17,7 @@ export const tsc = async () => {
 };
 
 export default function apiCodeGenPlugin(
-  options: apiCodeGenPluginOptions[],
+  options: apiCodeGenPluginOptions[]
 ): PluginOption {
   let firstRun = true;
   return {
@@ -48,7 +45,7 @@ export default function apiCodeGenPlugin(
             ...proxy,
           };
         },
-        Promise.resolve({} as ServerOptions["proxy"]),
+        Promise.resolve({} as ServerOptions["proxy"])
       );
 
       logger.info("-------> api code finished <--------");
