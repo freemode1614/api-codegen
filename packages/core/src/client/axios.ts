@@ -9,16 +9,7 @@ export class AxiosAdapter extends Adapter {
   readonly queryFieldName = "params";
   readonly name = "axios";
 
-  client(
-    uri: string,
-    method: string,
-    parameters: ParameterObject[],
-    requestBody: MediaTypeObject | undefined,
-    response: MediaTypeObject | undefined,
-    adapter: Adapter,
-    shouldUseFormData: boolean,
-    shouldUseJSONResponse: boolean,
-  ): Statement[] {
+  client(): Statement[] {
     throw new Error("Method not implemented.");
   }
 }
