@@ -53,7 +53,10 @@ export default function apiCodeGenPlugin(
 
       try {
         await tsc();
-      } catch (error) {}
+      } catch (error) {
+        logger.error(error);
+        process.exit(1);
+      }
 
       return {
         ...config,

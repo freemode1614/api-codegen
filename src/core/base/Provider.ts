@@ -108,4 +108,3 @@ export abstract class Provider
    */
   abstract parse(doc: unknown): ProviderInitResult;
 }
-

@@ -59,6 +59,7 @@ export interface EnumSchemaObject {
 }
 
 export interface SingleTypeSchemaObject {
+  // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
   type: keyof typeof NonArraySchemaType | string;
   description?: string;
   allOf?: SchemaObject[];
@@ -138,13 +139,9 @@ export type PathObject = {
   summary?: string;
   description?: string;
   parameters?: ParameterObject[];
-} & {
-  [method in HttpMethods]?: OperationObject;
-};
+} & Partial<Record<HttpMethods, OperationObject>>;
 
-export type PathsObject = {
-  [path: string]: OperationObject[];
-};
+export type PathsObject = Record<string, OperationObject[]>;
 
 export type FetchDocRequestInit = {
   method?: string;

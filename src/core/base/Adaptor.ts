@@ -63,4 +63,3 @@ export abstract class Adapter {
     useJSONResponse: boolean,
   ): Statement[];
 }
-

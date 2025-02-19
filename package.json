@@ -1,5 +1,5 @@
 {
-  "name": "@moccona/api-codegen",
+  "name": "@moccona/apicodegen",
   "version": "0.0.0",
   "description": "",
   "type": "module",
@@ -9,13 +9,13 @@
   },
   "exports": {
     "./package.json": "./package.json",
-    "./*": {
-      "types": "./npm/*/index.d.ts",
-      "import": "./npm/*/index.js"
+    ".": {
+      "types": "./npm/index.d.ts",
+      "import": "./npm/index.js"
     }
   },
   "keywords": [
-    "api codegen"
+    "api-codegen"
   ],
   "author": "freemode",
   "license": "MIT",
@@ -51,5 +51,8 @@
     }
   },
   "prettier": "@moccona/preset-config/prettierrc",
-  "packageManager": "pnpm@9.7.1"
+  "packageManager": "pnpm@9.7.1",
+  "browserslist": [
+    "not op_mini"
+  ]
 }

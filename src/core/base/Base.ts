@@ -263,4 +263,3 @@ export abstract class Base {
     return "$ref" in schema && typeof schema.$ref === "string";
   }
 }
-
