@@ -6,6 +6,10 @@ import { MediaTypeObject, ParameterObject } from "@apicodegen/core/interface";
 import type { Statement } from "typescript";
 import { factory as t, SyntaxKind } from "typescript";
 
+/**
+ * FetchAdapter is an adapter class that generates client-side fetch requests.
+ * It handles parameters, headers, and request bodies to construct proper fetch calls.
+ */
 export class FetchAdapter extends Adapter {
   readonly methodFieldName = "method";
   readonly bodyFieldName = "body";
@@ -13,6 +17,18 @@ export class FetchAdapter extends Adapter {
   readonly queryFieldName = "";
   readonly name = "fetch";
 
+  /**
+   * Generates client code for making API requests using the Fetch API.
+   * @param uri - The API endpoint URI
+   * @param method - The HTTP method (GET, POST, etc.)
+   * @param parameters - Array of parameters to include in the request
+   * @param requestBody - The request body media type definition
+   * @param response - The response media type definition
+   * @param adapter - The adapter instance
+   * @param shouldUseFormData - Flag to use FormData for the request body
+   * @param shouldUseJSONResponse - Flag to use JSON parsing for the response
+   * @return - An array of generated TypeScript statements
+   */
   public client(
     uri: string,
     method: string,
@@ -24,18 +40,27 @@ export class FetchAdapter extends Adapter {
     shouldUseJSONResponse: boolean,
   ): Statement[] {
     const statements: Statement[] = [];
+    
+    // Split parameters into header and body parameters
     const inBody = parameters.filter((p) => !p.in || p.in === "body");
     const inHeader = parameters.filter((p) => p.in === "header");
 
+    /**
+     * Creates the literal object expression for fetch options
+     * including method, headers, and body.
+     * @returns - The constructed fetch options object
+     */
     const toLiterlExpression = () => {
       return t.createObjectLiteralExpression(
         [
+          // Set the HTTP method
           t.createPropertyAssignment(
             t.createIdentifier(adapter.methodFieldName),
             t.createStringLiteral(method.toUpperCase()),
           ),
         ]
           .concat(
+            // Add headers if there are any
             inHeader.length > 0
               ? t.createPropertyAssignment(
                   t.createIdentifier(adapter.headersFieldName),
@@ -65,6 +90,7 @@ export class FetchAdapter extends Adapter {
               : [],
           )
           .concat(
+            // Add body if needed
             shouldUseFormData || inBody.length > 0 || requestBody?.schema
               ? t.createPropertyAssignment(
                   t.createIdentifier(adapter.bodyFieldName),
@@ -101,10 +127,12 @@ export class FetchAdapter extends Adapter {
       );
     };
 
+    // Construct the fetch call and return statement
     statements.push(
       t.createReturnStatement(
         shouldUseJSONResponse
-          ? t.createCallExpression(
+          ? // Handle JSON response with proper type checking
+            t.createCallExpression(
               t.createPropertyAccessExpression(
                 t.createCallExpression(
                   t.createIdentifier(adapter.name),
@@ -150,7 +178,8 @@ export class FetchAdapter extends Adapter {
                 ),
               ],
             )
-          : t.createCallExpression(
+          : // Simple fetch call without JSON parsing
+            t.createCallExpression(
               t.createIdentifier(adapter.name),
               undefined,
               [Generator.toUrlTemplate(uri, parameters), toLiterlExpression()],

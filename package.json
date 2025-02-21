@@ -57,7 +57,8 @@
   "prettier": "@moccona/preset-config/prettierrc",
   "packageManager": "pnpm@9.7.1",
   "browserslist": [
-    "defaults",
-    "not op_mini"
+    ">0.3%",
+    "not dead",
+    "not op_mini all"
   ]
 }
