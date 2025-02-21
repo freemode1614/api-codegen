@@ -16,7 +16,7 @@ export const tsc = async () => {
   await execaCommand("npx tsc -b");
 };
 
-export default function apiCodeGenPlugin(
+export function apiCodeGenPlugin(
   options: apiCodeGenPluginOptions[],
 ): PluginOption {
   let firstRun = true;

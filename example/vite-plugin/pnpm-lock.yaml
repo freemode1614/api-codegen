@@ -18,9 +18,9 @@ importers:
       '@eslint/js':
         specifier: ^9.20.0
         version: 9.20.0
-      '@moccona/api-codegen-vite-plugin':
+      '@moccona/apicodegen':
         specifier: workspace:*
-        version: link:../../packages/vite-plugin
+        version: link:../..
       '@types/react':
         specifier: ^19.0.8
         version: 19.0.8

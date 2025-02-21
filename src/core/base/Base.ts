@@ -48,7 +48,6 @@ export abstract class Base {
    * @param {any} [doc] - Optional document reference for context.
    * @returns {string} - The processed name.
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   static ref2name(ref: string, doc?: any): string {
     const paths = ref.replace(/^#/, "").split("/").filter(Boolean);
 
@@ -56,12 +55,12 @@ export abstract class Base {
       return paths.slice(-1)[0];
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     let temporary = doc;
     let lastPath = "";
     for (const path of paths) {
-      const adjustedPath = path.replace("~/1", "/");
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+      // For handling path prefix with ~1
+      const adjustedPath = path.replaceAll("~1", "/");
+      console.log(path, temporary, adjustedPath);
       temporary = temporary[adjustedPath];
       lastPath = adjustedPath;
     }
@@ -70,7 +69,6 @@ export abstract class Base {
       return "unknown";
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument
     return temporary.$ref ? this.ref2name(temporary.$ref, doc) : lastPath;
   }
 

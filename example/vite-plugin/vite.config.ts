@@ -1,6 +1,6 @@
 import { defineConfig, PluginOption } from "vite";
 import react from "@vitejs/plugin-react";
-import apiCodeGenPlugin from "@moccona/api-codegen-vite-plugin";
+import { apiCodeGenPlugin } from "@moccona/apicodegen";
 
 // https://vite.dev/config/
 export default defineConfig({
