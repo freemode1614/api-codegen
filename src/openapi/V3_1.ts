@@ -159,6 +159,7 @@ export class V3_1 {
   private getRequestBodyByRef(
     schema: OpenAPIV3_1.RequestBodyObject | OpenAPIV3_1.ReferenceObject,
     enums: EnumSchemaObject[] = [],
+    reserveRef = false,
   ): MediaTypeObject[] {
     if (Base.isRef(schema)) {
       schema = this.doc.components?.requestBodies?.[
@@ -172,7 +173,7 @@ export class V3_1 {
       type: c as MediaTypes,
       schema:
         content[c].schema &&
-        this.getSchemaByRef(content[c].schema, false, enums),
+        this.getSchemaByRef(content[c].schema, reserveRef, enums),
     }));
   }
 
@@ -366,6 +367,7 @@ export class V3_1 {
             const baseRequestBody = this.getRequestBodyByRef(
               requestBody,
               enums,
+              true,
             );
             const uniqueParameterName = [
               ...new Set(baseParameters.map((p) => p.name)),

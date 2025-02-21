@@ -1,17 +1,18 @@
-import { codeGen } from "@apicodegen/index";
-import { describe, it, beforeAll, afterAll, expect } from "vitest";
-import glob from "fast-glob";
-import path from "node:path";
-import handler from "serve-handler";
 import { createServer, type Server } from "node:http";
+import path from "node:path";
+
+import { codeGen } from "@apicodegen/index";
+import glob from "fast-glob";
+import handler from "serve-handler";
+import { afterAll, beforeAll, describe, it } from "vitest";
 
 let server: Server;
 const DOC_SERVER = "http://localhost:5500";
 
 // Setup doc server
 const initDocServer = async () => {
+  // eslint-disable-next-line @typescript-eslint/no-misused-promises
   server = createServer(async (req, resp) => {
-    console.log("url ~>", req.url);
     await handler(req, resp);
   });
 
@@ -25,18 +26,22 @@ const initDocServer = async () => {
 
 // Close doc server
 const closeDocServer = async () => {
-  new Promise<void>((resolve, reject) => {
+  await new Promise<void>((resolve, reject) => {
     if (server) {
       server.close((err) => {
-        err ? reject(err) : resolve();
+        if (err) {
+          reject(err);
+        } else {
+          resolve();
+        }
       });
     }
   });
 };
 
-const getDocsByVersion = (ver: "3.0" | "3.1" | "2.0") => {
+const getDocsByVersion = (version: "3.0" | "3.1" | "2.0") => {
   // Base path for fiter json doc.
-  const BASE = `api-docs/openapi/${ver}`;
+  const BASE = `api-docs/openapi/${version}`;
 
   const docs = glob.sync("**/*.json", {
     cwd: path.resolve(process.cwd(), BASE),
@@ -52,16 +57,17 @@ beforeAll(async () => {
   await initDocServer();
 });
 
-afterAll(() => {
-  closeDocServer();
+afterAll(async () => {
+  await closeDocServer();
 });
 
 describe("Main test case for single doc codegen", () => {
   it("Should not throw", async () => {
-    const { BASE } = getDocsByVersion("3.0");
+    // const { BASE } = getDocsByVersion("3.0");
     await codeGen({
-      docURL: `${DOC_SERVER}/${BASE}/json/circular-paths.json`,
+      docURL: `http://0.0.0.0:5500/openapi.json`,
       output: "output.ts",
+      baseURL: "/v1",
     });
   });
 
