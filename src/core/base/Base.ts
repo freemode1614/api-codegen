@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * @file Base class implementation
  * @author [Your Name]
@@ -44,9 +45,9 @@ export abstract class Base {
 
   /**
    * Converts a reference string to a meaningful name.
-   * @param {string} ref - The reference string to process.
-   * @param {any} [doc] - Optional document reference for context.
-   * @returns {string} - The processed name.
+   * @param ref - The reference string to process.
+   * @param [doc] - Optional document reference for context.
+   * @returns - The processed name.
    */
   static ref2name(ref: string, doc?: any): string {
     const paths = ref.replace(/^#/, "").split("/").filter(Boolean);
@@ -55,13 +56,12 @@ export abstract class Base {
       return paths.slice(-1)[0];
     }
 
-    let temporary = doc;
+    let temporary = doc as unknown;
     let lastPath = "";
     for (const path of paths) {
       // For handling path prefix with ~1
       const adjustedPath = path.replaceAll("~1", "/");
-      console.log(path, temporary, adjustedPath);
-      temporary = temporary[adjustedPath];
+      temporary = (temporary as Record<string, any>)[adjustedPath];
       lastPath = adjustedPath;
     }
 
@@ -69,15 +69,17 @@ export abstract class Base {
       return "unknown";
     }
 
-    return temporary.$ref ? this.ref2name(temporary.$ref, doc) : lastPath;
+    return (temporary as unknown as { $ref: string }).$ref
+      ? this.ref2name((temporary as unknown as { $ref: string }).$ref, doc)
+      : lastPath;
   }
 
   /**
    * Converts an API path to a function name.
-   * @param {string} path - The API endpoint path.
-   * @param {string} [method] - The HTTP method (e.g., GET, POST).
-   * @param {string} [operationId] - Unique identifier for the operation.
-   * @returns {string} - The generated function name.
+   * @param path - The API endpoint path.
+   * @param [method] - The HTTP method (e.g., GET, POST).
+   * @param [operationId] - Unique identifier for the operation.
+   * @returns - The generated function name.
    */
   static pathToFnName(path: string, method?: string, operationId?: string) {
     const name = this.camelCase(this.normalize(path));
@@ -93,8 +95,8 @@ export abstract class Base {
 
   /**
    * Normalizes a string by replacing special characters and avoiding TypeScript keywords.
-   * @param {string} text - Input text to normalize.
-   * @returns {string} - The normalized string.
+   * @param text - Input text to normalize.
+   * @returns - The normalized string.
    */
   static normalize(text: string) {
     if (typescriptKeywords.has(text)) {
@@ -105,8 +107,8 @@ export abstract class Base {
 
   /**
    * Capitalizes the first character of a string.
-   * @param {string} text - Input string.
-   * @returns {string} - Capitalized string.
+   * @param text - Input string.
+   * @returns - Capitalized string.
    */
   static capitalize(text: string) {
     text = text.trim();
@@ -115,8 +117,8 @@ export abstract class Base {
 
   /**
    * Converts a string to camelCase.
-   * @param {string} text - Input string.
-   * @returns {string} - CamelCase string.
+   * @param text - Input string.
+   * @returns - CamelCase string.
    */
   static camelCase(text: string) {
     text = text.trim();
@@ -129,8 +131,8 @@ export abstract class Base {
 
   /**
    * Converts a string to UpperCamelCase.
-   * @param {string} text - Input string.
-   * @returns {string} - UpperCamelCase string.
+   * @param text - Input string.
+   * @returns - UpperCamelCase string.
    */
   static upperCamelCase(text: string) {
     return this.normalize(text)
@@ -143,9 +145,9 @@ export abstract class Base {
 
   /**
    * Fetches documentation from a given URL.
-   * @param {string} url - The URL to fetch the documentation from.
-   * @param {FetchDocRequestInit} requestInit - Additional request parameters.
-   * @returns {Promise<T>} - A promise resolving to the fetched documentation data.
+   * @param url - The URL to fetch the documentation from.
+   * @param requestInit - Additional request parameters.
+   * @returns - A promise resolving to the fetched documentation data.
    */
   static async fetchDoc<T = unknown>(
     url: string,
@@ -172,23 +174,23 @@ export abstract class Base {
 
   /**
    * Determines the media type from a given media type string.
-   * @param {string} mediaType - The media type string to evaluate.
-   * @returns {MediaTypes | null} - The matched MediaTypes or null.
+   * @param mediaType - The media type string to evaluate.
+   * @returns - The matched MediaTypes or null.
    */
-  static getMediaType(mediaType: string): MediaTypes | null {
+  static getMediaType(mediaType: string): MediaTypes | undefined {
     // eslint-disable-next-line @typescript-eslint/no-for-in-array
     for (const type in Object.values(MediaTypes)) {
       if (new RegExp(type).test(mediaType)) {
         return type as MediaTypes;
       }
     }
-    return null;
+    return;
   }
 
   /**
    * Checks if a schema is a valid enum type that isn't boolean.
-   * @param {SchemaObject} a - The schema object to evaluate.
-   * @returns {boolean} - True if the schema is a valid non-boolean enum.
+   * @param a - The schema object to evaluate.
+   * @returns - True if the schema is a valid non-boolean enum.
    */
   static isValidEnumType(a: SchemaObject) {
     return a.type !== "boolean" && !this.isBooleanEnum(a);
@@ -196,8 +198,8 @@ export abstract class Base {
 
   /**
    * Checks if a schema represents a boolean enum.
-   * @param {SchemaObject} a - The schema object to evaluate.
-   * @returns {boolean} - True if the schema is a boolean enum.
+   * @param a - The schema object to evaluate.
+   * @returns - True if the schema is a boolean enum.
    */
   static isBooleanEnum(a: SchemaObject) {
     return (
@@ -210,9 +212,9 @@ export abstract class Base {
 
   /**
    * Checks if two enum schemas are identical.
-   * @param {EnumSchemaObject} a - First enum schema to compare.
-   * @param {EnumSchemaObject} b - Second enum schema to compare.
-   * @returns {boolean} - True if the enums are identical.
+   * @param a - First enum schema to compare.
+   * @param b - Second enum schema to compare.
+   * @returns - True if the enums are identical.
    */
   private static isSameEnum(a: EnumSchemaObject, b: EnumSchemaObject) {
     return (
@@ -223,8 +225,8 @@ export abstract class Base {
 
   /**
    * Filters out duplicate enum schemas from an array.
-   * @param {EnumSchemaObject[]} enums - Array of enum schemas to process.
-   * @returns {EnumSchemaObject[]} - Array of unique enum schemas.
+   * @param enums - Array of enum schemas to process.
+   * @returns - Array of unique enum schemas.
    */
   static uniqueEnums(enums: EnumSchemaObject[]) {
     const uniqueEnums_: EnumSchemaObject[] = [];
@@ -242,9 +244,9 @@ export abstract class Base {
 
   /**
    * Finds the first occurrence of a matching enum schema in an array.
-   * @param {EnumSchemaObject} a - The enum schema to find.
-   * @param {EnumSchemaObject[]} enums - Array of enum schemas to search.
-   * @returns {EnumSchemaObject | undefined} - The found schema or undefined.
+   * @param a - The enum schema to find.
+   * @param enums - Array of enum schemas to search.
+   * @returns - The found schema or undefined.
    */
   static findSameSchema(a: EnumSchemaObject, enums: EnumSchemaObject[]) {
     return enums.find((b) => this.isSameEnum(b, a));
@@ -252,10 +254,10 @@ export abstract class Base {
 
   /**
    * Checks if an object is a reference object.
-   * @param {any} schema - The object to check.
-   * @returns {boolean} - True if the object is a reference.
+   * @param schema - The object to check.
+   * @returns - True if the object is a reference.
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   static isRef(schema: any): schema is ReferenceObject {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     return "$ref" in schema && typeof schema.$ref === "string";
