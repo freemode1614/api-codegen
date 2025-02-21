@@ -34,12 +34,19 @@ const closeDocServer = async () => {
   });
 };
 
-// Base path for fiter json doc.
-const BASE = "api-docs/openapi/3.0";
+const getDocsByVersion = (ver: "3.0" | "3.1" | "2.0") => {
+  // Base path for fiter json doc.
+  const BASE = `api-docs/openapi/${ver}`;
 
-const docs = glob.sync("**/*.json", {
-  cwd: path.resolve(process.cwd(), BASE),
-});
+  const docs = glob.sync("**/*.json", {
+    cwd: path.resolve(process.cwd(), BASE),
+  });
+
+  return {
+    BASE,
+    docs,
+  };
+};
 
 beforeAll(async () => {
   await initDocServer();
@@ -49,15 +56,37 @@ afterAll(() => {
   closeDocServer();
 });
 
-describe("Main test case for apicodegen", () => {
+describe("Main test case for single doc codegen", () => {
   it("Should not throw", async () => {
+    const { BASE } = getDocsByVersion("3.0");
     await codeGen({
       docURL: `${DOC_SERVER}/${BASE}/json/circular-paths.json`,
       output: "output.ts",
     });
   });
 
-  it("Should not throw for all kind of docs", async () => {
+  it("Should not throw for openapi 3.0 docs", async () => {
+    const { BASE, docs } = getDocsByVersion("3.0");
+    for (const doc of docs) {
+      await codeGen({
+        docURL: `${DOC_SERVER}/${BASE}/${doc}`,
+        output: "output.ts",
+      });
+    }
+  });
+
+  it("Should not throw for openapi 3.1 docs", async () => {
+    const { BASE, docs } = getDocsByVersion("3.1");
+    for (const doc of docs) {
+      await codeGen({
+        docURL: `${DOC_SERVER}/${BASE}/${doc}`,
+        output: "output.ts",
+      });
+    }
+  });
+
+  it("Should not throw for openapi 2.0 docs", async () => {
+    const { BASE, docs } = getDocsByVersion("2.0");
     for (const doc of docs) {
       await codeGen({
         docURL: `${DOC_SERVER}/${BASE}/${doc}`,

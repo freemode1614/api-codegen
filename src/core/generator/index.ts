@@ -146,7 +146,8 @@ export class Generator {
    * @param comments - Array of comment objects to add.
    */
   static addComments(node: Node, comments: Comments) {
-    if (!Array.isArray(comments)) return;
+    if (!Array.isArray(comments) || comments.filter(Boolean).length === 0)
+      return;
 
     const formatComment = (comment: CommentObject): string => {
       return comment.tag
