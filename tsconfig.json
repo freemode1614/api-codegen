@@ -2,9 +2,9 @@
   "extends": "@moccona/preset-config/tsconfig/node.json",
   "compilerOptions": {
     "paths": {
-      "@apicodegen/*": ["./src/*"],
-    },
+      "@apicodegen/*": ["./src/*"]
+    }
   },
-  "include": ["src", "__tests__"],
-  "exclude": ["node_modules", "npm"],
+  "include": ["src"],
+  "exclude": ["node_modules", "npm"]
 }
