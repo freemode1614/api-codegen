@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "tsup --watch",
     "build": "tsup",
-    "test": "vitest --watch false"
+    "test": "vitest --watch false",
+    "prepublishOnly": "npm run build && npm run test"
   },
   "exports": {
     "./package.json": "./package.json",
