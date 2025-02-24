@@ -25,6 +25,9 @@
   ],
   "author": "freemode",
   "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
   "dependencies": {
     "@moccona/logger": "^0.0.2",
     "commander": "^13.1.0",
