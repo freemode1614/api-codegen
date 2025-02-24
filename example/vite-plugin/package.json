@@ -15,7 +15,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.20.0",
-    "@moccona/apicodegen": "workspace:*",
+    "@moccona/apicodegen": "../../npm",
     "@types/react": "^19.0.8",
     "@types/react-dom": "^19.0.3",
     "@vitejs/plugin-react": "^4.3.4",
