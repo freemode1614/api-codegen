@@ -3,6 +3,9 @@
   "version": "0.0.1",
   "description": "",
   "type": "module",
+  "bin": {
+    "apicodegen": "./bin/cli.cjs"
+  },
   "scripts": {
     "dev": "tsup --watch",
     "build": "tsup",
@@ -24,6 +27,7 @@
   "license": "MIT",
   "dependencies": {
     "@moccona/logger": "^0.0.2",
+    "commander": "^13.1.0",
     "execa": "^9.5.2",
     "fast-glob": "^3.3.3",
     "fs-extra": "^11.3.0",
