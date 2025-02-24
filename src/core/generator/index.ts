@@ -447,9 +447,10 @@ export class Generator {
           statements.push(
             t.createForOfStatement(
               undefined,
-              t.createVariableDeclarationList([
-                t.createVariableDeclaration("file"),
-              ]),
+              t.createVariableDeclarationList(
+                [t.createVariableDeclaration("file")],
+                NodeFlags.Const,
+              ),
               t.createPropertyAccessExpression(
                 t.createIdentifier("req"),
                 t.createIdentifier(key),

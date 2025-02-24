@@ -1,5 +1,17 @@
-import type { ProviderInitOptions, ProviderInitResult } from "@apicodegen/core";
-import { Base, FetchAdapter, Generator, Provider } from "@apicodegen/core";
+import type {
+  Adaptors,
+  ProviderInitOptions,
+  ProviderInitResult,
+} from "@apicodegen/core";
+import {
+  Adapter,
+  Adaptors as ads,
+  AxiosAdapter,
+  Base,
+  FetchAdapter,
+  Generator,
+  Provider,
+} from "@apicodegen/core";
 import { createScopedLogger } from "@moccona/logger";
 import { OpenAPI, OpenAPIV2, OpenAPIV3, OpenAPIV3_1 } from "openapi-types";
 
@@ -60,6 +72,17 @@ export class OpenAPIProvider extends Provider {
   }
 }
 
+function getAdaptor(type: keyof typeof Adaptors): Adapter {
+  switch (type) {
+    case ads.axios:
+      return new AxiosAdapter();
+    case ads.fetch:
+      return new FetchAdapter();
+    default:
+      throw TypeError(`Not Supported Adaptor ${type}`);
+  }
+}
+
 export async function codeGen(initOptions: ProviderInitOptions) {
   const { verbose } = initOptions;
 
@@ -80,7 +103,7 @@ export async function codeGen(initOptions: ProviderInitOptions) {
   const { enums, schemas, parameters, responses, requestBodies, apis } =
     provider;
 
-  const adaptor = new FetchAdapter();
+  const adaptor = getAdaptor(initOptions.adaptor ?? ads.fetch);
   const code = await Generator.genCode(
     {
       enums,

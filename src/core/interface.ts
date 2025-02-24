@@ -149,6 +149,11 @@ export type FetchDocRequestInit = {
   headers?: Record<string, string>;
 };
 
+export enum Adaptors {
+  fetch = "fetch",
+  axios = "axios",
+}
+
 export type ProviderInitOptions = {
   docURL: string;
   output: string;
@@ -156,6 +161,7 @@ export type ProviderInitOptions = {
   importClientSource?: string;
   requestOptions?: FetchDocRequestInit;
   verbose?: boolean;
+  adaptor?: keyof typeof Adaptors;
 };
 
 export interface ProviderInitResult {

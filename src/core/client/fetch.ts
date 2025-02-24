@@ -40,7 +40,7 @@ export class FetchAdapter extends Adapter {
     shouldUseJSONResponse: boolean,
   ): Statement[] {
     const statements: Statement[] = [];
-    
+
     // Split parameters into header and body parameters
     const inBody = parameters.filter((p) => !p.in || p.in === "body");
     const inHeader = parameters.filter((p) => p.in === "header");

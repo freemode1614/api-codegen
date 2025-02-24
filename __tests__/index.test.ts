@@ -64,9 +64,11 @@ afterAll(async () => {
 describe("Main test case for single doc codegen", () => {
   it("Should not throw", async () => {
     await codeGen({
-      docURL: `${DOC_SERVER}/api-docs/openapi/3.0/json/complex-nesting.json`,
+      docURL: `${DOC_SERVER}/api-docs/openapi/3.0/json/parameters-extreme.json`,
       output: "output.ts",
       baseURL: "/v1",
+      adaptor: "axios",
+      importClientSource: `import axios from "axios"`,
     });
   });
 
