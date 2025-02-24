@@ -63,9 +63,8 @@ afterAll(async () => {
 
 describe("Main test case for single doc codegen", () => {
   it("Should not throw", async () => {
-    // const { BASE } = getDocsByVersion("3.0");
     await codeGen({
-      docURL: `http://0.0.0.0:5500/openapi.json`,
+      docURL: `${DOC_SERVER}/api-docs/openapi/3.0/json/complex-nesting.json`,
       output: "output.ts",
       baseURL: "/v1",
     });

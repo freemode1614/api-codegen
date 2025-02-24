@@ -81,7 +81,7 @@ export async function codeGen(initOptions: ProviderInitOptions) {
     provider;
 
   const adaptor = new FetchAdapter();
-  const code = Generator.genCode(
+  const code = await Generator.genCode(
     {
       enums,
       schemas,

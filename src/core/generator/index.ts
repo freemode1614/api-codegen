@@ -2,7 +2,6 @@
 /* eslint-disable @typescript-eslint/prefer-nullish-coalescing */
 /* eslint-disable @typescript-eslint/no-unsafe-enum-comparison */
 /* eslint-disable no-case-declarations */
-
 import { Adapter } from "@apicodegen/core/base/Adaptor";
 import { Base } from "@apicodegen/core/base/Base";
 import type {
@@ -22,6 +21,7 @@ import {
   SchemaFormatType,
 } from "@apicodegen/core/interface";
 import { writeFile } from "fs/promises";
+import { format } from "prettier";
 import type {
   BindingElement,
   Block,
@@ -740,7 +740,13 @@ export class Generator {
     return statements;
   }
 
-  static genCode(
+  static async prettier(code: string) {
+    return await format(code, {
+      parser: "typescript",
+    });
+  }
+
+  static async genCode(
     schema: ProviderInitResult,
     initOptions: ProviderInitOptions,
     adaptor: Adapter,
@@ -755,6 +761,6 @@ export class Generator {
       code = importClientSource + "\n\n" + code;
     }
 
-    return code;
+    return await this.prettier(code);
   }
 }

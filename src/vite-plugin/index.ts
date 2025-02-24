@@ -25,7 +25,7 @@ export function apiCodeGenPlugin(
     async config(config) {
       if (!firstRun) return;
       firstRun = false;
-      logger.info("-------> api code start <--------");
+      logger.info("-------> api codegen start <--------");
 
       const proxies = await options.reduce(
         async (proxiesPromise_, option) => {
@@ -49,7 +49,7 @@ export function apiCodeGenPlugin(
         Promise.resolve({} as ServerOptions["proxy"]),
       );
 
-      logger.info("-------> api code finished <--------");
+      logger.info("-------> api codegen finished <--------");
 
       try {
         await tsc();
