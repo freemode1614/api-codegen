@@ -307,7 +307,11 @@ export class Generator {
         }
 
         if (type && typeof type === "string") {
-          return t.createTypeReferenceNode(t.createIdentifier(type));
+          return t.createTypeReferenceNode(
+            type !== "unknown"
+              ? t.createIdentifier(Base.upperCamelCase(type))
+              : type,
+          );
           // t.createTypeOperatorNode(
           //   SyntaxKind.KeyOfKeyword,
           //   t.createTypeQueryNode(t.createIdentifier(type)),
@@ -411,9 +415,9 @@ export class Generator {
         statements.push(
           t.createExpressionStatement(
             t.createBinaryExpression(
-              t.createPropertyAccessExpression(
+              t.createElementAccessExpression(
                 t.createIdentifier("req"),
-                t.createIdentifier(parameter.name),
+                t.createStringLiteral(parameter.name),
               ),
               t.createToken(SyntaxKind.AmpersandAmpersandToken),
               t.createCallExpression(
@@ -451,9 +455,9 @@ export class Generator {
                 [t.createVariableDeclaration("file")],
                 NodeFlags.Const,
               ),
-              t.createPropertyAccessExpression(
+              t.createElementAccessExpression(
                 t.createIdentifier("req"),
-                t.createIdentifier(key),
+                t.createStringLiteral(key),
               ),
               t.createBlock([
                 t.createExpressionStatement(
@@ -489,17 +493,17 @@ export class Generator {
                   [
                     t.createStringLiteral(key),
                     schemaByKey.type === "string"
-                      ? t.createPropertyAccessExpression(
+                      ? t.createElementAccessExpression(
                           t.createIdentifier("req"),
-                          t.createIdentifier(key),
+                          t.createStringLiteral(key),
                         )
                       : t.createCallExpression(
                           t.createIdentifier("String"),
                           undefined,
                           [
-                            t.createPropertyAccessExpression(
+                            t.createElementAccessExpression(
                               t.createIdentifier("req"),
-                              t.createIdentifier(key),
+                              t.createStringLiteral(key),
                             ),
                           ],
                         ),
@@ -511,9 +515,9 @@ export class Generator {
             statements.push(
               t.createExpressionStatement(
                 t.createBinaryExpression(
-                  t.createPropertyAccessExpression(
+                  t.createElementAccessExpression(
                     t.createIdentifier("req"),
-                    t.createIdentifier(key),
+                    t.createStringLiteral(key),
                   ),
                   t.createToken(SyntaxKind.AmpersandAmpersandToken),
                   t.createCallExpression(
@@ -525,17 +529,17 @@ export class Generator {
                     [
                       t.createStringLiteral(key),
                       schemaByKey.type === "string"
-                        ? t.createPropertyAccessExpression(
+                        ? t.createElementAccessExpression(
                             t.createIdentifier("req"),
-                            t.createIdentifier(key),
+                            t.createStringLiteral(key),
                           )
                         : t.createCallExpression(
                             t.createIdentifier("String"),
                             undefined,
                             [
-                              t.createPropertyAccessExpression(
+                              t.createElementAccessExpression(
                                 t.createIdentifier("req"),
-                                t.createIdentifier(key),
+                                t.createStringLiteral(key),
                               ),
                             ],
                           ),
@@ -761,6 +765,8 @@ export class Generator {
     if (importClientSource) {
       code = importClientSource + "\n\n" + code;
     }
+
+    // return code;
 
     return await this.prettier(code);
   }

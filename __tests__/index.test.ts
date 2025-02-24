@@ -64,7 +64,7 @@ afterAll(async () => {
 describe("Main test case for single doc codegen", () => {
   it("Should not throw", async () => {
     await codeGen({
-      docURL: `${DOC_SERVER}/api-docs/openapi/3.0/json/parameters-extreme.json`,
+      docURL: `${DOC_SERVER}/api-docs/openapi/3.0/json/schema-types.json`,
       output: "output.ts",
       baseURL: "/v1",
       adaptor: "axios",
