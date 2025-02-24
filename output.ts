@@ -19,14 +19,14 @@ export type Circular = {
   children: Circular[];
 };
 /**
-* Handling of `format` data types on `type: string` schemas.
+Handling of `format` data types on `type: string` schemas.
 
 📚 OpenAPI specification references:
 
 * [3.0.3 Data Types](https://github.com/OAI/OpenAPI-Specification/blob/main/versions/3.0.3.md#data-types)
 
 * [3.1.0 Data Types](https://github.com/OAI/OpenAPI-Specification/blob/main/versions/3.1.0.md#dataTypes)
-* `format` data types
+ `format` data types
 */
 export async function stringFormatSupportUsingPut(req: {
   binary: File;
@@ -66,14 +66,14 @@ export async function stringFormatSupportUsingPut(req: {
   });
 }
 /**
-* Support and handling of `type: string` schemas.
+Support and handling of `type: string` schemas.
 
 📚 OpenAPI specification references:
 
 * [3.0.3 Schema Object](https://github.com/OAI/OpenAPI-Specification/blob/main/versions/3.0.3.md#schemaObject)
 
 * [3.1.0 Schema Object](https://github.com/OAI/OpenAPI-Specification/blob/main/versions/3.1.0.md#schemaObject)
-* String support
+ String support
 */
 export async function stringSchemaSupportUsingPost(req: {
   stock: string;
@@ -96,14 +96,14 @@ export async function stringSchemaSupportUsingPost(req: {
   });
 }
 /**
-* Handling of a `requestBody` payload that's a single `type: string`.
+Handling of a `requestBody` payload that's a single `type: string`.
 
 📚 OpenAPI specification references:
 
 * [3.0.3 Data Types](https://github.com/OAI/OpenAPI-Specification/blob/main/versions/3.0.3.md#data-types)
 
 * [3.1.0 Data Types](https://github.com/OAI/OpenAPI-Specification/blob/main/versions/3.1.0.md#dataTypes)
-* Top-level payloads
+ Top-level payloads
 */
 export async function stringTopLevelUsingPost(req: string) {
   return axios(`/v1/anything/strings/top-level-payloads`, {
@@ -112,14 +112,15 @@ export async function stringTopLevelUsingPost(req: string) {
   });
 }
 /**
-* Handling of a `requestBody` payload that's a single `type: string` but `format: json`.
+Handling of a `requestBody` payload that's a single `type: string` but `format: json`.
 
 📚 OpenAPI specification references:
 
 * [3.0.3 Data Types](https://github.com/OAI/OpenAPI-Specification/blob/main/versions/3.0.3.md#data-types)
 
 * [3.1.0 Data Types](https://github.com/OAI/OpenAPI-Specification/blob/main/versions/3.1.0.md#dataTypes)
-* Top-level payloads (JSON)
+ Top-level payloads (JSON)
+
 */
 export async function stringTopLevelJSONUsingPatch(req: string) {
   return axios(`/v1/anything/strings/top-level-payloads`, {
@@ -128,14 +129,14 @@ export async function stringTopLevelJSONUsingPatch(req: string) {
   });
 }
 /**
-* Handling `format` data types on `type: integer` and `type: number` schemas.
+Handling `format` data types on `type: integer` and `type: number` schemas.
 
 📚 OpenAPI specification references:
 
 * [3.0.3 Data Types](https://github.com/OAI/OpenAPI-Specification/blob/main/versions/3.0.3.md#data-types)
 
 * [3.1.0 Data Types](https://github.com/OAI/OpenAPI-Specification/blob/main/versions/3.1.0.md#dataTypes)
-* `format` data types
+ `format` data types
 */
 export async function numberFormatSupportUsingPut(req: {
   "integer (format: int8)": number;
@@ -156,14 +157,14 @@ export async function numberFormatSupportUsingPut(req: {
   });
 }
 /**
-* Support and handling of `type: integer` and `type: number` schemas.
+Support and handling of `type: integer` and `type: number` schemas.
 
 📚 OpenAPI specification references:
 
 * [3.0.3 Schema Object](https://github.com/OAI/OpenAPI-Specification/blob/main/versions/3.0.3.md#schemaObject)
 
 * [3.1.0 Schema Object](https://github.com/OAI/OpenAPI-Specification/blob/main/versions/3.1.0.md#schemaObject)
-* Number support
+ Number support
 */
 export async function numberSchemaSupportUsingPost(req: {
   "integer (stock)": number;
@@ -190,14 +191,14 @@ export async function numberSchemaSupportUsingPost(req: {
   });
 }
 /**
-* Handling of a `requestBody` payload that's a single `type: integer`.
+Handling of a `requestBody` payload that's a single `type: integer`.
 
 📚 OpenAPI specification references:
 
 * [3.0.3 Data Types](https://github.com/OAI/OpenAPI-Specification/blob/main/versions/3.0.3.md#data-types)
 
 * [3.1.0 Data Types](https://github.com/OAI/OpenAPI-Specification/blob/main/versions/3.1.0.md#dataTypes)
-* Top-level payloads
+ Top-level payloads
 */
 export async function numberTopLevelUsingPatch(req: number) {
   return axios(`/v1/anything/numbers`, {
@@ -206,14 +207,14 @@ export async function numberTopLevelUsingPatch(req: number) {
   });
 }
 /**
-* Support and handling of `type: boolean` schemas.
+Support and handling of `type: boolean` schemas.
 
 📚 OpenAPI specification references:
 
 * [3.0.3 Schema Object](https://github.com/OAI/OpenAPI-Specification/blob/main/versions/3.0.3.md#schemaObject)
 
 * [3.1.0 Schema Object](https://github.com/OAI/OpenAPI-Specification/blob/main/versions/3.1.0.md#schemaObject)
-* Boolean support
+ Boolean support
 */
 export async function booleanSchemaSupportUsingPost(req: {
   stock: boolean;
@@ -230,14 +231,14 @@ export async function booleanSchemaSupportUsingPost(req: {
   });
 }
 /**
-* Handling of a `requestBody` payload that's a single `type: boolean`.
+Handling of a `requestBody` payload that's a single `type: boolean`.
 
 📚 OpenAPI specification references:
 
 * [3.0.3 Data Types](https://github.com/OAI/OpenAPI-Specification/blob/main/versions/3.0.3.md#data-types)
 
 * [3.1.0 Data Types](https://github.com/OAI/OpenAPI-Specification/blob/main/versions/3.1.0.md#dataTypes)
-* Top-level payloads
+ Top-level payloads
 */
 export async function booleanTopLevelUsingPatch(req: boolean) {
   return axios(`/v1/anything/booleans`, {
@@ -246,14 +247,14 @@ export async function booleanTopLevelUsingPatch(req: boolean) {
   });
 }
 /**
-* Support and handling of `type: array` schemas.
+Support and handling of `type: array` schemas.
 
 📚 OpenAPI specification references:
 
 * [3.0.3 Schema Object](https://github.com/OAI/OpenAPI-Specification/blob/main/versions/3.0.3.md#schemaObject)
 
 * [3.1.0 Schema Object](https://github.com/OAI/OpenAPI-Specification/blob/main/versions/3.1.0.md#schemaObject)
-* Array support
+ Array support
 */
 export async function arraySchemaSupportUsingPost(req: {
   stock: unknown[];
@@ -284,14 +285,14 @@ export async function arraySchemaSupportUsingPost(req: {
   });
 }
 /**
-* Handling of a `requestBody` payload that's a `type: array` composed of objects.
+Handling of a `requestBody` payload that's a `type: array` composed of objects.
 
 📚 OpenAPI specification references:
 
 * [3.0.3 Data Types](https://github.com/OAI/OpenAPI-Specification/blob/main/versions/3.0.3.md#data-types)
 
 * [3.1.0 Data Types](https://github.com/OAI/OpenAPI-Specification/blob/main/versions/3.1.0.md#dataTypes)
-* Top-level payloads (objects)
+ Top-level payloads (objects)
 */
 export async function arrayTopLevelObjectsUsingPost(
   req: {
@@ -309,14 +310,14 @@ export async function arrayTopLevelObjectsUsingPost(
   });
 }
 /**
-* Handling of a `requestBody` payload that's a `type: array` composed of primitives.
+Handling of a `requestBody` payload that's a `type: array` composed of primitives.
 
 📚 OpenAPI specification references:
 
 * [3.0.3 Data Types](https://github.com/OAI/OpenAPI-Specification/blob/main/versions/3.0.3.md#data-types)
 
 * [3.1.0 Data Types](https://github.com/OAI/OpenAPI-Specification/blob/main/versions/3.1.0.md#dataTypes)
-* Top-level payloads (primitives)
+ Top-level payloads (primitives)
 */
 export async function arrayTopLevelPrimitivesUsingPatch(req: string[]) {
   return axios(`/v1/anything/arrays/top-level-payloads`, {
@@ -325,14 +326,14 @@ export async function arrayTopLevelPrimitivesUsingPatch(req: string[]) {
   });
 }
 /**
-* Support and handling of `type: object` schemas.
+Support and handling of `type: object` schemas.
 
 📚 OpenAPI specification references:
 
 * [3.0.3 Schema Object](https://github.com/OAI/OpenAPI-Specification/blob/main/versions/3.0.3.md#schemaObject)
 
 * [3.1.0 Schema Object](https://github.com/OAI/OpenAPI-Specification/blob/main/versions/3.1.0.md#schemaObject)
-* Object support
+ Object support
 */
 export async function objectSchemaSupportUsingPost(req: {
   object: {
@@ -366,14 +367,14 @@ export async function objectSchemaSupportUsingPost(req: {
   });
 }
 /**
-* Handling of a nested `$ref` that recursively references itself.
+Handling of a nested `$ref` that recursively references itself.
 
 📚 OpenAPI specification references:
 
 * [3.0.3 Reference Object](https://github.com/OAI/OpenAPI-Specification/blob/main/versions/3.0.3.md#referenceObject)
 
 * [3.1.0 Reference Object](https://github.com/OAI/OpenAPI-Specification/blob/main/versions/3.1.0.md#referenceObject)
-* Nested circular $ref
+ Nested circular $ref
 */
 export async function circularHandlingUsingPost(req: { circular: Circular }) {
   return axios(`/v1/anything/circular`, {
@@ -382,14 +383,14 @@ export async function circularHandlingUsingPost(req: { circular: Circular }) {
   });
 }
 /**
-* Handling of a top-level request body `$ref` that recursively references itself.
+Handling of a top-level request body `$ref` that recursively references itself.
 
 📚 OpenAPI specification references:
 
 * [3.0.3 Reference Object](https://github.com/OAI/OpenAPI-Specification/blob/main/versions/3.0.3.md#referenceObject)
 
 * [3.1.0 Reference Object](https://github.com/OAI/OpenAPI-Specification/blob/main/versions/3.1.0.md#referenceObject)
-* Top-level circular $ref
+ Top-level circular $ref
 */
 export async function circularTopLevelUsingPatch(req: {
   string: string;
@@ -401,10 +402,10 @@ export async function circularTopLevelUsingPatch(req: {
   });
 }
 /**
-* This is a special value on ReadMe to denote a top level property. This can be done better using JSON Schema, but from ReadMe's dash, this is the only way to do it.
+This is a special value on ReadMe to denote a top level property. This can be done better using JSON Schema, but from ReadMe's dash, this is the only way to do it.
 
 <https://docs.readme.com/docs/raw-body-content>
-* Top-level RAW_BODY (string)
+ Top-level RAW_BODY (string)
 */
 export async function rawBodyTopLevelUsingPost(req: { RAW_BODY: string }) {
   return axios(`/v1/anything/raw_body/top-level-payloads`, {
@@ -413,10 +414,10 @@ export async function rawBodyTopLevelUsingPost(req: { RAW_BODY: string }) {
   });
 }
 /**
-* This is a special value on ReadMe to denote a top level property. This can be done better using JSON Schema, but from ReadMe's dash, this is the only way to do it.
+This is a special value on ReadMe to denote a top level property. This can be done better using JSON Schema, but from ReadMe's dash, this is the only way to do it.
 
 <https://docs.readme.com/docs/raw-body-content>
-* Top-level RAW_BODY (JSON)
+ Top-level RAW_BODY (JSON)
 */
 export async function rawBodyTopLevelJSONUsingPatch(req: { RAW_BODY: string }) {
   return axios(`/v1/anything/raw_body/top-level-payloads`, {
@@ -425,14 +426,14 @@ export async function rawBodyTopLevelJSONUsingPatch(req: { RAW_BODY: string }) {
   });
 }
 /**
-* Handling cases for when `type` is missing from a schema.
+Handling cases for when `type` is missing from a schema.
 
 📚 OpenAPI specification references:
 
 * [3.0.3 Schema Object](https://github.com/OAI/OpenAPI-Specification/blob/main/versions/3.0.3.md#schemaObject)
 
 * [3.1.0 Schema Object](https://github.com/OAI/OpenAPI-Specification/blob/main/versions/3.1.0.md#schemaObject)
-* Missing schema type
+ Missing schema type
 */
 export async function quirksMissingTypeUsingPost(req: {
   "missing type": unknown;
@@ -448,14 +449,14 @@ export async function quirksMissingTypeUsingPost(req: {
   });
 }
 /**
-* When an `allOf` sits at the top of a request body schema and it cannot be merged, we're unable to render out anything for an input because there's no usable schema for us.
+When an `allOf` sits at the top of a request body schema and it cannot be merged, we're unable to render out anything for an input because there's no usable schema for us.
 
 📚 OpenAPI specification references:
 
 * [3.0.3 Schema Object](https://github.com/OAI/OpenAPI-Specification/blob/main/versions/3.0.3.md#schemaObject)
 
 * [3.1.0 Schema Object](https://github.com/OAI/OpenAPI-Specification/blob/main/versions/3.1.0.md#schemaObject)
-* Incompatible allOf schemas on a root requestBody
+ Incompatible allOf schemas on a root requestBody
 */
 export async function quirksEntirelyIncompatibleAllOfUsingPut(
   req: string | number,
@@ -466,14 +467,14 @@ export async function quirksEntirelyIncompatibleAllOfUsingPut(
   });
 }
 /**
-* Handling cases for when a nested `allOf` cannot be merged together.
+Handling cases for when a nested `allOf` cannot be merged together.
 
 📚 OpenAPI specification references:
 
 * [3.0.3 Schema Object](https://github.com/OAI/OpenAPI-Specification/blob/main/versions/3.0.3.md#schemaObject)
 
 * [3.1.0 Schema Object](https://github.com/OAI/OpenAPI-Specification/blob/main/versions/3.1.0.md#schemaObject)
-* Incompatible nested allOf schemas
+ Incompatible nested allOf schemas
 */
 export async function quirksIncompatibleNestedAllOfUsingPost(req: {
   incompatible: string | number;
@@ -491,7 +492,7 @@ export async function quirksIncompatibleNestedAllOfUsingPost(req: {
   });
 }
 /**
-* Like `quirks_entirelyIncompatibleAllOf`, when we're to merge an `allOf` together we eliminate it, however this schema here has additional properties (`description`) alongside that `allOf` so it's not a wholly empty schema and we can use it. Unfortunately since we don't have any of the real data for the request body to use we treat this as a string input with a `format` of `json` so that the user can input a raw JSON input to make their request with.
+Like `quirks_entirelyIncompatibleAllOf`, when we're to merge an `allOf` together we eliminate it, however this schema here has additional properties (`description`) alongside that `allOf` so it's not a wholly empty schema and we can use it. Unfortunately since we don't have any of the real data for the request body to use we treat this as a string input with a `format` of `json` so that the user can input a raw JSON input to make their request with.
 
 Unfortunately in this case we don't support `description` on the root schema so it won't show up, but a large input box still will for the user. Obviously all of this less than ideal as we're losing request body schema data but since the `allOf` present is incompatible it's unusable and this is the best we can do under the circumstances.
 
@@ -500,7 +501,7 @@ Unfortunately in this case we don't support `description` on the root schema so 
 * [3.0.3 Schema Object](https://github.com/OAI/OpenAPI-Specification/blob/main/versions/3.0.3.md#schemaObject)
 
 * [3.1.0 Schema Object](https://github.com/OAI/OpenAPI-Specification/blob/main/versions/3.1.0.md#schemaObject)
-* Incompatible allOf schemas on a root requestBody (with other schema properties)
+ Incompatible allOf schemas on a root requestBody (with other schema properties)
 */
 export async function quirksPartiallyUsableIncompatibleAllOfUsingPatch(
   req: string | number,

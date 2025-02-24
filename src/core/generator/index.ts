@@ -151,8 +151,8 @@ export class Generator {
 
     const formatComment = (comment: CommentObject): string => {
       return comment.tag
-        ? `* @${comment.tag} ${comment.comment ?? ""}`
-        : `* ${comment.comment}`;
+        ? ` @${comment.tag} ${comment.comment ?? ""}`
+        : ` ${comment.comment}`;
     };
 
     const formattedComments =
