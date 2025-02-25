@@ -1,6 +1,6 @@
 #!/bin/env node
 
-import { type Adaptors, Generator } from "@apicodegen/core";
+import { Generator, ProviderInitOptions } from "@apicodegen/core";
 import { codeGen } from "@apicodegen/openapi";
 import { createCommand } from "commander";
 
@@ -19,13 +19,10 @@ cli
   .action(
     async (
       docURL: string,
-      options: {
-        output: string;
-        adaptor: keyof typeof Adaptors;
-        baseURL: string;
-        verbose: boolean;
-        importClientSource: string;
-      },
+      options: Pick<
+        ProviderInitOptions,
+        "output" | "adaptor" | "baseURL" | "verbose" | "importClientSource"
+      >,
     ) => {
       try {
         const code = await codeGen({
