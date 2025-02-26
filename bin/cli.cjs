@@ -142,7 +142,7 @@ var Base = class _Base {
    * @param [operationId] - Unique identifier for the operation.
    * @returns - The generated function name.
    */
-  static pathToFnName(path, method, operationId) {
+  static pathToFnName(path, method, _operationId = "") {
     const name = this.camelCase(this.normalize(path));
     const suffix = method ? this.capitalize(this.upperCamelCase(`using_${method}`)) : "";
     return name + suffix;
@@ -366,7 +366,7 @@ var Generator = class _Generator {
    * @param path - The base path string containing placeholders.
    * @param parameters - Array of parameter objects defining the parameters.
    * @param basePath - Optional base path to prepend (default: "").
-   * @returns A TypeScript template expression node.
+   * @returns A TypeScript template expressi
    */
   static toUrlTemplate(path, parameters, basePath = "") {
     const queryParameters = parameters.filter(
@@ -489,7 +489,7 @@ var Generator = class _Generator {
       case "boolean" /* boolean */:
         return import_typescript.factory.createToken(import_typescript.SyntaxKind.BooleanKeyword);
       case "file" /* file */:
-        return import_typescript.factory.createTypeReferenceNode(import_typescript.factory.createIdentifier("File"));
+        return import_typescript.factory.createTypeReferenceNode(import_typescript.factory.createIdentifier("Blob"));
       default:
         const {
           format: format2,
@@ -508,7 +508,7 @@ var Generator = class _Generator {
             return import_typescript.factory.createToken(import_typescript.SyntaxKind.BooleanKeyword);
           case "blob" /* blob */:
           case "binary" /* binary */:
-            return import_typescript.factory.createTypeReferenceNode(import_typescript.factory.createIdentifier("File"));
+            return import_typescript.factory.createTypeReferenceNode(import_typescript.factory.createIdentifier("Blob"));
           default:
         }
         if (enum_) {
@@ -532,8 +532,11 @@ var Generator = class _Generator {
           );
         }
         if (allOf) {
-          return import_typescript.factory.createUnionTypeNode(
-            allOf.map((schema2) => this.toTypeNode(schema2))
+          console.log(allOf);
+          return import_typescript.factory.createIntersectionTypeNode(
+            allOf.filter(
+              (schema2) => Base.isRef(schema2) || "properties" in schema2 && Object.keys(schema2.properties ?? {}).length > 0
+            ).map((schema2) => this.toTypeNode(schema2))
           );
         }
         if (type2 && typeof type2 === "string") {
@@ -612,16 +615,11 @@ var Generator = class _Generator {
       )
     );
     statements.push(fdDeclaration);
-    parameters.filter(
-      (parameter) => parameter.ref !== void 0 && (parameter.in === "formData" /* formData */ || parameter.schema && this.isBinarySchema(parameter.schema))
-    ).forEach((parameter) => {
+    parameters.forEach((parameter) => {
       statements.push(
         import_typescript.factory.createExpressionStatement(
           import_typescript.factory.createBinaryExpression(
-            import_typescript.factory.createElementAccessExpression(
-              import_typescript.factory.createIdentifier("req"),
-              import_typescript.factory.createStringLiteral(parameter.name)
-            ),
+            import_typescript.factory.createIdentifier(parameter.name),
             import_typescript.factory.createToken(import_typescript.SyntaxKind.AmpersandAmpersandToken),
             import_typescript.factory.createCallExpression(
               import_typescript.factory.createPropertyAccessExpression(
@@ -750,11 +748,11 @@ var Generator = class _Generator {
     );
     const shouldParseResponseToJSON = "application/json" === response?.type;
     const isRequestBodyBinary = requestBody?.schema && requestBody.schema.type === "array" /* array */ && this.isBinarySchema(requestBody.schema);
-    const inFormDataParameters = parameters.filter(
-      (p) => p.in === "formData" /* formData */
+    const parametersShouldPutInFormData = parameters.filter(
+      (p) => p.in === "formData" /* formData */ || p.schema && this.isBinarySchema(p.schema)
     );
-    const notInFormDataParameters = parameters.filter(
-      (p) => p.in !== "formData" /* formData */
+    const parametersShouldNotPutInFormData = parameters.filter(
+      (p) => !parametersShouldPutInFormData.includes(p)
     );
     const isRequestBodyContainsBinary = requestBody?.schema && "properties" in requestBody.schema && Object.values(requestBody.schema.properties).some(
       (p) => this.isBinarySchema(p)
@@ -762,13 +760,16 @@ var Generator = class _Generator {
     const hasBinaryInParameters = parameters.some(
       (p) => p?.schema && this.isBinarySchema(p.schema)
     );
-    const shouldPutParametersOrBodyInFormData = isFormDataRequest || isRequestBodyBinary || hasBinaryInParameters || isRequestBodyContainsBinary || inFormDataParameters.length > 0;
+    const shouldPutParametersOrBodyInFormData = isFormDataRequest || isRequestBodyBinary || hasBinaryInParameters || isRequestBodyContainsBinary || parametersShouldPutInFormData.length > 0;
     return import_typescript.factory.createBlock([
-      ...shouldPutParametersOrBodyInFormData ? this.toFormDataStatement(inFormDataParameters, requestBody?.schema) : [],
+      ...shouldPutParametersOrBodyInFormData ? this.toFormDataStatement(
+        parametersShouldPutInFormData,
+        requestBody?.schema
+      ) : [],
       ...adapter.client(
         uri,
         method,
-        notInFormDataParameters,
+        parametersShouldNotPutInFormData,
         requestBody,
         response,
         adapter,
@@ -1228,13 +1229,25 @@ var V2 = class {
         enum: enum_,
         format: format2,
         allOf: allOf?.map(
-          (s) => Base.isRef(s) ? { type: Base.upperCamelCase(Base.ref2name(s.$ref, this.doc)) } : this.toBaseSchema(s, enums)
+          (s) => Base.isRef(s) ? {
+            ...s,
+            ref: s.$ref,
+            type: Base.upperCamelCase(Base.ref2name(s.$ref, this.doc))
+          } : this.toBaseSchema(s, enums)
         ),
         anyOf: anyOf?.map(
-          (s) => Base.isRef(s) ? { type: Base.upperCamelCase(Base.ref2name(s.$ref, this.doc)) } : this.toBaseSchema(s, enums)
+          (s) => Base.isRef(s) ? {
+            ...s,
+            ref: s.$ref,
+            type: Base.upperCamelCase(Base.ref2name(s.$ref, this.doc))
+          } : this.toBaseSchema(s, enums)
         ),
         oneOf: oneOf?.map(
-          (s) => Base.isRef(s) ? { type: Base.upperCamelCase(Base.ref2name(s.$ref, this.doc)) } : this.toBaseSchema(s, enums)
+          (s) => Base.isRef(s) ? {
+            ...s,
+            ref: s.$ref,
+            type: Base.upperCamelCase(Base.ref2name(s.$ref, this.doc))
+          } : this.toBaseSchema(s, enums)
         ),
         properties: Object.keys(properties).reduce((acc, p) => {
           const propSchema = properties[p];
@@ -1591,13 +1604,25 @@ var V3 = class {
         enum: enum_,
         format: format2,
         allOf: allOf?.map(
-          (s) => Base.isRef(s) ? { type: Base.capitalize(Base.ref2name(s.$ref, this.doc)) } : this.toBaseSchema(s, enums)
+          (s) => Base.isRef(s) ? {
+            ...s,
+            ref: s.$ref,
+            type: Base.capitalize(Base.ref2name(s.$ref, this.doc))
+          } : this.toBaseSchema(s, enums)
         ),
         anyOf: anyOf?.map(
-          (s) => Base.isRef(s) ? { type: Base.capitalize(Base.ref2name(s.$ref, this.doc)) } : this.toBaseSchema(s, enums)
+          (s) => Base.isRef(s) ? {
+            ...s,
+            ref: s.$ref,
+            type: Base.capitalize(Base.ref2name(s.$ref, this.doc))
+          } : this.toBaseSchema(s, enums)
         ),
         oneOf: oneOf?.map(
-          (s) => Base.isRef(s) ? { type: Base.capitalize(Base.ref2name(s.$ref, this.doc)) } : this.toBaseSchema(s, enums)
+          (s) => Base.isRef(s) ? {
+            ...s,
+            ref: s.$ref,
+            type: Base.capitalize(Base.ref2name(s.$ref, this.doc))
+          } : this.toBaseSchema(s, enums)
         ),
         properties: Object.keys(properties).reduce((acc, p) => {
           const propSchema = properties[p];
@@ -1894,13 +1919,25 @@ var V3_1 = class {
         enum: enum_,
         format: format2,
         allOf: allOf?.map(
-          (s) => Base.isRef(s) ? { type: Base.upperCamelCase(Base.ref2name(s.$ref, this.doc)) } : this.toBaseSchema(s, enums)
+          (s) => Base.isRef(s) ? {
+            ...s,
+            ref: s.$ref,
+            type: Base.upperCamelCase(Base.ref2name(s.$ref, this.doc))
+          } : this.toBaseSchema(s, enums)
         ),
         anyOf: anyOf?.map(
-          (s) => Base.isRef(s) ? { type: Base.upperCamelCase(Base.ref2name(s.$ref, this.doc)) } : this.toBaseSchema(s, enums)
+          (s) => Base.isRef(s) ? {
+            ...s,
+            ref: s.$ref,
+            type: Base.upperCamelCase(Base.ref2name(s.$ref, this.doc))
+          } : this.toBaseSchema(s, enums)
         ),
         oneOf: oneOf?.map(
-          (s) => Base.isRef(s) ? { type: Base.upperCamelCase(Base.ref2name(s.$ref, this.doc)) } : this.toBaseSchema(s, enums)
+          (s) => Base.isRef(s) ? {
+            ...s,
+            ref: s.$ref,
+            type: Base.upperCamelCase(Base.ref2name(s.$ref, this.doc))
+          } : this.toBaseSchema(s, enums)
         ),
         properties: Object.keys(properties).reduce((acc, p) => {
           const propSchema = properties[p];
@@ -2113,7 +2150,7 @@ async function codeGen(initOptions) {
 var import_commander = require("commander");
 
 // package.json
-var version = "0.0.1";
+var version = "0.0.2";
 
 // src/cli.ts
 var cli = (0, import_commander.createCommand)("apicodegen");
