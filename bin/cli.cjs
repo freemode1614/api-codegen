@@ -145,7 +145,7 @@ var Base = class _Base {
   static pathToFnName(path, method, operationId) {
     const name = this.camelCase(this.normalize(path));
     const suffix = method ? this.capitalize(this.upperCamelCase(`using_${method}`)) : "";
-    return (operationId ? this.camelCase(this.normalize(operationId)) : name) + suffix;
+    return name + suffix;
   }
   /**
    * Normalizes a string by replacing special characters and avoiding TypeScript keywords.

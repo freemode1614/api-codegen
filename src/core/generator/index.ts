@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/restrict-plus-operands */
-/* eslint-disable @typescript-eslint/prefer-nullish-coalescing */
 /* eslint-disable @typescript-eslint/no-unsafe-enum-comparison */
 /* eslint-disable no-case-declarations */
 import { Adapter } from "@apicodegen/core/base/Adaptor";
@@ -89,7 +87,7 @@ export class Generator {
    * @param path - The base path string containing placeholders.
    * @param parameters - Array of parameter objects defining the parameters.
    * @param basePath - Optional base path to prepend (default: "").
-   * @returns A TypeScript template expression node.
+   * @returns A TypeScript template expressi
    */
   static toUrlTemplate(
     path: string,
@@ -252,7 +250,7 @@ export class Generator {
       case NonArraySchemaType.boolean:
         return t.createToken(SyntaxKind.BooleanKeyword);
       case NonArraySchemaType.file:
-        return t.createTypeReferenceNode(t.createIdentifier("File"));
+        return t.createTypeReferenceNode(t.createIdentifier("Blob"));
       default:
         const {
           format,
@@ -272,7 +270,7 @@ export class Generator {
             return t.createToken(SyntaxKind.BooleanKeyword);
           case SchemaFormatType.blob:
           case SchemaFormatType.binary:
-            return t.createTypeReferenceNode(t.createIdentifier("File"));
+            return t.createTypeReferenceNode(t.createIdentifier("Blob"));
           default:
         }
 
@@ -301,8 +299,14 @@ export class Generator {
         }
 
         if (allOf) {
-          return t.createUnionTypeNode(
-            allOf.map((schema) => this.toTypeNode(schema)),
+          return t.createIntersectionTypeNode(
+            allOf
+              .filter(
+                (schema) =>
+                  !Base.isRef(schema) ||
+                  (schema as SingleTypeSchemaObject).properties,
+              )
+              .map((schema) => this.toTypeNode(schema)),
           );
         }
 
@@ -404,37 +408,27 @@ export class Generator {
 
     statements.push(fdDeclaration);
 
-    parameters
-      .filter(
-        (parameter) =>
-          parameter.ref !== undefined &&
-          (parameter.in === ParameterIn.formData ||
-            (parameter.schema && this.isBinarySchema(parameter.schema))),
-      )
-      .forEach((parameter) => {
-        statements.push(
-          t.createExpressionStatement(
-            t.createBinaryExpression(
-              t.createElementAccessExpression(
-                t.createIdentifier("req"),
+    parameters.forEach((parameter) => {
+      statements.push(
+        t.createExpressionStatement(
+          t.createBinaryExpression(
+            t.createIdentifier(parameter.name),
+            t.createToken(SyntaxKind.AmpersandAmpersandToken),
+            t.createCallExpression(
+              t.createPropertyAccessExpression(
+                t.createIdentifier("fd"),
+                t.createIdentifier("append"),
+              ),
+              undefined,
+              [
                 t.createStringLiteral(parameter.name),
-              ),
-              t.createToken(SyntaxKind.AmpersandAmpersandToken),
-              t.createCallExpression(
-                t.createPropertyAccessExpression(
-                  t.createIdentifier("fd"),
-                  t.createIdentifier("append"),
-                ),
-                undefined,
-                [
-                  t.createStringLiteral(parameter.name),
-                  t.createIdentifier(parameter.name),
-                ],
-              ),
+                t.createIdentifier(parameter.name),
+              ],
             ),
           ),
-        );
-      });
+        ),
+      );
+    });
 
     if (
       requestBody &&
@@ -578,12 +572,14 @@ export class Generator {
       requestBody.schema.type === ArraySchemaType.array &&
       this.isBinarySchema(requestBody.schema);
 
-    const inFormDataParameters = parameters.filter(
-      (p) => p.in === ParameterIn.formData,
+    const parametersShouldPutInFormData = parameters.filter(
+      (p) =>
+        p.in === ParameterIn.formData ||
+        (p.schema && this.isBinarySchema(p.schema)),
     );
 
-    const notInFormDataParameters = parameters.filter(
-      (p) => p.in !== ParameterIn.formData,
+    const parametersShouldNotPutInFormData = parameters.filter(
+      (p) => !parametersShouldPutInFormData.includes(p),
     );
 
     const isRequestBodyContainsBinary =
@@ -602,16 +598,19 @@ export class Generator {
       isRequestBodyBinary ||
       hasBinaryInParameters ||
       isRequestBodyContainsBinary ||
-      inFormDataParameters.length > 0;
+      parametersShouldPutInFormData.length > 0;
 
     return t.createBlock([
       ...(shouldPutParametersOrBodyInFormData
-        ? this.toFormDataStatement(inFormDataParameters, requestBody?.schema)
+        ? this.toFormDataStatement(
+            parametersShouldPutInFormData,
+            requestBody?.schema,
+          )
         : []),
       ...adapter.client(
         uri,
         method,
-        notInFormDataParameters,
+        parametersShouldNotPutInFormData,
         requestBody,
         response,
         adapter,

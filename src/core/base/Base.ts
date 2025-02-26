@@ -81,16 +81,18 @@ export abstract class Base {
    * @param [operationId] - Unique identifier for the operation.
    * @returns - The generated function name.
    */
-  static pathToFnName(path: string, method?: string, operationId?: string) {
+  static pathToFnName(
+    path: string,
+    method?: string,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    _operationId: string = "",
+  ) {
     const name = this.camelCase(this.normalize(path));
     const suffix = method
       ? this.capitalize(this.upperCamelCase(`using_${method}`))
       : "";
 
-    return (
-      (operationId ? this.camelCase(this.normalize(operationId)) : name) +
-      suffix
-    );
+    return name + suffix;
   }
 
   /**
