@@ -104,7 +104,7 @@ export abstract class Base {
     if (typescriptKeywords.has(text)) {
       text += "_";
     }
-    return text.replace(/[/\-_{}():\s`,*<>$]/gm, "_").replaceAll("...", "");
+    return text.replace(/[/\-_{}():\s`,*<>$#.\d]/gm, "_").replaceAll("...", "");
   }
 
   /**
