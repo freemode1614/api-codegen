@@ -263,17 +263,29 @@ export class V3_1 {
         format: format as unknown as SchemaFormatType,
         allOf: allOf?.map((s) =>
           Base.isRef(s)
-            ? { type: Base.upperCamelCase(Base.ref2name(s.$ref, this.doc)) }
+            ? {
+                ...s,
+                ref: s.$ref,
+                type: Base.upperCamelCase(Base.ref2name(s.$ref, this.doc)),
+              }
             : this.toBaseSchema(s, enums),
         ),
         anyOf: anyOf?.map((s) =>
           Base.isRef(s)
-            ? { type: Base.upperCamelCase(Base.ref2name(s.$ref, this.doc)) }
+            ? {
+                ...s,
+                ref: s.$ref,
+                type: Base.upperCamelCase(Base.ref2name(s.$ref, this.doc)),
+              }
             : this.toBaseSchema(s, enums),
         ),
         oneOf: oneOf?.map((s) =>
           Base.isRef(s)
-            ? { type: Base.upperCamelCase(Base.ref2name(s.$ref, this.doc)) }
+            ? {
+                ...s,
+                ref: s.$ref,
+                type: Base.upperCamelCase(Base.ref2name(s.$ref, this.doc)),
+              }
             : this.toBaseSchema(s, enums),
         ),
         properties: Object.keys(properties).reduce((acc, p) => {

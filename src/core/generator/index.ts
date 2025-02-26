@@ -299,12 +299,15 @@ export class Generator {
         }
 
         if (allOf) {
+          console.log(allOf);
+
           return t.createIntersectionTypeNode(
             allOf
               .filter(
                 (schema) =>
-                  !Base.isRef(schema) ||
-                  (schema as SingleTypeSchemaObject).properties,
+                  Base.isRef(schema) ||
+                  ("properties" in schema &&
+                    Object.keys(schema.properties ?? {}).length > 0),
               )
               .map((schema) => this.toTypeNode(schema)),
           );
@@ -316,11 +319,6 @@ export class Generator {
               ? t.createIdentifier(Base.upperCamelCase(type))
               : type,
           );
-          // t.createTypeOperatorNode(
-          //   SyntaxKind.KeyOfKeyword,
-          //   t.createTypeQueryNode(t.createIdentifier(type)),
-          // );
-          // t.createTypeReferenceNode(t.createIdentifier(type));
         }
     }
 

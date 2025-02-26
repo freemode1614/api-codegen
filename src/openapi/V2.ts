@@ -1,5 +1,3 @@
-/* eslint-disable unicorn/filename-case */
-
 import {
   ArrayTypeSchemaObject,
   EnumSchemaObject,
@@ -139,17 +137,29 @@ export class V2 {
         format: format as unknown as SchemaFormatType,
         allOf: allOf?.map((s) =>
           Base.isRef(s)
-            ? { type: Base.upperCamelCase(Base.ref2name(s.$ref, this.doc)) }
+            ? {
+                ...s,
+                ref: s.$ref,
+                type: Base.upperCamelCase(Base.ref2name(s.$ref, this.doc)),
+              }
             : this.toBaseSchema(s as OpenAPIV2.SchemaObject, enums),
         ),
         anyOf: anyOf?.map((s) =>
           Base.isRef(s)
-            ? { type: Base.upperCamelCase(Base.ref2name(s.$ref, this.doc)) }
+            ? {
+                ...s,
+                ref: s.$ref,
+                type: Base.upperCamelCase(Base.ref2name(s.$ref, this.doc)),
+              }
             : this.toBaseSchema(s as OpenAPIV2.SchemaObject, enums),
         ),
         oneOf: oneOf?.map((s) =>
           Base.isRef(s)
-            ? { type: Base.upperCamelCase(Base.ref2name(s.$ref, this.doc)) }
+            ? {
+                ...s,
+                ref: s.$ref,
+                type: Base.upperCamelCase(Base.ref2name(s.$ref, this.doc)),
+              }
             : this.toBaseSchema(s as OpenAPIV2.SchemaObject, enums),
         ),
         properties: Object.keys(properties).reduce((acc, p) => {
@@ -316,12 +326,10 @@ export class V2 {
               });
             }
 
-            // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
             const inBody = baseParameters.filter(
               (p) => p.in === "body" || p.in === "formData",
             );
 
-            // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
             const notInBody = baseParameters.filter(
               (p) => p.in !== "body" && p.in !== "formData",
             );
