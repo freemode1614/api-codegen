@@ -156,7 +156,7 @@ var Base = class _Base {
     if (typescriptKeywords.has(text)) {
       text += "_";
     }
-    return text.replace(/[/\-_{}():\s`,*<>$]/gm, "_").replaceAll("...", "");
+    return text.replace(/[/\-_{}():\s`,*<>$#.\d]/gm, "_").replaceAll("...", "");
   }
   /**
    * Capitalizes the first character of a string.
@@ -532,11 +532,8 @@ var Generator = class _Generator {
           );
         }
         if (allOf) {
-          console.log(allOf);
           return import_typescript.factory.createIntersectionTypeNode(
-            allOf.filter(
-              (schema2) => Base.isRef(schema2) || "properties" in schema2 && Object.keys(schema2.properties ?? {}).length > 0
-            ).map((schema2) => this.toTypeNode(schema2))
+            allOf.map((schema2) => this.toTypeNode(schema2))
           );
         }
         if (type2 && typeof type2 === "string") {
