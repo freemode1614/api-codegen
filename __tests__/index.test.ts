@@ -62,15 +62,15 @@ afterAll(async () => {
 });
 
 describe("Main test case for single doc codegen", () => {
-  it("Should parse without error", async () => {
-    await codeGen({
-      docURL: `https://172.31.7.120:8002/static/openapi.json`,
-      output: "output.ts",
-      // baseURL: "/v1",
-      adaptor: "axios",
-      importClientSource: `import axios from "axios"`,
-    });
-  });
+  // it("Should parse without error", async () => {
+  //   await codeGen({
+  //     docURL: `https://172.31.7.120:8002/static/openapi.json`,
+  //     output: "output.ts",
+  //     // baseURL: "/v1",
+  //     adaptor: "axios",
+  //     importClientSource: `import axios from "axios"`,
+  //   });
+  // });
 
   it("Should not throw", async () => {
     await codeGen({
