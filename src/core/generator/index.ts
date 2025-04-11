@@ -299,7 +299,7 @@ export class Generator {
         }
 
         if (allOf) {
-          // FIXME: How all of should when turn it into code.
+          // FIXME: How "allOf" should be, when turn it into code.
           return t.createIntersectionTypeNode(
             allOf
               // .filter(
@@ -761,8 +761,6 @@ export class Generator {
     if (importClientSource) {
       code = importClientSource + "\n\n" + code;
     }
-
-    // return code;
 
     return await this.prettier(code);
   }

@@ -5,6 +5,6 @@
       "@apicodegen/*": ["./src/*"],
     },
   },
-  "include": ["src", "__tests__"],
+  "include": ["src", "__tests__", "bin/"],
   "exclude": ["node_modules", "npm"],
 }
