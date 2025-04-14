@@ -299,16 +299,8 @@ export class Generator {
         }
 
         if (allOf) {
-          // FIXME: How "allOf" should be, when turn it into code.
           return t.createIntersectionTypeNode(
-            allOf
-              // .filter(
-              //   (schema) =>
-              //     Base.isRef(schema) ||
-              //     ("properties" in schema &&
-              //       Object.keys(schema.properties ?? {}).length > 0),
-              // )
-              .map((schema) => this.toTypeNode(schema)),
+            allOf.map((schema) => this.toTypeNode(schema)),
           );
         }
 
