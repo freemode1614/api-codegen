@@ -2,7 +2,8 @@
 "use strict";
 
 // src/core/base/Adaptor.ts
-var Adapter = class {};
+var Adapter = class {
+};
 
 // src/core/constants/keywords.ts
 var typescriptKeywords = /* @__PURE__ */ new Set([
@@ -79,7 +80,7 @@ var typescriptKeywords = /* @__PURE__ */ new Set([
   "symbol",
   "object",
   "undefined",
-  "bigint",
+  "bigint"
 ]);
 
 // src/core/interface.ts
@@ -143,9 +144,7 @@ var Base = class _Base {
    */
   static pathToFnName(path, method, _operationId = "") {
     const name = this.camelCase(this.normalize(path));
-    const suffix = method
-      ? this.capitalize(this.upperCamelCase(`using_${method}`))
-      : "";
+    const suffix = method ? this.capitalize(this.upperCamelCase(`using_${method}`)) : "";
     return name + suffix;
   }
   /**
@@ -175,11 +174,7 @@ var Base = class _Base {
    */
   static camelCase(text) {
     text = text.trim();
-    return text
-      .split("_")
-      .filter(Boolean)
-      .map((t4, index) => (index === 0 ? t4 : this.capitalize(t4)))
-      .join("");
+    return text.split("_").filter(Boolean).map((t4, index) => index === 0 ? t4 : this.capitalize(t4)).join("");
   }
   /**
    * Converts a string to UpperCamelCase.
@@ -187,12 +182,7 @@ var Base = class _Base {
    * @returns - UpperCamelCase string.
    */
   static upperCamelCase(text) {
-    return this.normalize(text)
-      .replaceAll("...", "")
-      .split("_")
-      .filter(Boolean)
-      .map(this.capitalize)
-      .join("");
+    return this.normalize(text).replaceAll("...", "").split("_").filter(Boolean).map(this.capitalize).join("");
   }
   /**
    * Fetches documentation from a given URL.
@@ -203,14 +193,14 @@ var Base = class _Base {
   static async fetchDoc(url, requestInit = {}) {
     const agent = new import_undici.Agent({
       connect: {
-        rejectUnauthorized: false,
-      },
+        rejectUnauthorized: false
+      }
     });
     try {
       const { body } = await (0, import_undici.request)(url, {
         method: "GET",
         dispatcher: agent,
-        ...requestInit,
+        ...requestInit
       });
       return body.json();
     } catch (error) {
@@ -244,9 +234,8 @@ var Base = class _Base {
    * @returns - True if the schema is a boolean enum.
    */
   static isBooleanEnum(a) {
-    return (
-      a.type === "boolean" ||
-      !!a.enum?.some((member) => typeof member === "boolean")
+    return a.type === "boolean" || !!a.enum?.some(
+      (member) => typeof member === "boolean"
     );
   }
   /**
@@ -256,10 +245,7 @@ var Base = class _Base {
    * @returns - True if the enums are identical.
    */
   static isSameEnum(a, b) {
-    return (
-      a.enum.length === b.enum.length &&
-      a.enum.sort().every((v, index) => v === b.enum.sort()[index])
-    );
+    return a.enum.length === b.enum.length && a.enum.sort().every((v, index) => v === b.enum.sort()[index]);
   }
   /**
    * Filters out duplicate enum schemas from an array.
@@ -333,8 +319,7 @@ var Provider = class {
     this.output = initOptions.output ?? ".";
     this.requestOptions = initOptions.requestOptions ?? {};
     this.importClientSource = initOptions.importClientSource ?? "";
-    const { enums, schemas, requestBodies, responses, parameters, apis } =
-      this.parse(doc);
+    const { enums, schemas, requestBodies, responses, parameters, apis } = this.parse(doc);
     this.enums = enums;
     this.schemas = schemas;
     this.responses = responses;
@@ -362,10 +347,8 @@ var Generator = class _Generator {
     }
     const sourceFile = import_typescript.factory.createSourceFile(
       statements,
-      import_typescript.factory.createToken(
-        import_typescript.SyntaxKind.EndOfFileToken,
-      ),
-      import_typescript.NodeFlags.None,
+      import_typescript.factory.createToken(import_typescript.SyntaxKind.EndOfFileToken),
+      import_typescript.NodeFlags.None
     );
     return (0, import_typescript.createPrinter)().printFile(sourceFile);
   }
@@ -387,22 +370,17 @@ var Generator = class _Generator {
    */
   static toUrlTemplate(path, parameters, basePath = "") {
     const queryParameters = parameters.filter(
-      (p) => p.in === "query" /* query */,
+      (p) => p.in === "query" /* query */
     );
     if (queryParameters.length > 0) {
-      const queryString = queryParameters
-        .map(
-          (qp, index) =>
-            `${index === 0 ? "?" : "&"}${encodeURIComponent(qp.name)}={${qp.name}}`,
-        )
-        .join("");
+      const queryString = queryParameters.map(
+        (qp, index) => `${index === 0 ? "?" : "&"}${encodeURIComponent(qp.name)}={${qp.name}}`
+      ).join("");
       path += queryString;
     }
     const pathSegments = path.replaceAll("{", "${").split("$").filter(Boolean);
     if (pathSegments.length === 1) {
-      return import_typescript.factory.createNoSubstitutionTemplateLiteral(
-        basePath + path,
-      );
+      return import_typescript.factory.createNoSubstitutionTemplateLiteral(basePath + path);
     }
     return import_typescript.factory.createTemplateExpression(
       import_typescript.factory.createTemplateHead(basePath + pathSegments[0]),
@@ -414,11 +392,9 @@ var Generator = class _Generator {
         }
         return import_typescript.factory.createTemplateSpan(
           import_typescript.factory.createIdentifier(match[1]),
-          !isLastSegment
-            ? import_typescript.factory.createTemplateMiddle(match[2])
-            : import_typescript.factory.createTemplateTail(match[2] || ""),
+          !isLastSegment ? import_typescript.factory.createTemplateMiddle(match[2]) : import_typescript.factory.createTemplateTail(match[2] || "")
         );
-      }),
+      })
     );
   }
   /**
@@ -431,17 +407,14 @@ var Generator = class _Generator {
     if (!Array.isArray(comments) || comments.filter(Boolean).length === 0)
       return;
     const formatComment = (comment) => {
-      return comment.tag
-        ? ` @${comment.tag} ${comment.comment ?? ""}`
-        : ` ${comment.comment}`;
+      return comment.tag ? ` @${comment.tag} ${comment.comment ?? ""}` : ` ${comment.comment}`;
     };
-    const formattedComments =
-      "*\n" + comments.map(formatComment).join("\n").trim() + "\n";
+    const formattedComments = "*\n" + comments.map(formatComment).join("\n").trim() + "\n";
     (0, import_typescript.addSyntheticLeadingComment)(
       node,
       import_typescript.SyntaxKind.MultiLineCommentTrivia,
       formattedComments,
-      true,
+      true
     );
   }
   /**
@@ -456,11 +429,7 @@ var Generator = class _Generator {
       return this.isBinarySchema(arraySchema.items);
     }
     const nonArraySchema = schema;
-    return (
-      nonArraySchema.format === "blob" /* blob */ ||
-      nonArraySchema.format === "binary" /* binary */ ||
-      nonArraySchema.type === "file" /* file */
-    );
+    return nonArraySchema.format === "blob" /* blob */ || nonArraySchema.format === "binary" /* binary */ || nonArraySchema.type === "file" /* file */;
   }
   static toRequestBodyTypeNode(schema) {
     return import_typescript.factory.createParameterDeclaration(
@@ -468,7 +437,7 @@ var Generator = class _Generator {
       void 0,
       import_typescript.factory.createIdentifier("req"),
       void 0,
-      this.toTypeNode(schema),
+      this.toTypeNode(schema)
     );
   }
   static toTypeNode(schema) {
@@ -477,30 +446,21 @@ var Generator = class _Generator {
       const identify = Base.ref2name(ref);
       return import_typescript.factory.createTypeReferenceNode(
         import_typescript.factory.createIdentifier(
-          identify === "unknown" ? identify : Base.upperCamelCase(identify),
-        ),
+          identify === "unknown" ? identify : Base.upperCamelCase(identify)
+        )
       );
     }
     switch (type) {
       case "array" /* array */:
         const { items } = schema;
-        return import_typescript.factory.createArrayTypeNode(
-          this.toTypeNode(items),
-        );
+        return import_typescript.factory.createArrayTypeNode(this.toTypeNode(items));
       case "object" /* object */:
         const propsCount = Object.keys(schema.properties ?? {}).length;
         if (!schema.properties || propsCount === 0) {
-          return import_typescript.factory.createTypeReferenceNode(
-            import_typescript.factory.createIdentifier("Record"),
-            [
-              import_typescript.factory.createToken(
-                import_typescript.SyntaxKind.StringKeyword,
-              ),
-              import_typescript.factory.createToken(
-                import_typescript.SyntaxKind.UnknownKeyword,
-              ),
-            ],
-          );
+          return import_typescript.factory.createTypeReferenceNode(import_typescript.factory.createIdentifier("Record"), [
+            import_typescript.factory.createToken(import_typescript.SyntaxKind.StringKeyword),
+            import_typescript.factory.createToken(import_typescript.SyntaxKind.UnknownKeyword)
+          ]);
         }
         const props = Object.keys(schema.properties);
         return import_typescript.factory.createTypeLiteralNode(
@@ -510,38 +470,26 @@ var Generator = class _Generator {
               void 0,
               import_typescript.factory.createStringLiteral(propKey),
               // When field is required, a refrence or binary value, don't add question mark.
-              schema.required || schema.ref || this.isBinarySchema(schema)
-                ? void 0
-                : import_typescript.factory.createToken(
-                    import_typescript.SyntaxKind.QuestionToken,
-                  ),
-              this.toTypeNode(propSchema),
+              schema.required || schema.ref || this.isBinarySchema(schema) ? void 0 : import_typescript.factory.createToken(import_typescript.SyntaxKind.QuestionToken),
+              this.toTypeNode(propSchema)
             );
-          }),
+          })
         );
       case "integer" /* integer */:
       case "number" /* number */:
         if (schema.enum) {
           return import_typescript.factory.createUnionTypeNode(
-            schema.enum.map((e) =>
-              import_typescript.factory.createLiteralTypeNode(
-                import_typescript.factory.createNumericLiteral(e),
-              ),
-            ),
+            schema.enum.map(
+              (e) => import_typescript.factory.createLiteralTypeNode(import_typescript.factory.createNumericLiteral(e))
+            )
           );
         }
-        return import_typescript.factory.createToken(
-          import_typescript.SyntaxKind.NumberKeyword,
-        );
+        return import_typescript.factory.createToken(import_typescript.SyntaxKind.NumberKeyword);
       // case NonArraySchemaType.string:
       case "boolean" /* boolean */:
-        return import_typescript.factory.createToken(
-          import_typescript.SyntaxKind.BooleanKeyword,
-        );
+        return import_typescript.factory.createToken(import_typescript.SyntaxKind.BooleanKeyword);
       case "file" /* file */:
-        return import_typescript.factory.createTypeReferenceNode(
-          import_typescript.factory.createIdentifier("Blob"),
-        );
+        return import_typescript.factory.createTypeReferenceNode(import_typescript.factory.createIdentifier("Blob"));
       default:
         const {
           format: format2,
@@ -549,70 +497,52 @@ var Generator = class _Generator {
           allOf,
           anyOf,
           type: type2,
-          enum: enum_,
+          enum: enum_
         } = schema;
         switch (format2) {
           case "number" /* number */:
-            return import_typescript.factory.createToken(
-              import_typescript.SyntaxKind.NumberKeyword,
-            );
+            return import_typescript.factory.createToken(import_typescript.SyntaxKind.NumberKeyword);
           case "string" /* string */:
-            return import_typescript.factory.createToken(
-              import_typescript.SyntaxKind.StringKeyword,
-            );
+            return import_typescript.factory.createToken(import_typescript.SyntaxKind.StringKeyword);
           case "boolean" /* boolean */:
-            return import_typescript.factory.createToken(
-              import_typescript.SyntaxKind.BooleanKeyword,
-            );
+            return import_typescript.factory.createToken(import_typescript.SyntaxKind.BooleanKeyword);
           case "blob" /* blob */:
           case "binary" /* binary */:
-            return import_typescript.factory.createTypeReferenceNode(
-              import_typescript.factory.createIdentifier("Blob"),
-            );
+            return import_typescript.factory.createTypeReferenceNode(import_typescript.factory.createIdentifier("Blob"));
           default:
         }
         if (enum_) {
           return import_typescript.factory.createUnionTypeNode(
-            enum_.map((e) =>
-              import_typescript.factory.createLiteralTypeNode(
-                import_typescript.factory.createStringLiteral(e),
-              ),
-            ),
+            enum_.map(
+              (e) => import_typescript.factory.createLiteralTypeNode(import_typescript.factory.createStringLiteral(e))
+            )
           );
         }
         if (type2 === "string" /* string */) {
-          return import_typescript.factory.createToken(
-            import_typescript.SyntaxKind.StringKeyword,
-          );
+          return import_typescript.factory.createToken(import_typescript.SyntaxKind.StringKeyword);
         }
         if (oneOf) {
           return import_typescript.factory.createUnionTypeNode(
-            oneOf.map((schema2) => this.toTypeNode(schema2)),
+            oneOf.map((schema2) => this.toTypeNode(schema2))
           );
         }
         if (anyOf) {
           return import_typescript.factory.createUnionTypeNode(
-            anyOf.map((schema2) => this.toTypeNode(schema2)),
+            anyOf.map((schema2) => this.toTypeNode(schema2))
           );
         }
         if (allOf) {
           return import_typescript.factory.createIntersectionTypeNode(
-            allOf.map((schema2) => this.toTypeNode(schema2)),
+            allOf.map((schema2) => this.toTypeNode(schema2))
           );
         }
         if (type2 && typeof type2 === "string") {
           return import_typescript.factory.createTypeReferenceNode(
-            type2 !== "unknown"
-              ? import_typescript.factory.createIdentifier(
-                  Base.upperCamelCase(type2),
-                )
-              : type2,
+            type2 !== "unknown" ? import_typescript.factory.createIdentifier(Base.upperCamelCase(type2)) : type2
           );
         }
     }
-    return import_typescript.factory.createToken(
-      import_typescript.SyntaxKind.UnknownKeyword,
-    );
+    return import_typescript.factory.createToken(import_typescript.SyntaxKind.UnknownKeyword);
   }
   static toDeclarationNode(parameters) {
     const objectElements = [];
@@ -623,15 +553,15 @@ var Generator = class _Generator {
           void 0,
           void 0,
           import_typescript.factory.createIdentifier(
-            Base.camelCase(Base.normalize(Base.ref2name(parameter.ref))),
+            Base.camelCase(Base.normalize(Base.ref2name(parameter.ref)))
           ),
           void 0,
           import_typescript.factory.createTypeReferenceNode(
             import_typescript.factory.createIdentifier(
-              Base.upperCamelCase(Base.normalize(Base.ref2name(parameter.ref))),
-            ),
+              Base.upperCamelCase(Base.normalize(Base.ref2name(parameter.ref)))
+            )
           ),
-          void 0,
+          void 0
         );
       } else {
         const { name, schema, required } = parameter;
@@ -639,28 +569,16 @@ var Generator = class _Generator {
           import_typescript.factory.createBindingElement(
             void 0,
             void 0,
-            import_typescript.factory.createIdentifier(
-              Base.camelCase(Base.normalize(name)),
-            ),
-          ),
+            import_typescript.factory.createIdentifier(Base.camelCase(Base.normalize(name)))
+          )
         );
         typeObjectElements.push(
           import_typescript.factory.createPropertySignature(
             [],
-            import_typescript.factory.createIdentifier(
-              Base.camelCase(Base.normalize(name)),
-            ),
-            required
-              ? void 0
-              : import_typescript.factory.createToken(
-                  import_typescript.SyntaxKind.QuestionToken,
-                ),
-            !schema
-              ? import_typescript.factory.createToken(
-                  import_typescript.SyntaxKind.UnknownKeyword,
-                )
-              : this.toTypeNode(schema),
-          ),
+            import_typescript.factory.createIdentifier(Base.camelCase(Base.normalize(name))),
+            required ? void 0 : import_typescript.factory.createToken(import_typescript.SyntaxKind.QuestionToken),
+            !schema ? import_typescript.factory.createToken(import_typescript.SyntaxKind.UnknownKeyword) : this.toTypeNode(schema)
+          )
         );
       }
     }
@@ -670,7 +588,7 @@ var Generator = class _Generator {
       import_typescript.factory.createObjectBindingPattern(objectElements),
       void 0,
       import_typescript.factory.createTypeLiteralNode(typeObjectElements),
-      void 0,
+      void 0
     );
   }
   static toFormDataStatement(parameters, requestBody) {
@@ -686,12 +604,12 @@ var Generator = class _Generator {
             import_typescript.factory.createNewExpression(
               import_typescript.factory.createIdentifier("FormData"),
               void 0,
-              [],
-            ),
-          ),
+              []
+            )
+          )
         ],
-        import_typescript.NodeFlags.Const,
-      ),
+        import_typescript.NodeFlags.Const
+      )
     );
     statements.push(fdDeclaration);
     parameters.forEach((parameter) => {
@@ -699,53 +617,43 @@ var Generator = class _Generator {
         import_typescript.factory.createExpressionStatement(
           import_typescript.factory.createBinaryExpression(
             import_typescript.factory.createIdentifier(parameter.name),
-            import_typescript.factory.createToken(
-              import_typescript.SyntaxKind.AmpersandAmpersandToken,
-            ),
+            import_typescript.factory.createToken(import_typescript.SyntaxKind.AmpersandAmpersandToken),
             import_typescript.factory.createCallExpression(
               import_typescript.factory.createPropertyAccessExpression(
                 import_typescript.factory.createIdentifier("fd"),
-                import_typescript.factory.createIdentifier("append"),
+                import_typescript.factory.createIdentifier("append")
               ),
               void 0,
               [
                 import_typescript.factory.createStringLiteral(parameter.name),
-                import_typescript.factory.createIdentifier(parameter.name),
-              ],
-            ),
-          ),
-        ),
+                import_typescript.factory.createIdentifier(parameter.name)
+              ]
+            )
+          )
+        )
       );
     });
-    if (
-      requestBody &&
-      requestBody.type === "object" &&
-      requestBody.properties &&
-      Object.keys(requestBody.properties).length !== 0
-    ) {
+    if (requestBody && requestBody.type === "object" && requestBody.properties && Object.keys(requestBody.properties).length !== 0) {
       Object.keys(requestBody.properties).forEach((key) => {
         const schemaByKey = requestBody.properties[key];
-        if (
-          schemaByKey.type === "array" /* array */ &&
-          this.isBinarySchema(schemaByKey)
-        ) {
+        if (schemaByKey.type === "array" /* array */ && this.isBinarySchema(schemaByKey)) {
           statements.push(
             import_typescript.factory.createForOfStatement(
               void 0,
               import_typescript.factory.createVariableDeclarationList(
                 [import_typescript.factory.createVariableDeclaration("file")],
-                import_typescript.NodeFlags.Const,
+                import_typescript.NodeFlags.Const
               ),
               import_typescript.factory.createElementAccessExpression(
                 import_typescript.factory.createIdentifier("req"),
-                import_typescript.factory.createStringLiteral(key),
+                import_typescript.factory.createStringLiteral(key)
               ),
               import_typescript.factory.createBlock([
                 import_typescript.factory.createExpressionStatement(
                   import_typescript.factory.createCallExpression(
                     import_typescript.factory.createPropertyAccessExpression(
                       import_typescript.factory.createIdentifier("fd"),
-                      import_typescript.factory.createIdentifier("append"),
+                      import_typescript.factory.createIdentifier("append")
                     ),
                     [],
                     [
@@ -753,13 +661,13 @@ var Generator = class _Generator {
                       import_typescript.factory.createIdentifier("file"),
                       import_typescript.factory.createPropertyAccessExpression(
                         import_typescript.factory.createIdentifier("file"),
-                        import_typescript.factory.createIdentifier("name"),
-                      ),
-                    ],
-                  ),
-                ),
-              ]),
-            ),
+                        import_typescript.factory.createIdentifier("name")
+                      )
+                    ]
+                  )
+                )
+              ])
+            )
           );
         } else {
           if (schemaByKey.required) {
@@ -768,31 +676,27 @@ var Generator = class _Generator {
                 import_typescript.factory.createCallExpression(
                   import_typescript.factory.createPropertyAccessExpression(
                     import_typescript.factory.createIdentifier("fd"),
-                    import_typescript.factory.createIdentifier("append"),
+                    import_typescript.factory.createIdentifier("append")
                   ),
                   void 0,
                   [
                     import_typescript.factory.createStringLiteral(key),
-                    schemaByKey.type === "string"
-                      ? import_typescript.factory.createElementAccessExpression(
+                    schemaByKey.type === "string" ? import_typescript.factory.createElementAccessExpression(
+                      import_typescript.factory.createIdentifier("req"),
+                      import_typescript.factory.createStringLiteral(key)
+                    ) : import_typescript.factory.createCallExpression(
+                      import_typescript.factory.createIdentifier("String"),
+                      void 0,
+                      [
+                        import_typescript.factory.createElementAccessExpression(
                           import_typescript.factory.createIdentifier("req"),
-                          import_typescript.factory.createStringLiteral(key),
+                          import_typescript.factory.createStringLiteral(key)
                         )
-                      : import_typescript.factory.createCallExpression(
-                          import_typescript.factory.createIdentifier("String"),
-                          void 0,
-                          [
-                            import_typescript.factory.createElementAccessExpression(
-                              import_typescript.factory.createIdentifier("req"),
-                              import_typescript.factory.createStringLiteral(
-                                key,
-                              ),
-                            ),
-                          ],
-                        ),
-                  ],
-                ),
-              ),
+                      ]
+                    )
+                  ]
+                )
+              )
             );
           } else {
             statements.push(
@@ -800,44 +704,34 @@ var Generator = class _Generator {
                 import_typescript.factory.createBinaryExpression(
                   import_typescript.factory.createElementAccessExpression(
                     import_typescript.factory.createIdentifier("req"),
-                    import_typescript.factory.createStringLiteral(key),
+                    import_typescript.factory.createStringLiteral(key)
                   ),
-                  import_typescript.factory.createToken(
-                    import_typescript.SyntaxKind.AmpersandAmpersandToken,
-                  ),
+                  import_typescript.factory.createToken(import_typescript.SyntaxKind.AmpersandAmpersandToken),
                   import_typescript.factory.createCallExpression(
                     import_typescript.factory.createPropertyAccessExpression(
                       import_typescript.factory.createIdentifier("fd"),
-                      import_typescript.factory.createIdentifier("append"),
+                      import_typescript.factory.createIdentifier("append")
                     ),
                     void 0,
                     [
                       import_typescript.factory.createStringLiteral(key),
-                      schemaByKey.type === "string"
-                        ? import_typescript.factory.createElementAccessExpression(
+                      schemaByKey.type === "string" ? import_typescript.factory.createElementAccessExpression(
+                        import_typescript.factory.createIdentifier("req"),
+                        import_typescript.factory.createStringLiteral(key)
+                      ) : import_typescript.factory.createCallExpression(
+                        import_typescript.factory.createIdentifier("String"),
+                        void 0,
+                        [
+                          import_typescript.factory.createElementAccessExpression(
                             import_typescript.factory.createIdentifier("req"),
-                            import_typescript.factory.createStringLiteral(key),
+                            import_typescript.factory.createStringLiteral(key)
                           )
-                        : import_typescript.factory.createCallExpression(
-                            import_typescript.factory.createIdentifier(
-                              "String",
-                            ),
-                            void 0,
-                            [
-                              import_typescript.factory.createElementAccessExpression(
-                                import_typescript.factory.createIdentifier(
-                                  "req",
-                                ),
-                                import_typescript.factory.createStringLiteral(
-                                  key,
-                                ),
-                              ),
-                            ],
-                          ),
-                    ],
-                  ),
-                ),
-              ),
+                        ]
+                      )
+                    ]
+                  )
+                )
+              )
             );
           }
         }
@@ -846,46 +740,29 @@ var Generator = class _Generator {
     return statements;
   }
   static bodyBlock(uri, method, parameters, requestBody, response, adapter) {
-    const isFormDataRequest =
-      requestBody &&
-      ["multipart/form-data", "application/x-www-form-urlencoded"].includes(
-        requestBody.type,
-      );
+    const isFormDataRequest = requestBody && ["multipart/form-data", "application/x-www-form-urlencoded"].includes(
+      requestBody.type
+    );
     const shouldParseResponseToJSON = "application/json" === response?.type;
-    const isRequestBodyBinary =
-      requestBody?.schema &&
-      requestBody.schema.type === "array" /* array */ &&
-      this.isBinarySchema(requestBody.schema);
+    const isRequestBodyBinary = requestBody?.schema && requestBody.schema.type === "array" /* array */ && this.isBinarySchema(requestBody.schema);
     const parametersShouldPutInFormData = parameters.filter(
-      (p) =>
-        p.in === "formData" /* formData */ ||
-        (p.schema && this.isBinarySchema(p.schema)),
+      (p) => p.in === "formData" /* formData */ || p.schema && this.isBinarySchema(p.schema)
     );
     const parametersShouldNotPutInFormData = parameters.filter(
-      (p) => !parametersShouldPutInFormData.includes(p),
+      (p) => !parametersShouldPutInFormData.includes(p)
     );
-    const isRequestBodyContainsBinary =
-      requestBody?.schema &&
-      "properties" in requestBody.schema &&
-      Object.values(requestBody.schema.properties).some((p) =>
-        this.isBinarySchema(p),
-      );
+    const isRequestBodyContainsBinary = requestBody?.schema && "properties" in requestBody.schema && Object.values(requestBody.schema?.properties ?? {}).some(
+      (p) => this.isBinarySchema(p)
+    );
     const hasBinaryInParameters = parameters.some(
-      (p) => p?.schema && this.isBinarySchema(p.schema),
+      (p) => p?.schema && this.isBinarySchema(p.schema)
     );
-    const shouldPutParametersOrBodyInFormData =
-      isFormDataRequest ||
-      isRequestBodyBinary ||
-      hasBinaryInParameters ||
-      isRequestBodyContainsBinary ||
-      parametersShouldPutInFormData.length > 0;
+    const shouldPutParametersOrBodyInFormData = isFormDataRequest || isRequestBodyBinary || hasBinaryInParameters || isRequestBodyContainsBinary || parametersShouldPutInFormData.length > 0;
     return import_typescript.factory.createBlock([
-      ...(shouldPutParametersOrBodyInFormData
-        ? this.toFormDataStatement(
-            parametersShouldPutInFormData,
-            requestBody?.schema,
-          )
-        : []),
+      ...shouldPutParametersOrBodyInFormData ? this.toFormDataStatement(
+        parametersShouldPutInFormData,
+        requestBody?.schema
+      ) : [],
       ...adapter.client(
         uri,
         method,
@@ -894,8 +771,8 @@ var Generator = class _Generator {
         response,
         adapter,
         shouldPutParametersOrBodyInFormData,
-        shouldParseResponseToJSON,
-      ),
+        shouldParseResponseToJSON
+      )
     ]);
   }
   static schemaToStatemets(parsedDoc, adaptor, options) {
@@ -906,46 +783,29 @@ var Generator = class _Generator {
       enumNames.push(Base.capitalize(enumObject.name));
       statements.push(
         import_typescript.factory.createEnumDeclaration(
-          [
-            import_typescript.factory.createToken(
-              import_typescript.SyntaxKind.ExportKeyword,
-            ),
-          ],
-          import_typescript.factory.createIdentifier(
-            Base.upperCamelCase(enumObject.name),
-          ),
+          [import_typescript.factory.createToken(import_typescript.SyntaxKind.ExportKeyword)],
+          import_typescript.factory.createIdentifier(Base.upperCamelCase(enumObject.name)),
           enumObject.enum.map((member) => {
             return import_typescript.factory.createEnumMember(
               import_typescript.factory.createStringLiteral(
-                typeof member === "string" ? member : `${member}_`,
+                typeof member === "string" ? member : `${member}_`
               ),
-              typeof member === "string"
-                ? import_typescript.factory.createStringLiteral(member)
-                : import_typescript.factory.createNumericLiteral(member),
+              typeof member === "string" ? import_typescript.factory.createStringLiteral(member) : import_typescript.factory.createNumericLiteral(member)
             );
-          }),
-        ),
+          })
+        )
       );
     }
     for (const schemaKey in schemas) {
-      if (
-        Object.hasOwnProperty.call(schemas, schemaKey) &&
-        !enumNames.includes(Base.upperCamelCase(schemaKey))
-      ) {
+      if (Object.hasOwnProperty.call(schemas, schemaKey) && !enumNames.includes(Base.upperCamelCase(schemaKey))) {
         const schema = schemas[schemaKey];
         statements.push(
           import_typescript.factory.createTypeAliasDeclaration(
-            [
-              import_typescript.factory.createModifier(
-                import_typescript.SyntaxKind.ExportKeyword,
-              ),
-            ],
-            import_typescript.factory.createIdentifier(
-              Base.upperCamelCase(schemaKey),
-            ),
+            [import_typescript.factory.createModifier(import_typescript.SyntaxKind.ExportKeyword)],
+            import_typescript.factory.createIdentifier(Base.upperCamelCase(schemaKey)),
             void 0,
-            this.toTypeNode(schema),
-          ),
+            this.toTypeNode(schema)
+          )
         );
       }
     }
@@ -959,7 +819,7 @@ var Generator = class _Generator {
           responses = [],
           summary,
           deprecated,
-          description,
+          description
         } = operation;
         let { parameters = [] } = operation;
         parameters = parameters.filter((p) => p.in !== "cookie");
@@ -970,26 +830,15 @@ var Generator = class _Generator {
         for (const req of requestBody) {
           const statement = import_typescript.factory.createFunctionDeclaration(
             [
-              import_typescript.factory.createModifier(
-                import_typescript.SyntaxKind.ExportKeyword,
-              ),
-              import_typescript.factory.createModifier(
-                import_typescript.SyntaxKind.AsyncKeyword,
-              ),
+              import_typescript.factory.createModifier(import_typescript.SyntaxKind.ExportKeyword),
+              import_typescript.factory.createModifier(import_typescript.SyntaxKind.AsyncKeyword)
             ],
             void 0,
-            Base.pathToFnName(uri, method, operationId) +
-              (shouldAddExtraMethodNameSuffix
-                ? Base.capitalize(req.type.split("/")[1])
-                : ""),
+            Base.pathToFnName(uri, method, operationId) + (shouldAddExtraMethodNameSuffix ? Base.capitalize(req.type.split("/")[1]) : ""),
             void 0,
             [
-              parameters.length > 0
-                ? _Generator.toDeclarationNode(parameters)
-                : void 0,
-              req?.schema
-                ? _Generator.toRequestBodyTypeNode(req.schema)
-                : void 0,
+              parameters.length > 0 ? _Generator.toDeclarationNode(parameters) : void 0,
+              req?.schema ? _Generator.toRequestBodyTypeNode(req.schema) : void 0
             ].filter(Boolean),
             void 0,
             this.bodyBlock(
@@ -998,22 +847,22 @@ var Generator = class _Generator {
               parameters,
               req,
               responses[0],
-              adaptor,
-            ),
+              adaptor
+            )
           );
           this.addComments(
             statement,
             [
               description && {
-                comment: description,
+                comment: description
               },
               summary && {
-                comment: summary,
+                comment: summary
               },
               deprecated && {
-                tag: "deprecated",
-              },
-            ].filter(Boolean),
+                tag: "deprecated"
+              }
+            ].filter(Boolean)
           );
           statements.push(statement);
         }
@@ -1023,13 +872,13 @@ var Generator = class _Generator {
   }
   static async prettier(code) {
     return await (0, import_prettier.format)(code, {
-      parser: "typescript",
+      parser: "typescript"
     });
   }
   static async genCode(schema, initOptions, adaptor) {
     const { importClientSource } = initOptions;
     const statements = this.schemaToStatemets(schema, adaptor, {
-      baseURL: initOptions.baseURL ?? "",
+      baseURL: initOptions.baseURL ?? ""
     });
     let code = this.toCode(statements);
     if (importClientSource) {
@@ -1069,15 +918,7 @@ var AxiosAdapter = class extends Adapter {
    *
    * @throws {Error} Indicates that the method is not yet implemented and needs to be filled in.
    */
-  client(
-    uri,
-    method,
-    parameters,
-    requestBody,
-    response,
-    adapter,
-    shouldUseFormData,
-  ) {
+  client(uri, method, parameters, requestBody, response, adapter, shouldUseFormData) {
     const statements = [];
     const inBody = parameters.filter((p) => !p.in || p.in === "body");
     const inHeader = parameters.filter((p) => p.in === "header");
@@ -1086,78 +927,58 @@ var AxiosAdapter = class extends Adapter {
         [
           // Set the HTTP method
           import_typescript2.factory.createPropertyAssignment(
-            import_typescript2.factory.createIdentifier(
-              adapter.methodFieldName,
-            ),
-            import_typescript2.factory.createStringLiteral(
-              method.toUpperCase(),
-            ),
-          ),
-        ]
-          .concat(
-            // Add headers if there are any
-            inHeader.length > 0
-              ? import_typescript2.factory.createPropertyAssignment(
-                  import_typescript2.factory.createIdentifier(
-                    adapter.headersFieldName,
-                  ),
-                  import_typescript2.factory.createObjectLiteralExpression(
-                    inHeader.map((p) =>
-                      import_typescript2.factory.createPropertyAssignment(
-                        import_typescript2.factory.createStringLiteral(p.name),
-                        import_typescript2.factory.createCallExpression(
-                          import_typescript2.factory.createIdentifier(
-                            "encodeURIComponent",
-                          ),
-                          void 0,
-                          [
-                            import_typescript2.factory.createCallExpression(
-                              import_typescript2.factory.createIdentifier(
-                                "String",
-                              ),
-                              void 0,
-                              [
-                                import_typescript2.factory.createIdentifier(
-                                  Base.camelCase(Base.normalize(p.name)),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                )
-              : [],
+            import_typescript2.factory.createIdentifier(adapter.methodFieldName),
+            import_typescript2.factory.createStringLiteral(method.toUpperCase())
           )
-          .concat(
-            // Add body if needed
-            shouldUseFormData || inBody.length > 0 || requestBody?.schema
-              ? import_typescript2.factory.createPropertyAssignment(
-                  import_typescript2.factory.createIdentifier(
-                    adapter.bodyFieldName,
-                  ),
-                  shouldUseFormData
-                    ? import_typescript2.factory.createIdentifier("fd")
-                    : inBody.length > 0 ||
-                        (requestBody?.schema &&
-                          !Generator.isBinarySchema(requestBody.schema))
-                      ? import_typescript2.factory.createIdentifier("req")
-                      : import_typescript2.factory.createIdentifier("req"),
+        ].concat(
+          // Add headers if there are any
+          inHeader.length > 0 ? import_typescript2.factory.createPropertyAssignment(
+            import_typescript2.factory.createIdentifier(adapter.headersFieldName),
+            import_typescript2.factory.createObjectLiteralExpression(
+              inHeader.map(
+                (p) => import_typescript2.factory.createPropertyAssignment(
+                  import_typescript2.factory.createStringLiteral(p.name),
+                  import_typescript2.factory.createCallExpression(
+                    import_typescript2.factory.createIdentifier("encodeURIComponent"),
+                    void 0,
+                    [
+                      import_typescript2.factory.createCallExpression(
+                        import_typescript2.factory.createIdentifier("String"),
+                        void 0,
+                        [
+                          import_typescript2.factory.createIdentifier(
+                            Base.camelCase(Base.normalize(p.name))
+                          )
+                        ]
+                      )
+                    ]
+                  )
                 )
-              : [],
-          ),
-        true,
+              )
+            )
+          ) : []
+        ).concat(
+          // Add body if needed
+          shouldUseFormData || inBody.length > 0 || requestBody?.schema ? import_typescript2.factory.createPropertyAssignment(
+            import_typescript2.factory.createIdentifier(adapter.bodyFieldName),
+            shouldUseFormData ? import_typescript2.factory.createIdentifier("fd") : inBody.length > 0 || requestBody?.schema && !Generator.isBinarySchema(requestBody.schema) ? import_typescript2.factory.createIdentifier("req") : import_typescript2.factory.createIdentifier("req")
+          ) : []
+        ),
+        true
       );
     };
     statements.push(
       import_typescript2.factory.createReturnStatement(
         import_typescript2.factory.createCallExpression(
           import_typescript2.factory.createIdentifier(adapter.name),
-          response?.schema ? [Generator.toTypeNode(response.schema)] : void 0,
-          [Generator.toUrlTemplate(uri, parameters), toLiterlExpression()],
-        ),
-      ),
+          response?.schema ? [
+            Generator.toTypeNode(
+              response.schema
+            )
+          ] : void 0,
+          [Generator.toUrlTemplate(uri, parameters), toLiterlExpression()]
+        )
+      )
     );
     return statements;
   }
@@ -1183,16 +1004,7 @@ var FetchAdapter = class extends Adapter {
    * @param shouldUseJSONResponse - Flag to use JSON parsing for the response
    * @return - An array of generated TypeScript statements
    */
-  client(
-    uri,
-    method,
-    parameters,
-    requestBody,
-    response,
-    adapter,
-    shouldUseFormData,
-    shouldUseJSONResponse,
-  ) {
+  client(uri, method, parameters, requestBody, response, adapter, shouldUseFormData, shouldUseJSONResponse) {
     const statements = [];
     const inBody = parameters.filter((p) => !p.in || p.in === "body");
     const inHeader = parameters.filter((p) => p.in === "header");
@@ -1201,162 +1013,122 @@ var FetchAdapter = class extends Adapter {
         [
           // Set the HTTP method
           import_typescript3.factory.createPropertyAssignment(
-            import_typescript3.factory.createIdentifier(
-              adapter.methodFieldName,
-            ),
-            import_typescript3.factory.createStringLiteral(
-              method.toUpperCase(),
-            ),
-          ),
-        ]
-          .concat(
-            // Add headers if there are any
-            inHeader.length > 0
-              ? import_typescript3.factory.createPropertyAssignment(
-                  import_typescript3.factory.createIdentifier(
-                    adapter.headersFieldName,
-                  ),
-                  import_typescript3.factory.createObjectLiteralExpression(
-                    inHeader.map((p) =>
-                      import_typescript3.factory.createPropertyAssignment(
-                        import_typescript3.factory.createStringLiteral(p.name),
-                        import_typescript3.factory.createCallExpression(
-                          import_typescript3.factory.createIdentifier(
-                            "encodeURIComponent",
-                          ),
-                          void 0,
-                          [
-                            import_typescript3.factory.createCallExpression(
-                              import_typescript3.factory.createIdentifier(
-                                "String",
-                              ),
-                              void 0,
-                              [
-                                import_typescript3.factory.createIdentifier(
-                                  Base.camelCase(Base.normalize(p.name)),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                )
-              : [],
+            import_typescript3.factory.createIdentifier(adapter.methodFieldName),
+            import_typescript3.factory.createStringLiteral(method.toUpperCase())
           )
-          .concat(
-            // Add body if needed
-            shouldUseFormData || inBody.length > 0 || requestBody?.schema
-              ? import_typescript3.factory.createPropertyAssignment(
-                  import_typescript3.factory.createIdentifier(
-                    adapter.bodyFieldName,
-                  ),
-                  shouldUseFormData
-                    ? import_typescript3.factory.createIdentifier("fd")
-                    : inBody.length > 0 ||
-                        (requestBody?.schema &&
-                          !Generator.isBinarySchema(requestBody.schema))
-                      ? import_typescript3.factory.createCallExpression(
-                          import_typescript3.factory.createPropertyAccessExpression(
-                            import_typescript3.factory.createIdentifier("JSON"),
-                            import_typescript3.factory.createIdentifier(
-                              "stringify",
-                            ),
-                          ),
-                          [],
-                          [
-                            requestBody
-                              ? import_typescript3.factory.createIdentifier(
-                                  "req",
-                                )
-                              : import_typescript3.factory.createObjectLiteralExpression(
-                                  inBody.map((b) =>
-                                    import_typescript3.factory.createShorthandPropertyAssignment(
-                                      import_typescript3.factory.createIdentifier(
-                                        b.name,
-                                      ),
-                                    ),
-                                  ),
-                                  true,
-                                ),
-                          ],
-                        )
-                      : // One File parameter
-                        import_typescript3.factory.createIdentifier("req"),
+        ].concat(
+          // Add headers if there are any
+          inHeader.length > 0 ? import_typescript3.factory.createPropertyAssignment(
+            import_typescript3.factory.createIdentifier(adapter.headersFieldName),
+            import_typescript3.factory.createObjectLiteralExpression(
+              inHeader.map(
+                (p) => import_typescript3.factory.createPropertyAssignment(
+                  import_typescript3.factory.createStringLiteral(p.name),
+                  import_typescript3.factory.createCallExpression(
+                    import_typescript3.factory.createIdentifier("encodeURIComponent"),
+                    void 0,
+                    [
+                      import_typescript3.factory.createCallExpression(
+                        import_typescript3.factory.createIdentifier("String"),
+                        void 0,
+                        [
+                          import_typescript3.factory.createIdentifier(
+                            Base.camelCase(Base.normalize(p.name))
+                          )
+                        ]
+                      )
+                    ]
+                  )
                 )
-              : [],
-          ),
-        true,
+              )
+            )
+          ) : []
+        ).concat(
+          // Add body if needed
+          shouldUseFormData || inBody.length > 0 || requestBody?.schema ? import_typescript3.factory.createPropertyAssignment(
+            import_typescript3.factory.createIdentifier(adapter.bodyFieldName),
+            shouldUseFormData ? import_typescript3.factory.createIdentifier("fd") : inBody.length > 0 || requestBody?.schema && !Generator.isBinarySchema(requestBody.schema) ? import_typescript3.factory.createCallExpression(
+              import_typescript3.factory.createPropertyAccessExpression(
+                import_typescript3.factory.createIdentifier("JSON"),
+                import_typescript3.factory.createIdentifier("stringify")
+              ),
+              [],
+              [
+                requestBody ? import_typescript3.factory.createIdentifier("req") : import_typescript3.factory.createObjectLiteralExpression(
+                  inBody.map(
+                    (b) => import_typescript3.factory.createShorthandPropertyAssignment(
+                      import_typescript3.factory.createIdentifier(b.name)
+                    )
+                  ),
+                  true
+                )
+              ]
+            ) : (
+              // One File parameter
+              import_typescript3.factory.createIdentifier("req")
+            )
+          ) : []
+        ),
+        true
       );
     };
     statements.push(
       import_typescript3.factory.createReturnStatement(
-        shouldUseJSONResponse
-          ? // Handle JSON response with proper type checking
-            import_typescript3.factory.createCallExpression(
-              import_typescript3.factory.createPropertyAccessExpression(
-                import_typescript3.factory.createCallExpression(
-                  import_typescript3.factory.createIdentifier(adapter.name),
-                  void 0,
-                  [
-                    Generator.toUrlTemplate(uri, parameters),
-                    toLiterlExpression(),
-                  ],
-                ),
-                import_typescript3.factory.createIdentifier("then"),
+        shouldUseJSONResponse ? (
+          // Handle JSON response with proper type checking
+          import_typescript3.factory.createCallExpression(
+            import_typescript3.factory.createPropertyAccessExpression(
+              import_typescript3.factory.createCallExpression(
+                import_typescript3.factory.createIdentifier(adapter.name),
+                void 0,
+                [
+                  Generator.toUrlTemplate(uri, parameters),
+                  toLiterlExpression()
+                ]
               ),
-              void 0,
-              [
-                import_typescript3.factory.createArrowFunction(
-                  [
-                    import_typescript3.factory.createModifier(
-                      import_typescript3.SyntaxKind.AsyncKeyword,
-                    ),
-                  ],
-                  [],
-                  [
-                    import_typescript3.factory.createParameterDeclaration(
-                      void 0,
-                      void 0,
-                      import_typescript3.factory.createIdentifier("response"),
-                    ),
-                  ],
-                  void 0,
-                  import_typescript3.factory.createToken(
-                    import_typescript3.SyntaxKind.EqualsGreaterThanToken,
-                  ),
-                  import_typescript3.factory.createAsExpression(
-                    import_typescript3.factory.createParenthesizedExpression(
-                      import_typescript3.factory.createAwaitExpression(
-                        import_typescript3.factory.createCallExpression(
-                          import_typescript3.factory.createPropertyAccessExpression(
-                            import_typescript3.factory.createIdentifier(
-                              "response",
-                            ),
-                            import_typescript3.factory.createIdentifier("json"),
-                          ),
-                          void 0,
-                          [],
-                        ),
-                      ),
-                    ),
-                    response?.schema
-                      ? Generator.toTypeNode(response.schema)
-                      : import_typescript3.factory.createToken(
-                          import_typescript3.SyntaxKind.UnknownKeyword,
-                        ),
-                  ),
-                ),
-              ],
-            )
-          : // Simple fetch call without JSON parsing
-            import_typescript3.factory.createCallExpression(
-              import_typescript3.factory.createIdentifier(adapter.name),
-              void 0,
-              [Generator.toUrlTemplate(uri, parameters), toLiterlExpression()],
+              import_typescript3.factory.createIdentifier("then")
             ),
-      ),
+            void 0,
+            [
+              import_typescript3.factory.createArrowFunction(
+                [import_typescript3.factory.createModifier(import_typescript3.SyntaxKind.AsyncKeyword)],
+                [],
+                [
+                  import_typescript3.factory.createParameterDeclaration(
+                    void 0,
+                    void 0,
+                    import_typescript3.factory.createIdentifier("response")
+                  )
+                ],
+                void 0,
+                import_typescript3.factory.createToken(import_typescript3.SyntaxKind.EqualsGreaterThanToken),
+                import_typescript3.factory.createAsExpression(
+                  import_typescript3.factory.createParenthesizedExpression(
+                    import_typescript3.factory.createAwaitExpression(
+                      import_typescript3.factory.createCallExpression(
+                        import_typescript3.factory.createPropertyAccessExpression(
+                          import_typescript3.factory.createIdentifier("response"),
+                          import_typescript3.factory.createIdentifier("json")
+                        ),
+                        void 0,
+                        []
+                      )
+                    )
+                  ),
+                  response?.schema ? Generator.toTypeNode(response.schema) : import_typescript3.factory.createToken(import_typescript3.SyntaxKind.UnknownKeyword)
+                )
+              )
+            ]
+          )
+        ) : (
+          // Simple fetch call without JSON parsing
+          import_typescript3.factory.createCallExpression(
+            import_typescript3.factory.createIdentifier(adapter.name),
+            void 0,
+            [Generator.toUrlTemplate(uri, parameters), toLiterlExpression()]
+          )
+        )
+      )
     );
     return statements;
   }
@@ -1380,18 +1152,13 @@ var V2 = class {
   /**
    * OpenAPI schema to base schema.
    */
-  getSchemaByRef(
-    schema,
-    reserveRef = false,
-    enums = [],
-    upLevelSchemaKey = "",
-  ) {
+  getSchemaByRef(schema, reserveRef = false, enums = [], upLevelSchemaKey = "") {
     let refName = "";
     if (Base.isRef(schema)) {
       refName = Base.upperCamelCase(Base.ref2name(schema.$ref));
       if (reserveRef) {
         return {
-          type: upLevelSchemaKey + refName,
+          type: upLevelSchemaKey + refName
         };
       }
       if (!this.doc.definitions) {
@@ -1407,7 +1174,7 @@ var V2 = class {
   toBaseSchema(schema, enums = [], schemaKey = "", upLevelSchemaKey = "") {
     if (!schema) {
       return {
-        type: "unknown",
+        type: "unknown"
       };
     }
     if (Base.isRef(schema)) {
@@ -1419,7 +1186,7 @@ var V2 = class {
         type,
         required: !!required,
         description,
-        items: this.toBaseSchema(items, enums, schemaKey, upLevelSchemaKey),
+        items: this.toBaseSchema(items, enums, schemaKey, upLevelSchemaKey)
       };
     } else {
       const {
@@ -1430,29 +1197,23 @@ var V2 = class {
         enum: enum_,
         format: format2,
         oneOf,
-        properties = {},
+        properties = {}
       } = schema;
       let { type } = schema;
       if (enum_ && type !== "boolean") {
-        const name =
-          Base.upperCamelCase(upLevelSchemaKey) +
-          Base.upperCamelCase(schemaKey);
+        const name = Base.upperCamelCase(upLevelSchemaKey) + Base.upperCamelCase(schemaKey);
         const enumObject = {
           name,
-          enum: [...new Set(enum_)],
+          enum: [...new Set(enum_)]
         };
         const sameObject = Base.findSameSchema(enumObject, enums);
         if (!sameObject && Base.isValidEnumType(schema)) {
           enums.push(enumObject);
         }
         return {
-          type: sameObject
-            ? sameObject.name
-            : Base.isBooleanEnum(schema)
-              ? "boolean"
-              : enumObject.name,
+          type: sameObject ? sameObject.name : Base.isBooleanEnum(schema) ? "boolean" : enumObject.name,
           required,
-          description,
+          description
         };
       }
       if (type === void 0 && Object.keys(properties).length > 0) {
@@ -1464,46 +1225,38 @@ var V2 = class {
         description,
         enum: enum_,
         format: format2,
-        allOf: allOf?.map((s) =>
-          Base.isRef(s)
-            ? {
-                ...s,
-                ref: s.$ref,
-                type: Base.upperCamelCase(Base.ref2name(s.$ref, this.doc)),
-              }
-            : this.toBaseSchema(s, enums),
+        allOf: allOf?.map(
+          (s) => Base.isRef(s) ? {
+            ...s,
+            ref: s.$ref,
+            type: Base.upperCamelCase(Base.ref2name(s.$ref, this.doc))
+          } : this.toBaseSchema(s, enums)
         ),
-        anyOf: anyOf?.map((s) =>
-          Base.isRef(s)
-            ? {
-                ...s,
-                ref: s.$ref,
-                type: Base.upperCamelCase(Base.ref2name(s.$ref, this.doc)),
-              }
-            : this.toBaseSchema(s, enums),
+        anyOf: anyOf?.map(
+          (s) => Base.isRef(s) ? {
+            ...s,
+            ref: s.$ref,
+            type: Base.upperCamelCase(Base.ref2name(s.$ref, this.doc))
+          } : this.toBaseSchema(s, enums)
         ),
-        oneOf: oneOf?.map((s) =>
-          Base.isRef(s)
-            ? {
-                ...s,
-                ref: s.$ref,
-                type: Base.upperCamelCase(Base.ref2name(s.$ref, this.doc)),
-              }
-            : this.toBaseSchema(s, enums),
+        oneOf: oneOf?.map(
+          (s) => Base.isRef(s) ? {
+            ...s,
+            ref: s.$ref,
+            type: Base.upperCamelCase(Base.ref2name(s.$ref, this.doc))
+          } : this.toBaseSchema(s, enums)
         ),
         properties: Object.keys(properties).reduce((acc, p) => {
           const propSchema = properties[p];
           return {
             ...acc,
-            [p]: Base.isRef(propSchema)
-              ? {
-                  type: Base.upperCamelCase(
-                    Base.ref2name(propSchema.$ref, this.doc),
-                  ),
-                }
-              : this.toBaseSchema(propSchema, enums, p, upLevelSchemaKey),
+            [p]: Base.isRef(propSchema) ? {
+              type: Base.upperCamelCase(
+                Base.ref2name(propSchema.$ref, this.doc)
+              )
+            } : this.toBaseSchema(propSchema, enums, p, upLevelSchemaKey)
           };
-        }, {}),
+        }, {})
       };
     }
   }
@@ -1522,13 +1275,13 @@ var V2 = class {
       items,
       enum: enum_,
       properties,
+      schema
     } = parameter;
     if (enum_) {
-      const type2 =
-        Base.upperCamelCase(upLevelSchemaKey) + Base.upperCamelCase(name);
+      const type2 = Base.upperCamelCase(upLevelSchemaKey) + Base.upperCamelCase(name);
       const enumSchema = {
         name: type2,
-        enum: [...new Set(enum_)],
+        enum: [...new Set(enum_)]
       };
       const sameEnum = Base.findSameSchema(enumSchema, enums);
       if (!sameEnum && Base.isValidEnumType({ type: type2, enum: enums })) {
@@ -1540,8 +1293,31 @@ var V2 = class {
         description,
         in: parameter.in,
         schema: {
-          type: sameEnum?.name ?? type2,
-        },
+          type: sameEnum?.name ?? type2
+        }
+      };
+    }
+    if (items) {
+      return {
+        name,
+        required,
+        description,
+        in: parameter.in,
+        schema: {
+          type,
+          items
+        }
+      };
+    }
+    if (schema && Base.isRef(schema)) {
+      return {
+        name,
+        required,
+        description,
+        in: parameter.in,
+        schema: {
+          type: Base.upperCamelCase(Base.ref2name(schema.$ref))
+        }
       };
     }
     return {
@@ -1549,16 +1325,10 @@ var V2 = class {
       required,
       description,
       in: parameter.in,
-      schema: items
-        ? {
-            type,
-            items,
-          }
-        : {
-            type,
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-            properties,
-          },
+      schema: {
+        type,
+        properties
+      }
     };
   }
   /**
@@ -1572,8 +1342,8 @@ var V2 = class {
     return [
       {
         type: "application/json" /* JSON */,
-        schema: responseSchema && this.getSchemaByRef(responseSchema, true),
-      },
+        schema: responseSchema && this.getSchemaByRef(responseSchema, true)
+      }
     ];
   }
   init() {
@@ -1583,14 +1353,14 @@ var V2 = class {
       const schema = definitions[key];
       return {
         ...acc,
-        [key]: this.getSchemaByRef(schema, false, enums, key),
+        [key]: this.getSchemaByRef(schema, false, enums, key)
       };
     }, {});
     const responses_ = Object.keys(responses).reduce((acc, key) => {
       const response = responses[key];
       return {
         ...acc,
-        [key]: this.getResponseByRef(response),
+        [key]: this.getResponseByRef(response)
       };
     }, {});
     const apis = Object.keys(paths).reduce((acc, path) => {
@@ -1608,67 +1378,69 @@ var V2 = class {
               operationId,
               summary: summary_,
               description: description_,
-              responses: responses2 = {},
+              responses: responses2 = {}
             } = methodObject;
             const { parameters: parameters_ = [] } = methodObject;
             const baseParameters = [...parameters, ...parameters_].map(
-              (parameter) => this.getParameterByRef(parameter, enums),
+              (parameter) => this.getParameterByRef(parameter, enums)
             );
             const uniqueParameterName = [
-              ...new Set(baseParameters.map((p) => p.name)),
+              ...new Set(baseParameters.map((p) => p.name))
             ];
             if (Object.keys(responses2).length === 0) {
               Object.assign(responses2, {
                 200: {
-                  description: "Successful response",
-                },
+                  description: "Successful response"
+                }
               });
             }
             const inBody = baseParameters.filter(
-              (p) => p.in === "body" || p.in === "formData",
+              (p) => p.in === "body" || p.in === "formData"
             );
             const notInBody = baseParameters.filter(
-              (p) => p.in !== "body" && p.in !== "formData",
+              (p) => p.in !== "body" && p.in !== "formData"
             );
             const httpCodes = Object.keys(responses2);
             for (const code of httpCodes) {
               if (code in responses2) {
                 const response = responses2[code];
                 const responseSchema = this.getResponseByRef(response);
+                const inBodyOnlyHasBody = inBody && inBody.length === 1 && inBody[0].in === "body" && inBody[0].name === "body";
+                console.log("inBody~>", inBody);
                 methodApis.push({
                   method,
                   operationId,
                   summary: summary_,
                   deprecated,
                   description: description_,
-                  parameters: uniqueParameterName
-                    .map((name) => notInBody.find((p) => p.name === name))
-                    .filter(Boolean),
+                  parameters: uniqueParameterName.map((name) => notInBody.find((p) => p.name === name)).filter(Boolean),
                   responses: responseSchema,
-                  requestBody:
-                    inBody.length > 0
-                      ? [
-                          {
-                            type: "application/json" /* JSON */,
-                            schema: {
-                              type: "object" /* object */,
-                              properties: inBody.reduce((a, p) => {
-                                return {
-                                  ...a,
-                                  [p.name]: {
-                                    type: p.schema?.type ?? "unknown",
-                                    required: p.schema?.required,
-                                    // @ts-expect-error items can be undefined
-                                    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-                                    items: p.schema?.items,
-                                    description: p.schema?.description,
-                                  },
-                                };
-                              }, {}),
-                            },
-                          },
-                        ]
-                      : void 0,
+                  requestBody: inBody.length > 0 ? inBodyOnlyHasBody ? [
+                    {
+                      type: "application/json" /* JSON */,
+                      schema: inBody[0].schema
+                    }
+                  ] : [
+                    {
+                      type: "application/json" /* JSON */,
+                      schema: {
+                        type: "object" /* object */,
+                        properties: inBody.reduce((a, p) => {
+                          return {
+                            ...a,
+                            [p.name]: {
+                              type: p.schema?.type ?? "unknown",
+                              required: p.schema?.required,
+                              // @ts-expect-error items can be undefined
+                              // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+                              items: p.schema?.items,
+                              description: p.schema?.description
+                            }
+                          };
+                        }, {})
+                      }
+                    }
+                  ] : void 0
                 });
                 break;
               }
@@ -1678,7 +1450,7 @@ var V2 = class {
       }
       return {
         ...acc,
-        [path]: methodApis,
+        [path]: methodApis
       };
     }, {});
     return {
@@ -1687,7 +1459,7 @@ var V2 = class {
       responses: responses_,
       parameters: {},
       requestBodies: {},
-      apis,
+      apis
     };
   }
 };
@@ -1707,22 +1479,16 @@ var V3 = class {
   /**
    * OpenAPI schema to base schema.
    */
-  getSchemaByRef(
-    schema,
-    reserveRef = false,
-    enums = [],
-    upLevelSchemaKey = "",
-  ) {
+  getSchemaByRef(schema, reserveRef = false, enums = [], upLevelSchemaKey = "") {
     let refName = "";
     if (Base.isRef(schema)) {
       refName = Base.capitalize(Base.ref2name(schema.$ref));
       if (reserveRef) {
         return {
-          type: upLevelSchemaKey + refName,
+          type: upLevelSchemaKey + refName
         };
       }
-      schema =
-        this.doc.components?.schemas?.[Base.ref2name(schema.$ref, this.doc)];
+      schema = this.doc.components?.schemas?.[Base.ref2name(schema.$ref, this.doc)];
     }
     return this.toBaseSchema(schema, enums, "", upLevelSchemaKey + refName);
   }
@@ -1731,27 +1497,20 @@ var V3 = class {
    */
   getParameterByRef(schema, enums = [], upLevelSchemaKey = "") {
     if (Base.isRef(schema)) {
-      schema =
-        this.doc.components?.parameters?.[Base.ref2name(schema.$ref, this.doc)];
+      schema = this.doc.components?.parameters?.[Base.ref2name(schema.$ref, this.doc)];
     }
     const {
       name,
       required,
       deprecated,
       description,
-      schema: parameterSchema,
+      schema: parameterSchema
     } = schema;
-    if (
-      parameterSchema &&
-      !Base.isRef(parameterSchema) &&
-      parameterSchema.enum
-    ) {
-      const type =
-        Base.upperCamelCase(Base.normalize(upLevelSchemaKey)) +
-        Base.upperCamelCase(Base.normalize(name));
+    if (parameterSchema && !Base.isRef(parameterSchema) && parameterSchema.enum) {
+      const type = Base.upperCamelCase(Base.normalize(upLevelSchemaKey)) + Base.upperCamelCase(Base.normalize(name));
       const enumSchema = {
         name: type,
-        enum: [...new Set(parameterSchema.enum)],
+        enum: [...new Set(parameterSchema.enum)]
       };
       const sameEnum = Base.findSameSchema(enumSchema, enums);
       if (!sameEnum && Base.isValidEnumType(parameterSchema)) {
@@ -1764,8 +1523,8 @@ var V3 = class {
         deprecated,
         in: schema.in,
         schema: {
-          type: sameEnum?.name ?? type,
-        },
+          type: sameEnum?.name ?? type
+        }
       };
     }
     return {
@@ -1774,14 +1533,12 @@ var V3 = class {
       description,
       deprecated,
       in: schema.in,
-      schema:
-        schema.schema &&
-        this.getSchemaByRef(
-          schema.schema,
-          false,
-          enums,
-          upLevelSchemaKey + Base.capitalize(name),
-        ),
+      schema: schema.schema && this.getSchemaByRef(
+        schema.schema,
+        false,
+        enums,
+        upLevelSchemaKey + Base.capitalize(name)
+      )
     };
   }
   /**
@@ -1789,13 +1546,12 @@ var V3 = class {
    */
   getResponseByRef(schema) {
     if (Base.isRef(schema)) {
-      schema =
-        this.doc.components?.responses?.[Base.ref2name(schema.$ref, this.doc)];
+      schema = this.doc.components?.responses?.[Base.ref2name(schema.$ref, this.doc)];
     }
     const { content = {} } = schema;
     return Object.keys(content).map((c) => ({
       type: c,
-      schema: content[c].schema && this.getSchemaByRef(content[c].schema, true),
+      schema: content[c].schema && this.getSchemaByRef(content[c].schema, true)
     }));
   }
   /**
@@ -1803,17 +1559,12 @@ var V3 = class {
    */
   getRequestBodyByRef(schema, enums = []) {
     if (Base.isRef(schema)) {
-      schema =
-        this.doc.components?.requestBodies?.[
-          Base.ref2name(schema.$ref, this.doc)
-        ];
+      schema = this.doc.components?.requestBodies?.[Base.ref2name(schema.$ref, this.doc)];
     }
     const { content = {} } = schema;
     return Object.keys(content).map((c) => ({
       type: c,
-      schema:
-        content[c].schema &&
-        this.getSchemaByRef(content[c].schema, false, enums),
+      schema: content[c].schema && this.getSchemaByRef(content[c].schema, false, enums)
     }));
   }
   /**
@@ -1822,7 +1573,7 @@ var V3 = class {
   toBaseSchema(schema, enums = [], schemaKey = "", upLevelSchemaKey = "") {
     if (!schema) {
       return {
-        type: "unknown",
+        type: "unknown"
       };
     }
     if (Base.isRef(schema)) {
@@ -1834,7 +1585,7 @@ var V3 = class {
         type,
         required: !!required,
         description,
-        items: this.toBaseSchema(items, enums, schemaKey, upLevelSchemaKey),
+        items: this.toBaseSchema(items, enums, schemaKey, upLevelSchemaKey)
       };
     } else {
       const {
@@ -1846,30 +1597,24 @@ var V3 = class {
         enum: enum_,
         format: format2,
         oneOf,
-        properties = {},
+        properties = {}
       } = schema;
       let { type } = schema;
       if (enum_ && type !== "boolean") {
-        const name =
-          Base.upperCamelCase(Base.normalize(upLevelSchemaKey)) +
-          Base.upperCamelCase(Base.normalize(schemaKey));
+        const name = Base.upperCamelCase(Base.normalize(upLevelSchemaKey)) + Base.upperCamelCase(Base.normalize(schemaKey));
         const enumObject = {
           name,
-          enum: [...new Set(enum_)],
+          enum: [...new Set(enum_)]
         };
         const sameObject = Base.findSameSchema(enumObject, enums);
         if (!sameObject && Base.isValidEnumType(schema)) {
           enums.push(enumObject);
         }
         return {
-          type: sameObject
-            ? sameObject.name
-            : Base.isBooleanEnum(schema)
-              ? "boolean"
-              : enumObject.name,
+          type: sameObject ? sameObject.name : Base.isBooleanEnum(schema) ? "boolean" : enumObject.name,
           required,
           description,
-          deprecated,
+          deprecated
         };
       }
       if (type === void 0 && Object.keys(properties).length > 0) {
@@ -1882,46 +1627,38 @@ var V3 = class {
         deprecated,
         enum: enum_,
         format: format2,
-        allOf: allOf?.map((s) =>
-          Base.isRef(s)
-            ? {
-                ...s,
-                ref: s.$ref,
-                type: Base.capitalize(Base.ref2name(s.$ref, this.doc)),
-              }
-            : this.toBaseSchema(s, enums),
+        allOf: allOf?.map(
+          (s) => Base.isRef(s) ? {
+            ...s,
+            ref: s.$ref,
+            type: Base.capitalize(Base.ref2name(s.$ref, this.doc))
+          } : this.toBaseSchema(s, enums)
         ),
-        anyOf: anyOf?.map((s) =>
-          Base.isRef(s)
-            ? {
-                ...s,
-                ref: s.$ref,
-                type: Base.capitalize(Base.ref2name(s.$ref, this.doc)),
-              }
-            : this.toBaseSchema(s, enums),
+        anyOf: anyOf?.map(
+          (s) => Base.isRef(s) ? {
+            ...s,
+            ref: s.$ref,
+            type: Base.capitalize(Base.ref2name(s.$ref, this.doc))
+          } : this.toBaseSchema(s, enums)
         ),
-        oneOf: oneOf?.map((s) =>
-          Base.isRef(s)
-            ? {
-                ...s,
-                ref: s.$ref,
-                type: Base.capitalize(Base.ref2name(s.$ref, this.doc)),
-              }
-            : this.toBaseSchema(s, enums),
+        oneOf: oneOf?.map(
+          (s) => Base.isRef(s) ? {
+            ...s,
+            ref: s.$ref,
+            type: Base.capitalize(Base.ref2name(s.$ref, this.doc))
+          } : this.toBaseSchema(s, enums)
         ),
         properties: Object.keys(properties).reduce((acc, p) => {
           const propSchema = properties[p];
           return {
             ...acc,
-            [p]: Base.isRef(propSchema)
-              ? {
-                  type: Base.capitalize(
-                    Base.ref2name(propSchema.$ref, this.doc),
-                  ),
-                }
-              : this.toBaseSchema(propSchema, enums, p, upLevelSchemaKey),
+            [p]: Base.isRef(propSchema) ? {
+              type: Base.capitalize(
+                Base.ref2name(propSchema.$ref, this.doc)
+              )
+            } : this.toBaseSchema(propSchema, enums, p, upLevelSchemaKey)
           };
-        }, {}),
+        }, {})
       };
     }
   }
@@ -1932,34 +1669,34 @@ var V3 = class {
       requestBodies = {},
       responses = {},
       parameters = {},
-      schemas = {},
+      schemas = {}
     } = components;
     const schemas_ = Object.keys(schemas).reduce((acc, key) => {
       const schema = schemas[key];
       return {
         ...acc,
-        [key]: this.getSchemaByRef(schema, false, enums, key),
+        [key]: this.getSchemaByRef(schema, false, enums, key)
       };
     }, {});
     const parameters_ = Object.keys(parameters).reduce((acc, key) => {
       const parameter = parameters[key];
       return {
         ...acc,
-        [key]: this.getParameterByRef(parameter, enums, key),
+        [key]: this.getParameterByRef(parameter, enums, key)
       };
     }, {});
     const responses_ = Object.keys(responses).reduce((acc, key) => {
       const response = responses[key];
       return {
         ...acc,
-        [key]: this.getResponseByRef(response),
+        [key]: this.getResponseByRef(response)
       };
     }, {});
     const requestBodies_ = Object.keys(requestBodies).reduce((acc, key) => {
       const requestBody = requestBodies[key];
       return {
         ...acc,
-        [key]: this.getRequestBodyByRef(requestBody, enums),
+        [key]: this.getRequestBodyByRef(requestBody, enums)
       };
     }, {});
     const apis = Object.keys(paths).reduce((acc, path) => {
@@ -1968,11 +1705,7 @@ var V3 = class {
       const methodApis = [];
       if ($ref) {
       } else {
-        const {
-          parameters: parameters2 = [],
-          description,
-          summary,
-        } = pathObject;
+        const { parameters: parameters2 = [], description, summary } = pathObject;
         Object.values(HttpMethods).forEach((method) => {
           const methodObject = pathObject[method];
           if (methodObject) {
@@ -1982,24 +1715,24 @@ var V3 = class {
               responses: responses2 = {},
               summary: summary_,
               description: description_,
-              requestBody = { content: {} },
+              requestBody = { content: {} }
             } = methodObject;
             const { parameters: parameters_2 = [] } = methodObject;
             const baseParameters = [...parameters2, ...parameters_2].map(
-              (parameter) => this.getParameterByRef(parameter, enums),
+              (parameter) => this.getParameterByRef(parameter, enums)
             );
             const baseRequestBody = this.getRequestBodyByRef(
               requestBody,
-              enums,
+              enums
             );
             const uniqueParameterName = [
-              ...new Set(baseParameters.map((p) => p.name)),
+              ...new Set(baseParameters.map((p) => p.name))
             ];
             if (Object.keys(responses2).length === 0) {
               Object.assign(responses2, {
                 200: {
-                  description: "Successful response",
-                },
+                  description: "Successful response"
+                }
               });
             }
             const httpCodes = Object.keys(responses2);
@@ -2013,11 +1746,11 @@ var V3 = class {
                   summary: summary_ ?? summary,
                   description: description_ ?? description,
                   deprecated,
-                  parameters: uniqueParameterName.map((name) =>
-                    baseParameters.find((p) => p.name === name),
+                  parameters: uniqueParameterName.map(
+                    (name) => baseParameters.find((p) => p.name === name)
                   ),
                   responses: responseSchema,
-                  requestBody: baseRequestBody,
+                  requestBody: baseRequestBody
                 });
                 break;
               }
@@ -2027,7 +1760,7 @@ var V3 = class {
       }
       return {
         ...acc,
-        [path]: methodApis,
+        [path]: methodApis
       };
     }, {});
     return {
@@ -2036,7 +1769,7 @@ var V3 = class {
       responses: responses_,
       parameters: parameters_,
       requestBodies: requestBodies_,
-      apis,
+      apis
     };
   }
 };
@@ -2056,27 +1789,21 @@ var V3_1 = class {
   /**
    * OpenAPI schema to base schema.
    */
-  getSchemaByRef(
-    schema,
-    reserveRef = false,
-    enums = [],
-    upLevelSchemaKey = "",
-  ) {
+  getSchemaByRef(schema, reserveRef = false, enums = [], upLevelSchemaKey = "") {
     let refName = "";
     if (Base.isRef(schema)) {
       refName = Base.upperCamelCase(Base.ref2name(schema.$ref));
       if (reserveRef) {
         return {
-          type: upLevelSchemaKey + refName,
+          type: upLevelSchemaKey + refName
         };
       }
       if (!this.doc.components) {
         this.doc.components = {
-          schemas: {},
+          schemas: {}
         };
       }
-      schema =
-        this.doc.components.schemas[Base.ref2name(schema.$ref, this.doc)];
+      schema = this.doc.components.schemas[Base.ref2name(schema.$ref, this.doc)];
     }
     return this.toBaseSchema(schema, enums, "", upLevelSchemaKey + refName);
   }
@@ -2085,26 +1812,20 @@ var V3_1 = class {
    */
   getParameterByRef(schema, enums = [], upLevelSchemaKey = "") {
     if (Base.isRef(schema)) {
-      schema =
-        this.doc.components?.parameters?.[Base.ref2name(schema.$ref, this.doc)];
+      schema = this.doc.components?.parameters?.[Base.ref2name(schema.$ref, this.doc)];
     }
     const {
       name,
       required,
       deprecated,
       description,
-      schema: parameterSchema,
+      schema: parameterSchema
     } = schema;
-    if (
-      parameterSchema &&
-      !Base.isRef(parameterSchema) &&
-      parameterSchema.enum
-    ) {
-      const type =
-        Base.upperCamelCase(upLevelSchemaKey) + Base.upperCamelCase(name);
+    if (parameterSchema && !Base.isRef(parameterSchema) && parameterSchema.enum) {
+      const type = Base.upperCamelCase(upLevelSchemaKey) + Base.upperCamelCase(name);
       const enumSchema = {
         name: type,
-        enum: [...new Set(parameterSchema.enum)],
+        enum: [...new Set(parameterSchema.enum)]
       };
       const sameEnum = Base.findSameSchema(enumSchema, enums);
       if (!sameEnum && Base.isValidEnumType(parameterSchema)) {
@@ -2117,8 +1838,8 @@ var V3_1 = class {
         deprecated,
         in: schema.in,
         schema: {
-          type: sameEnum?.name ?? type,
-        },
+          type: sameEnum?.name ?? type
+        }
       };
     }
     return {
@@ -2127,14 +1848,12 @@ var V3_1 = class {
       description,
       deprecated,
       in: schema.in,
-      schema:
-        schema.schema &&
-        this.getSchemaByRef(
-          schema.schema,
-          false,
-          enums,
-          upLevelSchemaKey + Base.capitalize(name),
-        ),
+      schema: schema.schema && this.getSchemaByRef(
+        schema.schema,
+        false,
+        enums,
+        upLevelSchemaKey + Base.capitalize(name)
+      )
     };
   }
   /**
@@ -2142,13 +1861,12 @@ var V3_1 = class {
    */
   getResponseByRef(schema) {
     if (Base.isRef(schema)) {
-      schema =
-        this.doc.components?.responses?.[Base.ref2name(schema.$ref, this.doc)];
+      schema = this.doc.components?.responses?.[Base.ref2name(schema.$ref, this.doc)];
     }
     const { content = {} } = schema;
     return Object.keys(content).map((c) => ({
       type: c,
-      schema: content[c].schema && this.getSchemaByRef(content[c].schema, true),
+      schema: content[c].schema && this.getSchemaByRef(content[c].schema, true)
     }));
   }
   /**
@@ -2156,17 +1874,12 @@ var V3_1 = class {
    */
   getRequestBodyByRef(schema, enums = [], reserveRef = false) {
     if (Base.isRef(schema)) {
-      schema =
-        this.doc.components?.requestBodies?.[
-          Base.ref2name(schema.$ref, this.doc)
-        ];
+      schema = this.doc.components?.requestBodies?.[Base.ref2name(schema.$ref, this.doc)];
     }
     const { content = {} } = schema;
     return Object.keys(content).map((c) => ({
       type: c,
-      schema:
-        content[c].schema &&
-        this.getSchemaByRef(content[c].schema, reserveRef, enums),
+      schema: content[c].schema && this.getSchemaByRef(content[c].schema, reserveRef, enums)
     }));
   }
   /**
@@ -2175,7 +1888,7 @@ var V3_1 = class {
   toBaseSchema(schema, enums = [], schemaKey = "", upLevelSchemaKey = "") {
     if (!schema) {
       return {
-        type: "unknown",
+        type: "unknown"
       };
     }
     if (Base.isRef(schema)) {
@@ -2187,7 +1900,7 @@ var V3_1 = class {
         type,
         required: !!required,
         description,
-        items: this.toBaseSchema(items, enums, schemaKey, upLevelSchemaKey),
+        items: this.toBaseSchema(items, enums, schemaKey, upLevelSchemaKey)
       };
     } else {
       const {
@@ -2199,30 +1912,24 @@ var V3_1 = class {
         enum: enum_,
         format: format2,
         oneOf,
-        properties = {},
+        properties = {}
       } = schema;
       let { type } = schema;
       if (enum_ && type !== "boolean") {
-        const name =
-          Base.upperCamelCase(upLevelSchemaKey) +
-          Base.upperCamelCase(schemaKey);
+        const name = Base.upperCamelCase(upLevelSchemaKey) + Base.upperCamelCase(schemaKey);
         const enumObject = {
           name,
-          enum: [...new Set(enum_)],
+          enum: [...new Set(enum_)]
         };
         const sameObject = Base.findSameSchema(enumObject, enums);
         if (!sameObject && Base.isValidEnumType(schema)) {
           enums.push(enumObject);
         }
         return {
-          type: sameObject
-            ? sameObject.name
-            : Base.isBooleanEnum(schema)
-              ? "boolean"
-              : enumObject.name,
+          type: sameObject ? sameObject.name : Base.isBooleanEnum(schema) ? "boolean" : enumObject.name,
           required,
           description,
-          deprecated,
+          deprecated
         };
       }
       if (type === void 0 && Object.keys(properties).length > 0) {
@@ -2235,46 +1942,38 @@ var V3_1 = class {
         deprecated,
         enum: enum_,
         format: format2,
-        allOf: allOf?.map((s) =>
-          Base.isRef(s)
-            ? {
-                ...s,
-                ref: s.$ref,
-                type: Base.upperCamelCase(Base.ref2name(s.$ref, this.doc)),
-              }
-            : this.toBaseSchema(s, enums),
+        allOf: allOf?.map(
+          (s) => Base.isRef(s) ? {
+            ...s,
+            ref: s.$ref,
+            type: Base.upperCamelCase(Base.ref2name(s.$ref, this.doc))
+          } : this.toBaseSchema(s, enums)
         ),
-        anyOf: anyOf?.map((s) =>
-          Base.isRef(s)
-            ? {
-                ...s,
-                ref: s.$ref,
-                type: Base.upperCamelCase(Base.ref2name(s.$ref, this.doc)),
-              }
-            : this.toBaseSchema(s, enums),
+        anyOf: anyOf?.map(
+          (s) => Base.isRef(s) ? {
+            ...s,
+            ref: s.$ref,
+            type: Base.upperCamelCase(Base.ref2name(s.$ref, this.doc))
+          } : this.toBaseSchema(s, enums)
         ),
-        oneOf: oneOf?.map((s) =>
-          Base.isRef(s)
-            ? {
-                ...s,
-                ref: s.$ref,
-                type: Base.upperCamelCase(Base.ref2name(s.$ref, this.doc)),
-              }
-            : this.toBaseSchema(s, enums),
+        oneOf: oneOf?.map(
+          (s) => Base.isRef(s) ? {
+            ...s,
+            ref: s.$ref,
+            type: Base.upperCamelCase(Base.ref2name(s.$ref, this.doc))
+          } : this.toBaseSchema(s, enums)
         ),
         properties: Object.keys(properties).reduce((acc, p) => {
           const propSchema = properties[p];
           return {
             ...acc,
-            [p]: Base.isRef(propSchema)
-              ? {
-                  type: Base.upperCamelCase(
-                    Base.ref2name(propSchema.$ref, this.doc),
-                  ),
-                }
-              : this.toBaseSchema(propSchema, enums, p, upLevelSchemaKey),
+            [p]: Base.isRef(propSchema) ? {
+              type: Base.upperCamelCase(
+                Base.ref2name(propSchema.$ref, this.doc)
+              )
+            } : this.toBaseSchema(propSchema, enums, p, upLevelSchemaKey)
           };
-        }, {}),
+        }, {})
       };
     }
   }
@@ -2285,34 +1984,34 @@ var V3_1 = class {
       requestBodies = {},
       responses = {},
       parameters = {},
-      schemas = {},
+      schemas = {}
     } = components;
     const schemas_ = Object.keys(schemas).reduce((acc, key) => {
       const schema = schemas[key];
       return {
         ...acc,
-        [key]: this.getSchemaByRef(schema, false, enums, key),
+        [key]: this.getSchemaByRef(schema, false, enums, key)
       };
     }, {});
     const parameters_ = Object.keys(parameters).reduce((acc, key) => {
       const parameter = parameters[key];
       return {
         ...acc,
-        [key]: this.getParameterByRef(parameter, enums, key),
+        [key]: this.getParameterByRef(parameter, enums, key)
       };
     }, {});
     const responses_ = Object.keys(responses).reduce((acc, key) => {
       const response = responses[key];
       return {
         ...acc,
-        [key]: this.getResponseByRef(response),
+        [key]: this.getResponseByRef(response)
       };
     }, {});
     const requestBodies_ = Object.keys(requestBodies).reduce((acc, key) => {
       const requestBody = requestBodies[key];
       return {
         ...acc,
-        [key]: this.getRequestBodyByRef(requestBody, enums),
+        [key]: this.getRequestBodyByRef(requestBody, enums)
       };
     }, {});
     const apis = Object.keys(paths).reduce((acc, path) => {
@@ -2321,11 +2020,7 @@ var V3_1 = class {
       const methodApis = [];
       if ($ref) {
       } else {
-        const {
-          parameters: parameters2 = [],
-          description,
-          summary,
-        } = pathObject;
+        const { parameters: parameters2 = [], description, summary } = pathObject;
         Object.values(HttpMethods).forEach((method) => {
           const methodObject = pathObject[method];
           if (methodObject) {
@@ -2335,25 +2030,25 @@ var V3_1 = class {
               summary: summary_,
               description: description_,
               responses: responses2 = {},
-              requestBody = { content: {} },
+              requestBody = { content: {} }
             } = methodObject;
             const { parameters: parameters_2 = [] } = methodObject;
             const baseParameters = [...parameters2, ...parameters_2].map(
-              (parameter) => this.getParameterByRef(parameter, enums),
+              (parameter) => this.getParameterByRef(parameter, enums)
             );
             const baseRequestBody = this.getRequestBodyByRef(
               requestBody,
               enums,
-              true,
+              true
             );
             const uniqueParameterName = [
-              ...new Set(baseParameters.map((p) => p.name)),
+              ...new Set(baseParameters.map((p) => p.name))
             ];
             if (Object.keys(responses2).length === 0) {
               Object.assign(responses2, {
                 200: {
-                  description: "Successful response",
-                },
+                  description: "Successful response"
+                }
               });
             }
             const httpCodes = Object.keys(responses2);
@@ -2367,11 +2062,11 @@ var V3_1 = class {
                   summary: summary_ ?? summary,
                   description: description_ ?? description,
                   deprecated,
-                  parameters: uniqueParameterName.map((name) =>
-                    baseParameters.find((p) => p.name === name),
+                  parameters: uniqueParameterName.map(
+                    (name) => baseParameters.find((p) => p.name === name)
                   ),
                   responses: responseSchema,
-                  requestBody: baseRequestBody,
+                  requestBody: baseRequestBody
                 });
                 break;
               }
@@ -2381,7 +2076,7 @@ var V3_1 = class {
       }
       return {
         ...acc,
-        [path]: methodApis,
+        [path]: methodApis
       };
     }, {});
     return {
@@ -2390,7 +2085,7 @@ var V3_1 = class {
       responses: responses_,
       parameters: parameters_,
       requestBodies: requestBodies_,
-      apis,
+      apis
     };
   }
 };
@@ -2452,11 +2147,10 @@ async function codeGen(initOptions) {
   logger.info(`Fech document from ${initOptions.docURL}`);
   const doc = await Base.fetchDoc(
     initOptions.docURL,
-    initOptions.requestOptions,
+    initOptions.requestOptions
   );
   const provider = new OpenAPIProvider(initOptions, doc);
-  const { enums, schemas, parameters, responses, requestBodies, apis } =
-    provider;
+  const { enums, schemas, parameters, responses, requestBodies, apis } = provider;
   const adaptor = getAdaptor(initOptions.adaptor ?? "fetch" /* fetch */);
   const code = await Generator.genCode(
     {
@@ -2465,10 +2159,10 @@ async function codeGen(initOptions) {
       parameters,
       responses,
       requestBodies,
-      apis,
+      apis
     },
     initOptions,
-    adaptor,
+    adaptor
   );
   if (process.env.NODE_ENV === "test") {
     await Generator.write(code, initOptions.output);
@@ -2484,15 +2178,8 @@ var version = "0.0.2";
 
 // src/cli.ts
 var cli = (0, import_commander.createCommand)("apicodegen");
-cli
-  .version(version)
-  .argument("<docURL>", "DOc url for tool to read")
-  .option("--output", "Where code generated", "./output.ts")
-  .option("--adaptor", "Adaptor for api call", "fetch")
-  .option("--baseURL", "Base path of the api endpoint", "")
-  .option("--verbose", "More logs", false)
-  .option("--importClientSource", "Where request tool comes from")
-  .action(async (docURL, options) => {
+cli.version(version).argument("<docURL>", "DOc url for tool to read").option("--output", "Where code generated", "./output.ts").option("--adaptor", "Adaptor for api call", "fetch").option("--baseURL", "Base path of the api endpoint", "").option("--verbose", "More logs", false).option("--importClientSource", "Where request tool comes from").action(
+  async (docURL, options) => {
     try {
       const code = await codeGen({
         docURL,
@@ -2500,11 +2187,12 @@ cli
         output: options.output,
         verbose: options.verbose,
         adaptor: options.adaptor,
-        importClientSource: options.importClientSource,
+        importClientSource: options.importClientSource
       });
       await Generator.write(code, options.output);
     } catch (err) {
       cli.error(err.message);
     }
-  });
+  }
+);
 cli.parse();

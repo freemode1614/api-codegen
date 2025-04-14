@@ -574,7 +574,7 @@ export class Generator {
     const isRequestBodyContainsBinary =
       requestBody?.schema &&
       "properties" in requestBody.schema &&
-      Object.values(requestBody.schema.properties!).some((p) =>
+      Object.values(requestBody.schema?.properties ?? {}).some((p) =>
         this.isBinarySchema(p),
       );
 

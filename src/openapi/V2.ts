@@ -8,6 +8,7 @@ import {
   ParameterObject,
   SchemaFormatType,
   SchemaObject,
+  SingleTypeSchemaObject,
 } from "@apicodegen/core";
 import { Base, HttpMethods, NonArraySchemaType } from "@apicodegen/core";
 import { OpenAPIV2 } from "openapi-types";
@@ -199,6 +200,7 @@ export class V2 {
       items,
       enum: enum_,
       properties,
+      schema,
     } = parameter;
 
     if (enum_) {
@@ -230,21 +232,40 @@ export class V2 {
       };
     }
 
+    if (items) {
+      return {
+        name,
+        required,
+        description,
+        in: parameter.in as ParameterIn,
+        schema: {
+          type: type as string,
+          items: items as OpenAPIV2.SchemaObject | undefined,
+        } as ArrayTypeSchemaObject,
+      };
+    }
+
+    if (schema && Base.isRef(schema)) {
+      return {
+        name,
+        required,
+        description,
+        in: parameter.in as ParameterIn,
+        schema: {
+          type: Base.upperCamelCase(Base.ref2name(schema.$ref)),
+        },
+      };
+    }
+
     return {
       name,
       required,
       description,
       in: parameter.in as ParameterIn,
-      schema: items
-        ? ({
-            type: type as string,
-            items: items as OpenAPIV2.SchemaObject | undefined,
-          } as ArrayTypeSchemaObject)
-        : ({
-            type: type as string,
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-            properties,
-          } as SchemaObject),
+      schema: {
+        type: type as string,
+        properties,
+      } as SchemaObject,
     };
   }
 
@@ -339,6 +360,15 @@ export class V2 {
               if (code in responses) {
                 const response = responses[code]!;
                 const responseSchema = this.getResponseByRef(response);
+
+                const inBodyOnlyHasBody =
+                  inBody &&
+                  inBody.length === 1 &&
+                  inBody[0].in === "body" &&
+                  inBody[0].name === "body";
+
+                console.log("inBody~>", inBody);
+
                 methodApis.push({
                   method,
                   operationId,
@@ -351,29 +381,36 @@ export class V2 {
                   responses: responseSchema,
                   requestBody:
                     inBody.length > 0
-                      ? [
-                          {
-                            type: MediaTypes.JSON,
-                            schema: {
-                              type: NonArraySchemaType.object,
-                              properties: inBody.reduce<
-                                Record<string, SchemaObject>
-                              >((a, p) => {
-                                return {
-                                  ...a,
-                                  [p.name]: {
-                                    type: p.schema?.type ?? "unknown",
-                                    required: p.schema?.required,
-                                    // @ts-expect-error items can be undefined
-                                    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-                                    items: p.schema?.items,
-                                    description: p.schema?.description,
-                                  } as SchemaObject,
-                                };
-                              }, {}),
+                      ? inBodyOnlyHasBody
+                        ? [
+                            {
+                              type: MediaTypes.JSON,
+                              schema: inBody[0].schema,
                             },
-                          },
-                        ]
+                          ]
+                        : [
+                            {
+                              type: MediaTypes.JSON,
+                              schema: {
+                                type: NonArraySchemaType.object,
+                                properties: inBody.reduce<
+                                  Record<string, SchemaObject>
+                                >((a, p) => {
+                                  return {
+                                    ...a,
+                                    [p.name]: {
+                                      type: p.schema?.type ?? "unknown",
+                                      required: p.schema?.required,
+                                      // @ts-expect-error items can be undefined
+                                      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+                                      items: p.schema?.items,
+                                      description: p.schema?.description,
+                                    } as SchemaObject,
+                                  };
+                                }, {}),
+                              },
+                            },
+                          ]
                       : undefined,
                 });
                 break;
