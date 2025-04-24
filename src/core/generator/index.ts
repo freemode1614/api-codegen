@@ -306,7 +306,7 @@ export class Generator {
 
         if (type && typeof type === "string") {
           return t.createTypeReferenceNode(
-            type !== "unknown"
+            type !== "unknown" && type !== "null"
               ? t.createIdentifier(Base.upperCamelCase(type))
               : type,
           );

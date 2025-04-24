@@ -13,7 +13,7 @@ export default defineConfig([
   {
     entry: ["./src/cli.ts"],
     outDir: "./bin",
-    format: "cjs",
+    format: "esm",
     shims: true,
     clean: true,
     sourcemap: false,
