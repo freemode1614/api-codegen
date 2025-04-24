@@ -103,7 +103,7 @@ export class Generator {
       const queryString = queryParameters
         .map(
           (qp, index) =>
-            `${index === 0 ? "?" : "&"}${encodeURIComponent(qp.name)}={${qp.name}}`,
+            `${index === 0 ? "?" : "&"}${encodeURIComponent(qp.name)}={${Base.camelCase(Base.normalize(qp.name))}}`,
         )
         .join("");
       path += queryString;

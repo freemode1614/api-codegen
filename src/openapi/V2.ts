@@ -8,7 +8,6 @@ import {
   ParameterObject,
   SchemaFormatType,
   SchemaObject,
-  SingleTypeSchemaObject,
 } from "@apicodegen/core";
 import { Base, HttpMethods, NonArraySchemaType } from "@apicodegen/core";
 import { OpenAPIV2 } from "openapi-types";

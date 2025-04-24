@@ -155,7 +155,7 @@ var Base = class _Base {
     if (typescriptKeywords.has(text)) {
       text += "_";
     }
-    return text.replace(/[/\-_{}():\s`,*<>$#.\d]/gm, "_").replaceAll("...", "");
+    return text.replace(/[/\-_{}():\s`,*<>$#.]/gm, "_").replaceAll("...", "");
   }
   /**
    * Capitalizes the first character of a string.
@@ -379,7 +379,7 @@ var Generator = class _Generator {
     );
     if (queryParameters.length > 0) {
       const queryString = queryParameters.map(
-        (qp, index) => `${index === 0 ? "?" : "&"}${encodeURIComponent(qp.name)}={${qp.name}}`
+        (qp, index) => `${index === 0 ? "?" : "&"}${encodeURIComponent(qp.name)}={${Base.camelCase(Base.normalize(qp.name))}}`
       ).join("");
       path += queryString;
     }
