@@ -158,23 +158,36 @@ export class FetchAdapter extends Adapter {
                   ],
                   undefined,
                   t.createToken(SyntaxKind.EqualsGreaterThanToken),
-                  t.createAsExpression(
-                    t.createParenthesizedExpression(
-                      t.createAwaitExpression(
-                        t.createCallExpression(
-                          t.createPropertyAccessExpression(
-                            t.createIdentifier("response"),
-                            t.createIdentifier("json"),
+                  response?.schema
+                    ? t.createAsExpression(
+                        t.createParenthesizedExpression(
+                          t.createAwaitExpression(
+                            t.createCallExpression(
+                              t.createPropertyAccessExpression(
+                                t.createIdentifier("response"),
+                                t.createIdentifier("json"),
+                              ),
+                              undefined,
+                              [],
+                            ),
                           ),
-                          undefined,
-                          [],
+                        ),
+                        response?.schema
+                          ? Generator.toTypeNode(response.schema)
+                          : t.createToken(SyntaxKind.UnknownKeyword),
+                      )
+                    : t.createParenthesizedExpression(
+                        t.createAwaitExpression(
+                          t.createCallExpression(
+                            t.createPropertyAccessExpression(
+                              t.createIdentifier("response"),
+                              t.createIdentifier("json"),
+                            ),
+                            undefined,
+                            [],
+                          ),
                         ),
                       ),
-                    ),
-                    response?.schema
-                      ? Generator.toTypeNode(response.schema)
-                      : t.createToken(SyntaxKind.UnknownKeyword),
-                  ),
                 ),
               ],
             )

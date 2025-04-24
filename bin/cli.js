@@ -1107,7 +1107,7 @@ var FetchAdapter = class extends Adapter {
                 ],
                 void 0,
                 t3.createToken(SyntaxKind2.EqualsGreaterThanToken),
-                t3.createAsExpression(
+                response?.schema ? t3.createAsExpression(
                   t3.createParenthesizedExpression(
                     t3.createAwaitExpression(
                       t3.createCallExpression(
@@ -1121,6 +1121,17 @@ var FetchAdapter = class extends Adapter {
                     )
                   ),
                   response?.schema ? Generator.toTypeNode(response.schema) : t3.createToken(SyntaxKind2.UnknownKeyword)
+                ) : t3.createParenthesizedExpression(
+                  t3.createAwaitExpression(
+                    t3.createCallExpression(
+                      t3.createPropertyAccessExpression(
+                        t3.createIdentifier("response"),
+                        t3.createIdentifier("json")
+                      ),
+                      void 0,
+                      []
+                    )
+                  )
                 )
               )
             ]
