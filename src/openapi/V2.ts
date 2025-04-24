@@ -366,8 +366,6 @@ export class V2 {
                   inBody[0].in === "body" &&
                   inBody[0].name === "body";
 
-                console.log("inBody~>", inBody);
-
                 methodApis.push({
                   method,
                   operationId,

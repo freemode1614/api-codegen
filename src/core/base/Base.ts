@@ -87,7 +87,7 @@ export abstract class Base {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     _operationId: string = "",
   ) {
-    const name = this.camelCase(this.normalize(path));
+    const name = this.normalize(this.camelCase(this.normalize(path)));
     const suffix = method
       ? this.capitalize(this.upperCamelCase(`using_${method}`))
       : "";
@@ -104,7 +104,7 @@ export abstract class Base {
     if (typescriptKeywords.has(text)) {
       text += "_";
     }
-    return text.replace(/[/\-_{}():\s`,*<>$#.]/gm, "_").replaceAll("...", "");
+    return text.replace(/[/\-_{}():\s`,*<>$#.]/gm, "_").replace(/^\d./gm, '').replaceAll("...", "");
   }
 
   /**

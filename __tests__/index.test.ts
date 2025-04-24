@@ -1,13 +1,17 @@
+import cp from "node:child_process";
 import { createServer, type Server } from "node:http";
 import path from "node:path";
 
 import { codeGen } from "@apicodegen/index";
 import glob from "fast-glob";
 import handler from "serve-handler";
-import { afterAll, beforeAll, describe, it } from "vitest";
+import { promisify } from "util";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 let server: Server;
 const DOC_SERVER = "http://localhost:5500";
+
+const exec = promisify(cp.exec);
 
 // Setup doc server
 const initDocServer = async () => {
@@ -18,7 +22,6 @@ const initDocServer = async () => {
 
   await new Promise<void>((resolve) => {
     server.listen(5500, () => {
-      console.log(`API doc server running at ${DOC_SERVER}`);
       resolve();
     });
   });
@@ -61,54 +64,51 @@ afterAll(async () => {
   await closeDocServer();
 });
 
-describe("Main test case for single doc codegen", () => {
-  // it("Should parse without error", async () => {
-  //   await codeGen({
-  //     docURL: `https://172.31.7.120:8002/static/openapi.json`,
-  //     output: "output.ts",
-  //     // baseURL: "/v1",
-  //     adaptor: "axios",
-  //     importClientSource: `import axios from "axios"`,
-  //   });
-  // });
+describe("OpenAPI 2.0 codegen", () => {
+  const { BASE, docs } = getDocsByVersion("2.0");
+  for (const doc of docs) {
+    const docUrl = `${DOC_SERVER}/${BASE}/${doc}`;
 
-  it("Should not throw", async () => {
-    await codeGen({
-      docURL: `${DOC_SERVER}/api-docs/openapi/3.0/json/schema-types.json`,
-      output: "output.ts",
-      baseURL: "/v1",
-      adaptor: "axios",
-      importClientSource: `import axios from "axios"`,
+    it(`${docUrl}`, async () => {
+      await codeGen({
+        docURL: docUrl,
+        output: "output.ts",
+      });
+      const { stderr } = await exec("tsc ./output.ts --noEmit");
+      expect(stderr).toBeFalsy();
     });
-  });
+  }
+});
 
-  it("Should not throw for openapi 3.0 docs", async () => {
-    const { BASE, docs } = getDocsByVersion("3.0");
-    for (const doc of docs) {
+describe("OpenAPI 3.0 codegen", () => {
+  const { BASE, docs } = getDocsByVersion("3.0");
+  for (const doc of docs) {
+    const docUrl = `${DOC_SERVER}/${BASE}/${doc}`;
+
+    it(`3.0 docs: ${docUrl}`, async () => {
       await codeGen({
-        docURL: `${DOC_SERVER}/${BASE}/${doc}`,
+        docURL: docUrl,
         output: "output.ts",
       });
-    }
-  });
+      const { stderr } = await exec("tsc ./output.ts --noEmit");
+      expect(stderr).toBeFalsy();
+    });
+  }
+});
 
-  it("Should not throw for openapi 3.1 docs", async () => {
-    const { BASE, docs } = getDocsByVersion("3.1");
-    for (const doc of docs) {
+describe("OenAPI 3.1 codegen", () => {
+  const { BASE, docs } = getDocsByVersion("3.1");
+  for (const doc of docs) {
+    const docUrl = `${DOC_SERVER}/${BASE}/${doc}`;
+
+    it(`${docUrl}`, async () => {
       await codeGen({
-        docURL: `${DOC_SERVER}/${BASE}/${doc}`,
+        docURL: docUrl,
         output: "output.ts",
       });
-    }
-  });
 
-  it("Should not throw for openapi 2.0 docs", async () => {
-    const { BASE, docs } = getDocsByVersion("2.0");
-    for (const doc of docs) {
-      await codeGen({
-        docURL: `${DOC_SERVER}/${BASE}/${doc}`,
-        output: "output.ts",
-      });
-    }
-  });
+      const { stderr } = await exec("tsc ./output.ts --noEmit");
+      expect(stderr).toBeFalsy();
+    });
+  }
 });

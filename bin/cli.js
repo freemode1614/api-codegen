@@ -142,7 +142,7 @@ var Base = class _Base {
    * @returns - The generated function name.
    */
   static pathToFnName(path, method, _operationId = "") {
-    const name = this.camelCase(this.normalize(path));
+    const name = this.normalize(this.camelCase(this.normalize(path)));
     const suffix = method ? this.capitalize(this.upperCamelCase(`using_${method}`)) : "";
     return name + suffix;
   }
@@ -155,7 +155,7 @@ var Base = class _Base {
     if (typescriptKeywords.has(text)) {
       text += "_";
     }
-    return text.replace(/[/\-_{}():\s`,*<>$#.]/gm, "_").replaceAll("...", "");
+    return text.replace(/[/\-_{}():\s`,*<>$#.]/gm, "_").replace(/^\d./gm, "").replaceAll("...", "");
   }
   /**
    * Capitalizes the first character of a string.
@@ -1422,7 +1422,6 @@ var V2 = class {
                 const response = responses2[code];
                 const responseSchema = this.getResponseByRef(response);
                 const inBodyOnlyHasBody = inBody && inBody.length === 1 && inBody[0].in === "body" && inBody[0].name === "body";
-                console.log("inBody~>", inBody);
                 methodApis.push({
                   method,
                   operationId,
