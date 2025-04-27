@@ -665,7 +665,13 @@ var Generator = class _Generator {
                       t.createStringLiteral(key),
                       t.createIdentifier("file"),
                       t.createPropertyAccessExpression(
-                        t.createIdentifier("file"),
+                        t.createAsExpression(
+                          t.createIdentifier("file"),
+                          t.createTypeReferenceNode(
+                            t.createIdentifier("File"),
+                            void 0
+                          )
+                        ),
                         t.createIdentifier("name")
                       )
                     ]

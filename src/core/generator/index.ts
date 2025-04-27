@@ -454,7 +454,13 @@ export class Generator {
                       t.createStringLiteral(key),
                       t.createIdentifier("file"),
                       t.createPropertyAccessExpression(
-                        t.createIdentifier("file"),
+                        t.createAsExpression(
+                          t.createIdentifier("file"),
+                          t.createTypeReferenceNode(
+                            t.createIdentifier("File"),
+                            undefined,
+                          ),
+                        ),
                         t.createIdentifier("name"),
                       ),
                     ],

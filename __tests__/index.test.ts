@@ -64,6 +64,19 @@ afterAll(async () => {
   await closeDocServer();
 });
 
+// describe("某个特定的 api 文档", () => {
+//   const { BASE } = getDocsByVersion("3.0");
+//   const docUrl = `${DOC_SERVER}/${BASE}/json/schema-enums.json`;
+//   it(`${docUrl}`, async () => {
+//     await codeGen({
+//       docURL: docUrl,
+//       output: "output.ts",
+//     });
+//     const { stderr } = await exec("npx tsc ./output.ts --noEmit");
+//     expect(stderr).toBeFalsy();
+//   });
+// });
+
 describe("OpenAPI 2.0 codegen", () => {
   const { BASE, docs } = getDocsByVersion("2.0");
   for (const doc of docs) {
