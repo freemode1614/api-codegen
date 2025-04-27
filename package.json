@@ -73,7 +73,7 @@
     }
   },
   "prettier": "@moccona/preset-config/prettierrc",
-  "packageManager": "pnpm@9.7.1",
+  "packageManager": "pnpm@10.9.0",
   "browserslist": [
     ">0.3%",
     "not dead",
