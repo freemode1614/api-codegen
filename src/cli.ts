@@ -24,6 +24,8 @@ cli
         "output" | "adaptor" | "baseURL" | "verbose" | "importClientSource"
       >,
     ) => {
+      // Generate code based on the provided OpenAPI documentation
+      // This action will create a new file at output.ts containing the generated TypeScript code
       try {
         const code = await codeGen({
           docURL,
