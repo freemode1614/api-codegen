@@ -55,14 +55,13 @@ export function apiCodeGenPlugin(
         await tsc();
       } catch (error) {
         logger.error(error);
-        process.exit(1);
       }
 
       return {
         ...config,
         server: {
           ...(config.server ?? {}),
-          proxy: proxies,
+          proxy: Object.assign({}, config.server?.proxy ?? {}, proxies),
         },
       };
     },

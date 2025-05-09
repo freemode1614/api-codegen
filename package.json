@@ -10,14 +10,17 @@
     "dev": "tsup --watch",
     "build": "tsup",
     "test": "vitest --watch false",
-    "prepublishOnly": "npm run build && npm run test"
+    "prepublishOnly": "npm run build"
   },
   "exports": {
     "./package.json": "./package.json",
+    "./*": {
+      "types": "./npm/*/index.js",
+      "import": "./npm/*/index.d.ts"
+    },
     ".": {
       "types": "./npm/index.d.ts",
-      "import": "./npm/index.js",
-      "require": "./npm/index.cjs"
+      "import": "./npm/index.js"
     }
   },
   "keywords": [

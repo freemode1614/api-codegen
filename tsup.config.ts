@@ -18,4 +18,13 @@ export default defineConfig([
     clean: true,
     sourcemap: false,
   },
+  {
+    entry: ["./src/vite-plugin/index.ts"],
+    outDir: "./npm/vite",
+    format: "esm",
+    shims: true,
+    clean: true,
+    sourcemap: true,
+    dts: true
+  }
 ]);
