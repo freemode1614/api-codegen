@@ -12,8 +12,8 @@ export type apiCodeGenPluginOptions = ProviderInitOptions & {
   proxy?: ServerOptions["proxy"];
 };
 
-export const tsc = async () => {
-  await execaCommand("npx tsc -b");
+export const tsc = async (path: string) => {
+  await execaCommand(`npx tsc ${path} --noEmit`);
 };
 
 export function apiCodeGenPlugin(
@@ -36,9 +36,13 @@ export function apiCodeGenPlugin(
             const code = await codeGen(codeGenInitOptions);
             await fs.createFile(codeGenInitOptions.output);
             await fs.writeFile(codeGenInitOptions.output, code);
+            try {
+              await tsc(codeGenInitOptions.output);
+            } catch (error) {
+              logger.error(error);
+            }
           } catch (error) {
             logger.error(`Failed to generate api ${name}`);
-            console.error(error);
           }
 
           return {
@@ -50,12 +54,6 @@ export function apiCodeGenPlugin(
       );
 
       logger.info("-------> api codegen finished <--------");
-
-      try {
-        await tsc();
-      } catch (error) {
-        logger.error(error);
-      }
 
       return {
         ...config,
