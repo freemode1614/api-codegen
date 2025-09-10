@@ -42,7 +42,7 @@ export function apiCodeGenPlugin(
               logger.error(error);
             }
           } catch (error) {
-            logger.error(`Failed to generate api ${name}`);
+            logger.error(`Failed to generate api ${name}: ${error}`);
           }
 
           return {

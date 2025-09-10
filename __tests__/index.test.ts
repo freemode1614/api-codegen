@@ -81,13 +81,14 @@ describe("OpenAPI 2.0 codegen", () => {
   const { BASE, docs } = getDocsByVersion("2.0");
   for (const doc of docs) {
     const docUrl = `${DOC_SERVER}/${BASE}/${doc}`;
+    const output = `__tests__/apis/${doc.replace(".json", "").replace("json/", "")}.ts`;
 
     it(`${docUrl}`, async () => {
       await codeGen({
         docURL: docUrl,
-        output: "output.ts",
+        output: output,
       });
-      const { stderr } = await exec("tsc ./output.ts --noEmit");
+      const { stderr } = await exec(`tsc ${output} --noEmit`);
       expect(stderr).toBeFalsy();
     });
   }
@@ -97,13 +98,14 @@ describe("OpenAPI 3.0 codegen", () => {
   const { BASE, docs } = getDocsByVersion("3.0");
   for (const doc of docs) {
     const docUrl = `${DOC_SERVER}/${BASE}/${doc}`;
+    const output = `__tests__/apis/${doc.replace(".json", "").replace("json/", "")}.ts`;
 
     it(`3.0 docs: ${docUrl}`, async () => {
       await codeGen({
         docURL: docUrl,
-        output: "output.ts",
+        output: output,
       });
-      const { stderr } = await exec("tsc ./output.ts --noEmit");
+      const { stderr } = await exec(`tsc ${output} --noEmit`);
       expect(stderr).toBeFalsy();
     });
   }
@@ -113,6 +115,7 @@ describe("OenAPI 3.1 codegen", () => {
   const { BASE, docs } = getDocsByVersion("3.1");
   for (const doc of docs) {
     const docUrl = `${DOC_SERVER}/${BASE}/${doc}`;
+    const output = `__tests__/apis/${doc.replace(".json", "").replace("json/", "")}.ts`;
 
     it(`${docUrl}`, async () => {
       await codeGen({
@@ -120,7 +123,7 @@ describe("OenAPI 3.1 codegen", () => {
         output: "output.ts",
       });
 
-      const { stderr } = await exec("tsc ./output.ts --noEmit");
+      const { stderr } = await exec(`tsc ${output} --noEmit`);
       expect(stderr).toBeFalsy();
     });
   }
