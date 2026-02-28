@@ -316,27 +316,28 @@ export class Generator {
     return t.createToken(SyntaxKind.UnknownKeyword);
   }
 
-  static toDeclarationNode(
+  static toDeclarationNodes(
     parameters: ParameterObject[],
-  ): ParameterDeclaration {
+  ): ParameterDeclaration[] {
     const objectElements: BindingElement[] = [];
     const typeObjectElements: PropertySignature[] = [];
+    const refParameters: ParameterDeclaration[] = [];
 
     for (const parameter of parameters) {
       if (parameter.ref) {
-        t.createParameterDeclaration(
-          undefined,
-          undefined,
-          t.createIdentifier(
-            Base.camelCase(Base.normalize(Base.ref2name(parameter.ref))),
-          ),
-          undefined,
-          t.createTypeReferenceNode(
-            t.createIdentifier(
-              Base.upperCamelCase(Base.normalize(Base.ref2name(parameter.ref))),
+        // Handle reference parameters as standalone parameters
+        const refName = Base.ref2name(parameter.ref);
+        refParameters.push(
+          t.createParameterDeclaration(
+            undefined,
+            undefined,
+            t.createIdentifier(Base.camelCase(Base.normalize(refName))),
+            undefined,
+            t.createTypeReferenceNode(
+              t.createIdentifier(Base.upperCamelCase(Base.normalize(refName))),
             ),
+            undefined,
           ),
-          undefined,
         );
       } else {
         const { name, schema, required } = parameter;
@@ -361,14 +362,20 @@ export class Generator {
       }
     }
 
-    return t.createParameterDeclaration(
-      undefined,
-      undefined,
-      t.createObjectBindingPattern(objectElements),
-      undefined,
-      t.createTypeLiteralNode(typeObjectElements),
-      undefined,
-    );
+    // Build object destructuring parameter for non-ref parameters
+    if (objectElements.length > 0) {
+      const objectParam = t.createParameterDeclaration(
+        undefined,
+        undefined,
+        t.createObjectBindingPattern(objectElements),
+        undefined,
+        t.createTypeLiteralNode(typeObjectElements),
+        undefined,
+      );
+      return [objectParam, ...refParameters];
+    }
+
+    return refParameters;
   }
 
   static toFormDataStatement(
@@ -699,12 +706,12 @@ export class Generator {
                 : ""),
             undefined,
             [
-              parameters.length > 0
-                ? Generator.toDeclarationNode(parameters)
-                : undefined,
-              req?.schema
-                ? Generator.toRequestBodyTypeNode(req.schema)
-                : undefined,
+              ...(parameters.length > 0
+                ? Generator.toDeclarationNodes(parameters)
+                : []),
+              ...(req?.schema
+                ? [Generator.toRequestBodyTypeNode(req.schema)]
+                : []),
             ].filter(Boolean) as ParameterDeclaration[],
             undefined,
             this.bodyBlock(

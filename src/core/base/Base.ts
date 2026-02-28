@@ -1,7 +1,6 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * @file Base class implementation
- * @author [Your Name]
+ * @author wp.l
  * @description Base utility class providing common methods for code generation and API handling
  */
 
@@ -104,7 +103,10 @@ export abstract class Base {
     if (typescriptKeywords.has(text)) {
       text += "_";
     }
-    return text.replace(/[/\-_{}():\s`,*<>$#.]/gm, "_").replace(/^\d./gm, '').replaceAll("...", "");
+    return text
+      .replace(/[/\-_{}():\s`,*<>$#.]/gm, "_")
+      .replace(/^\d./gm, "")
+      .replaceAll("...", "");
   }
 
   /**
@@ -156,21 +158,27 @@ export abstract class Base {
     requestInit: FetchDocRequestInit = {},
   ): Promise<T> {
     const agent = new Agent({
-      connect: {
-        rejectUnauthorized: false,
-      },
+      connect: { rejectUnauthorized: false },
     });
 
-    // eslint-disable-next-line no-useless-catch
+    const { body, statusCode } = await request(url, {
+      method: "GET",
+      dispatcher: agent,
+      ...requestInit,
+    });
+
+    if (statusCode >= 400) {
+      throw new Error(
+        `Failed to fetch OpenAPI documentation from ${url}: HTTP ${statusCode}`,
+      );
+    }
+
     try {
-      const { body } = await request(url, {
-        method: "GET",
-        dispatcher: agent,
-        ...requestInit,
-      });
       return body.json() as T;
     } catch (error) {
-      throw error;
+      throw new Error(
+        `Failed to parse JSON response from ${url}: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 
@@ -180,13 +188,11 @@ export abstract class Base {
    * @returns - The matched MediaTypes or null.
    */
   static getMediaType(mediaType: string): MediaTypes | undefined {
-    // eslint-disable-next-line @typescript-eslint/no-for-in-array
-    for (const type in Object.values(MediaTypes)) {
-      if (new RegExp(type).test(mediaType)) {
-        return type as MediaTypes;
-      }
-    }
-    return;
+    const mediaTypeValues = Object.values(MediaTypes) as string[];
+    const found = mediaTypeValues.find((type) =>
+      mediaType.includes(type),
+    );
+    return found as MediaTypes | undefined;
   }
 
   /**
@@ -230,18 +236,26 @@ export abstract class Base {
    * @param enums - Array of enum schemas to process.
    * @returns - Array of unique enum schemas.
    */
-  static uniqueEnums(enums: EnumSchemaObject[]) {
-    const uniqueEnums_: EnumSchemaObject[] = [];
-    for (const enumObject of enums) {
-      if (uniqueEnums_.length === 0) {
-        uniqueEnums_.push(enumObject);
-      } else {
-        if (!uniqueEnums_.some((a) => this.isSameEnum(a, enumObject))) {
-          uniqueEnums_.push(enumObject);
+  static uniqueEnums(enums: EnumSchemaObject[]): EnumSchemaObject[] {
+    const enumMap = new Map<string, Set<string | number>>();
+
+    for (const e of enums) {
+      const existing = enumMap.get(e.name);
+      if (existing) {
+        // Merge enum values with the same name
+        for (const value of e.enum) {
+          existing.add(value);
         }
+      } else {
+        enumMap.set(e.name, new Set(e.enum));
       }
     }
-    return uniqueEnums_;
+
+    // Convert back to array
+    return Array.from(enumMap.entries()).map(([name, values]) => ({
+      name,
+      enum: Array.from(values),
+    }));
   }
 
   /**
@@ -260,8 +274,12 @@ export abstract class Base {
    * @returns - True if the object is a reference.
    */
 
-  static isRef(schema: any): schema is ReferenceObject {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-    return "$ref" in schema && typeof schema.$ref === "string";
+  static isRef(schema: unknown): schema is ReferenceObject {
+    return (
+      typeof schema === "object" &&
+      schema !== null &&
+      "$ref" in schema &&
+      typeof (schema as Record<string, unknown>).$ref === "string"
+    );
   }
 }

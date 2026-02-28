@@ -1,7 +1,7 @@
 /**
- * @file Provider abstract class.
- * This file defines the `Provider` abstract class, which serves as a base for providers responsible for parsing
- * and processing API documentation.
+ * @file Base class implementation
+ * @author wp.l
+ * @description This file defines the `Provider` abstract class, which serves as a base for providers responsible for parsing and processing API documentation.
  */
 
 import type {

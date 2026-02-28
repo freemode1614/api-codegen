@@ -15,12 +15,14 @@
   "exports": {
     "./package.json": "./package.json",
     "./*": {
-      "types": "./npm/*/index.js",
-      "import": "./npm/*/index.d.ts"
+      "types": "./npm/*/index.d.ts",
+      "import": "./npm/*/index.js",
+      "require": "./npm/*/index.cjs"
     },
     ".": {
       "types": "./npm/index.d.ts",
-      "import": "./npm/index.js"
+      "import": "./npm/index.js",
+      "require": "./npm/index.cjs"
     }
   },
   "keywords": [

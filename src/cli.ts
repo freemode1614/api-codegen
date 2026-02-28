@@ -10,12 +10,12 @@ const cli = createCommand("apicodegen");
 
 cli
   .version(version)
-  .argument("<docURL>", "DOc url for tool to read")
-  .option("--output", "Where code generated", "./output.ts")
-  .option("--adaptor", "Adaptor for api call", "fetch")
-  .option("--baseURL", "Base path of the api endpoint", "")
-  .option("--verbose", "More logs", false)
-  .option("--importClientSource", "Where request tool comes from")
+  .argument("<docURL>", "URL of the OpenAPI documentation")
+  .option("-o, --output <path>", "Output file path", "./output.ts")
+  .option("-a, --adaptor <type>", "HTTP client adaptor (fetch|axios)", "fetch")
+  .option("-b, --baseURL <url>", "Base URL for API endpoints")
+  .option("-v, --verbose", "Enable verbose logging", false)
+  .option("--importClientSource <path>", "Custom client import source path")
   .action(
     async (
       docURL: string,

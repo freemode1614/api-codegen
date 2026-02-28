@@ -44,9 +44,13 @@ export class V3 {
           type: upLevelSchemaKey + refName,
         };
       }
-      schema = this.doc.components?.schemas?.[
+      const resolvedSchema = this.doc.components?.schemas?.[
         Base.ref2name(schema.$ref, this.doc)
-      ] as OpenAPIV3.SchemaObject;
+      ];
+      if (!resolvedSchema) {
+        return { type: "unknown" };
+      }
+      schema = resolvedSchema as OpenAPIV3.SchemaObject;
     }
 
     return this.toBaseSchema(schema, enums, "", upLevelSchemaKey + refName);
@@ -61,9 +65,16 @@ export class V3 {
     upLevelSchemaKey = "",
   ): ParameterObject {
     if (Base.isRef(schema)) {
-      schema = this.doc.components?.parameters?.[
+      const resolvedSchema = this.doc.components?.parameters?.[
         Base.ref2name(schema.$ref, this.doc)
-      ] as OpenAPIV3.ParameterObject;
+      ];
+      if (!resolvedSchema) {
+        return {
+          name: "unknown",
+          in: "query" as ParameterIn,
+        };
+      }
+      schema = resolvedSchema as OpenAPIV3.ParameterObject;
     }
 
     const {
@@ -133,9 +144,13 @@ export class V3 {
     schema: OpenAPIV3.ResponseObject | OpenAPIV3.ReferenceObject,
   ): MediaTypeObject[] {
     if (Base.isRef(schema)) {
-      schema = this.doc.components?.responses?.[
+      const resolvedSchema = this.doc.components?.responses?.[
         Base.ref2name(schema.$ref, this.doc)
-      ] as OpenAPIV3.ResponseObject;
+      ];
+      if (!resolvedSchema) {
+        return [];
+      }
+      schema = resolvedSchema as OpenAPIV3.ResponseObject;
     }
 
     const { content = {} } = schema;
@@ -154,9 +169,13 @@ export class V3 {
     enums: EnumSchemaObject[] = [],
   ): MediaTypeObject[] {
     if (Base.isRef(schema)) {
-      schema = this.doc.components?.requestBodies?.[
+      const resolvedSchema = this.doc.components?.requestBodies?.[
         Base.ref2name(schema.$ref, this.doc)
-      ] as OpenAPIV3.RequestBodyObject;
+      ];
+      if (!resolvedSchema) {
+        return [];
+      }
+      schema = resolvedSchema as OpenAPIV3.RequestBodyObject;
     }
 
     const { content = {} } = schema;

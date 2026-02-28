@@ -1,6 +1,6 @@
 /**
  * @file Adapter abstract class definition
- * @author [Your Name]
+ * @author wp.l
  * @description Base adapter implementation for various code generation tools
  */
 

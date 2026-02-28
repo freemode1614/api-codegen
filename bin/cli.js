@@ -191,19 +191,24 @@ var Base = class _Base {
    */
   static async fetchDoc(url, requestInit = {}) {
     const agent = new Agent({
-      connect: {
-        rejectUnauthorized: false
-      }
+      connect: { rejectUnauthorized: false }
     });
+    const { body, statusCode } = await request(url, {
+      method: "GET",
+      dispatcher: agent,
+      ...requestInit
+    });
+    if (statusCode >= 400) {
+      throw new Error(
+        `Failed to fetch OpenAPI documentation from ${url}: HTTP ${statusCode}`
+      );
+    }
     try {
-      const { body } = await request(url, {
-        method: "GET",
-        dispatcher: agent,
-        ...requestInit
-      });
       return body.json();
     } catch (error) {
-      throw error;
+      throw new Error(
+        `Failed to parse JSON response from ${url}: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
   }
   /**
@@ -212,12 +217,11 @@ var Base = class _Base {
    * @returns - The matched MediaTypes or null.
    */
   static getMediaType(mediaType) {
-    for (const type in Object.values(MediaTypes)) {
-      if (new RegExp(type).test(mediaType)) {
-        return type;
-      }
-    }
-    return;
+    const mediaTypeValues = Object.values(MediaTypes);
+    const found = mediaTypeValues.find(
+      (type) => mediaType.includes(type)
+    );
+    return found;
   }
   /**
    * Checks if a schema is a valid enum type that isn't boolean.
@@ -252,17 +256,21 @@ var Base = class _Base {
    * @returns - Array of unique enum schemas.
    */
   static uniqueEnums(enums) {
-    const uniqueEnums_ = [];
-    for (const enumObject of enums) {
-      if (uniqueEnums_.length === 0) {
-        uniqueEnums_.push(enumObject);
-      } else {
-        if (!uniqueEnums_.some((a) => this.isSameEnum(a, enumObject))) {
-          uniqueEnums_.push(enumObject);
+    const enumMap = /* @__PURE__ */ new Map();
+    for (const e of enums) {
+      const existing = enumMap.get(e.name);
+      if (existing) {
+        for (const value of e.enum) {
+          existing.add(value);
         }
+      } else {
+        enumMap.set(e.name, new Set(e.enum));
       }
     }
-    return uniqueEnums_;
+    return Array.from(enumMap.entries()).map(([name, values]) => ({
+      name,
+      enum: Array.from(values)
+    }));
   }
   /**
    * Finds the first occurrence of a matching enum schema in an array.
@@ -279,7 +287,7 @@ var Base = class _Base {
    * @returns - True if the object is a reference.
    */
   static isRef(schema) {
-    return "$ref" in schema && typeof schema.$ref === "string";
+    return typeof schema === "object" && schema !== null && "$ref" in schema && typeof schema.$ref === "string";
   }
 };
 
@@ -549,24 +557,24 @@ var Generator = class _Generator {
     }
     return t.createToken(SyntaxKind.UnknownKeyword);
   }
-  static toDeclarationNode(parameters) {
+  static toDeclarationNodes(parameters) {
     const objectElements = [];
     const typeObjectElements = [];
+    const refParameters = [];
     for (const parameter of parameters) {
       if (parameter.ref) {
-        t.createParameterDeclaration(
-          void 0,
-          void 0,
-          t.createIdentifier(
-            Base.camelCase(Base.normalize(Base.ref2name(parameter.ref)))
-          ),
-          void 0,
-          t.createTypeReferenceNode(
-            t.createIdentifier(
-              Base.upperCamelCase(Base.normalize(Base.ref2name(parameter.ref)))
-            )
-          ),
-          void 0
+        const refName = Base.ref2name(parameter.ref);
+        refParameters.push(
+          t.createParameterDeclaration(
+            void 0,
+            void 0,
+            t.createIdentifier(Base.camelCase(Base.normalize(refName))),
+            void 0,
+            t.createTypeReferenceNode(
+              t.createIdentifier(Base.upperCamelCase(Base.normalize(refName)))
+            ),
+            void 0
+          )
         );
       } else {
         const { name, schema, required } = parameter;
@@ -587,14 +595,18 @@ var Generator = class _Generator {
         );
       }
     }
-    return t.createParameterDeclaration(
-      void 0,
-      void 0,
-      t.createObjectBindingPattern(objectElements),
-      void 0,
-      t.createTypeLiteralNode(typeObjectElements),
-      void 0
-    );
+    if (objectElements.length > 0) {
+      const objectParam = t.createParameterDeclaration(
+        void 0,
+        void 0,
+        t.createObjectBindingPattern(objectElements),
+        void 0,
+        t.createTypeLiteralNode(typeObjectElements),
+        void 0
+      );
+      return [objectParam, ...refParameters];
+    }
+    return refParameters;
   }
   static toFormDataStatement(parameters, requestBody) {
     const statements = [];
@@ -848,8 +860,8 @@ var Generator = class _Generator {
             Base.pathToFnName(uri, method, operationId) + (shouldAddExtraMethodNameSuffix ? Base.capitalize(req.type.split("/")[1]) : ""),
             void 0,
             [
-              parameters.length > 0 ? _Generator.toDeclarationNode(parameters) : void 0,
-              req?.schema ? _Generator.toRequestBodyTypeNode(req.schema) : void 0
+              ...parameters.length > 0 ? _Generator.toDeclarationNodes(parameters) : [],
+              ...req?.schema ? [_Generator.toRequestBodyTypeNode(req.schema)] : []
             ].filter(Boolean),
             void 0,
             this.bodyBlock(
@@ -969,7 +981,6 @@ var AxiosAdapter = class extends Adapter {
             )
           ) : []
         ).concat(
-          // Add body if needed
           shouldUseFormData || inBody.length > 0 || requestBody?.schema ? t2.createPropertyAssignment(
             t2.createIdentifier(adapter.bodyFieldName),
             shouldUseFormData ? t2.createIdentifier("fd") : inBody.length > 0 || requestBody?.schema && !Generator.isBinarySchema(requestBody.schema) ? t2.createIdentifier("req") : t2.createIdentifier("req")
@@ -1055,7 +1066,6 @@ var FetchAdapter = class extends Adapter {
             )
           ) : []
         ).concat(
-          // Add body if needed
           shouldUseFormData || inBody.length > 0 || requestBody?.schema ? t3.createPropertyAssignment(
             t3.createIdentifier(adapter.bodyFieldName),
             shouldUseFormData ? t3.createIdentifier("fd") : inBody.length > 0 || requestBody?.schema && !Generator.isBinarySchema(requestBody.schema) ? t3.createCallExpression(
@@ -1509,7 +1519,11 @@ var V3 = class {
           type: upLevelSchemaKey + refName
         };
       }
-      schema = this.doc.components?.schemas?.[Base.ref2name(schema.$ref, this.doc)];
+      const resolvedSchema = this.doc.components?.schemas?.[Base.ref2name(schema.$ref, this.doc)];
+      if (!resolvedSchema) {
+        return { type: "unknown" };
+      }
+      schema = resolvedSchema;
     }
     return this.toBaseSchema(schema, enums, "", upLevelSchemaKey + refName);
   }
@@ -1518,7 +1532,14 @@ var V3 = class {
    */
   getParameterByRef(schema, enums = [], upLevelSchemaKey = "") {
     if (Base.isRef(schema)) {
-      schema = this.doc.components?.parameters?.[Base.ref2name(schema.$ref, this.doc)];
+      const resolvedSchema = this.doc.components?.parameters?.[Base.ref2name(schema.$ref, this.doc)];
+      if (!resolvedSchema) {
+        return {
+          name: "unknown",
+          in: "query"
+        };
+      }
+      schema = resolvedSchema;
     }
     const {
       name,
@@ -1567,7 +1588,11 @@ var V3 = class {
    */
   getResponseByRef(schema) {
     if (Base.isRef(schema)) {
-      schema = this.doc.components?.responses?.[Base.ref2name(schema.$ref, this.doc)];
+      const resolvedSchema = this.doc.components?.responses?.[Base.ref2name(schema.$ref, this.doc)];
+      if (!resolvedSchema) {
+        return [];
+      }
+      schema = resolvedSchema;
     }
     const { content = {} } = schema;
     return Object.keys(content).map((c) => ({
@@ -1580,7 +1605,11 @@ var V3 = class {
    */
   getRequestBodyByRef(schema, enums = []) {
     if (Base.isRef(schema)) {
-      schema = this.doc.components?.requestBodies?.[Base.ref2name(schema.$ref, this.doc)];
+      const resolvedSchema = this.doc.components?.requestBodies?.[Base.ref2name(schema.$ref, this.doc)];
+      if (!resolvedSchema) {
+        return [];
+      }
+      schema = resolvedSchema;
     }
     const { content = {} } = schema;
     return Object.keys(content).map((c) => ({
@@ -2199,7 +2228,7 @@ var version = "0.0.2";
 
 // src/cli.ts
 var cli = createCommand("apicodegen");
-cli.version(version).argument("<docURL>", "DOc url for tool to read").option("--output", "Where code generated", "./output.ts").option("--adaptor", "Adaptor for api call", "fetch").option("--baseURL", "Base path of the api endpoint", "").option("--verbose", "More logs", false).option("--importClientSource", "Where request tool comes from").action(
+cli.version(version).argument("<docURL>", "URL of the OpenAPI documentation").option("-o, --output <path>", "Output file path", "./output.ts").option("-a, --adaptor <type>", "HTTP client adaptor (fetch|axios)", "fetch").option("-b, --baseURL <url>", "Base URL for API endpoints").option("-v, --verbose", "Enable verbose logging", false).option("--importClientSource <path>", "Custom client import source path").action(
   async (docURL, options) => {
     try {
       const code = await codeGen({

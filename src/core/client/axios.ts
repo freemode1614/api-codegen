@@ -108,7 +108,6 @@ export class AxiosAdapter extends Adapter {
               : [],
           )
           .concat(
-            // Add body if needed
             shouldUseFormData || inBody.length > 0 || requestBody?.schema
               ? t.createPropertyAssignment(
                   t.createIdentifier(adapter.bodyFieldName),

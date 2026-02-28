@@ -9,9 +9,8 @@ To install `@moccona/apicodegen`, you can use npm or yarn:
 ```sh
 npm install -g @moccona/apicodegen
 
-or
+# or
 
-```sh
 yarn global add @moccona/apicodegen
 ```
 
