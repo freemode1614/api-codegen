@@ -133,3 +133,4 @@ dist
 # build
 npm
 output.ts
+__tests__/apis/
