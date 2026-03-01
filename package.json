@@ -1,10 +1,10 @@
 {
   "name": "@moccona/apicodegen",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "",
   "type": "module",
   "bin": {
-    "apicodegen": "./bin/cli.cjs"
+    "apicodegen": "./bin/cli.js"
   },
   "scripts": {
     "dev": "tsup --watch",

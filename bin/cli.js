@@ -2224,7 +2224,7 @@ async function codeGen(initOptions) {
 import { createCommand } from "commander";
 
 // package.json
-var version = "0.0.2";
+var version = "0.0.3";
 
 // src/cli.ts
 var cli = createCommand("apicodegen");
