@@ -1,16 +1,18 @@
 import {
-  ArrayTypeSchemaObject,
-  EnumSchemaObject,
-  MediaTypeObject,
+  type ArrayTypeSchemaObject,
+  Base,
+  type EnumSchemaObject,
+  HttpMethods,
+  type MediaTypeObject,
   MediaTypes,
-  OperationObject,
-  ParameterIn,
-  ParameterObject,
-  SchemaFormatType,
-  SchemaObject,
+  NonArraySchemaType,
+  type OperationObject,
+  type ParameterIn,
+  type ParameterObject,
+  type SchemaFormatType,
+  type SchemaObject,
 } from "@apicodegen/core";
-import { Base, HttpMethods, NonArraySchemaType } from "@apicodegen/core";
-import { OpenAPIV2 } from "openapi-types";
+import type { OpenAPIV2 } from "openapi-types";
 
 export class V2 {
   doc!: OpenAPIV2.Document;
@@ -96,9 +98,7 @@ export class V2 {
       let { type } = schema;
 
       if (enum_ && type !== "boolean") {
-        const name =
-          Base.upperCamelCase(upLevelSchemaKey) +
-          Base.upperCamelCase(schemaKey);
+        const name = Base.upperCamelCase(upLevelSchemaKey) + Base.upperCamelCase(schemaKey);
 
         const enumObject = {
           name,
@@ -107,10 +107,7 @@ export class V2 {
 
         const sameObject = Base.findSameSchema(enumObject, enums);
 
-        if (
-          !sameObject &&
-          Base.isValidEnumType(schema as unknown as SchemaObject)
-        ) {
+        if (!sameObject && Base.isValidEnumType(schema as unknown as SchemaObject)) {
           enums.push(enumObject);
         }
 
@@ -168,9 +165,7 @@ export class V2 {
             ...acc,
             [p]: Base.isRef(propSchema)
               ? {
-                  type: Base.upperCamelCase(
-                    Base.ref2name(propSchema.$ref, this.doc),
-                  ),
+                  type: Base.upperCamelCase(Base.ref2name(propSchema.$ref, this.doc)),
                 }
               : this.toBaseSchema(propSchema, enums, p, upLevelSchemaKey),
           };
@@ -191,20 +186,10 @@ export class V2 {
       parameter = this.doc.parameters![Base.ref2name(parameter.$ref, this.doc)];
     }
 
-    const {
-      name,
-      required,
-      description,
-      type,
-      items,
-      enum: enum_,
-      properties,
-      schema,
-    } = parameter;
+    const { name, required, description, type, items, enum: enum_, properties, schema } = parameter;
 
     if (enum_) {
-      const type =
-        Base.upperCamelCase(upLevelSchemaKey) + Base.upperCamelCase(name);
+      const type = Base.upperCamelCase(upLevelSchemaKey) + Base.upperCamelCase(name);
 
       const enumSchema = {
         name: type,
@@ -213,10 +198,7 @@ export class V2 {
 
       const sameEnum = Base.findSameSchema(enumSchema, enums);
 
-      if (
-        !sameEnum &&
-        Base.isValidEnumType({ type, enum: enums } as SchemaObject)
-      ) {
+      if (!sameEnum && Base.isValidEnumType({ type, enum: enums } as SchemaObject)) {
         enums.push(enumSchema);
       }
 
@@ -331,12 +313,10 @@ export class V2 {
               responses = {},
             } = methodObject;
             const { parameters: parameters_ = [] } = methodObject;
-            const baseParameters = [...parameters, ...parameters_].map(
-              (parameter) => this.getParameterByRef(parameter, enums),
+            const baseParameters = [...parameters, ...parameters_].map((parameter) =>
+              this.getParameterByRef(parameter, enums),
             );
-            const uniqueParameterName = [
-              ...new Set(baseParameters.map((p) => p.name)),
-            ];
+            const uniqueParameterName = [...new Set(baseParameters.map((p) => p.name))];
 
             if (Object.keys(responses).length === 0) {
               Object.assign(responses, {
@@ -346,13 +326,9 @@ export class V2 {
               });
             }
 
-            const inBody = baseParameters.filter(
-              (p) => p.in === "body" || p.in === "formData",
-            );
+            const inBody = baseParameters.filter((p) => p.in === "body" || p.in === "formData");
 
-            const notInBody = baseParameters.filter(
-              (p) => p.in !== "body" && p.in !== "formData",
-            );
+            const notInBody = baseParameters.filter((p) => p.in !== "body" && p.in !== "formData");
 
             const httpCodes = Object.keys(responses);
             for (const code of httpCodes) {
@@ -390,9 +366,7 @@ export class V2 {
                               type: MediaTypes.JSON,
                               schema: {
                                 type: NonArraySchemaType.object,
-                                properties: inBody.reduce<
-                                  Record<string, SchemaObject>
-                                >((a, p) => {
+                                properties: inBody.reduce<Record<string, SchemaObject>>((a, p) => {
                                   return {
                                     ...a,
                                     [p.name]: {

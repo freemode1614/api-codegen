@@ -48,9 +48,7 @@ import type {
  * const provider = new OpenAPIProvider(initOptions, docData);
  * ```
  */
-export abstract class Provider
-  implements ProviderInitResult, ProviderInitOptions
-{
+export abstract class Provider implements ProviderInitResult, ProviderInitOptions {
   /** collection of enum schemas */
   readonly enums: EnumSchemaObject[] = [];
   /** collection of schemas indexed by name */
@@ -87,8 +85,7 @@ export abstract class Provider
     this.requestOptions = initOptions.requestOptions ?? {};
     this.importClientSource = initOptions.importClientSource ?? "";
 
-    const { enums, schemas, requestBodies, responses, parameters, apis } =
-      this.parse(doc);
+    const { enums, schemas, requestBodies, responses, parameters, apis } = this.parse(doc);
 
     this.enums = enums;
     this.schemas = schemas;

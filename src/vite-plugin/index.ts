@@ -16,9 +16,7 @@ export const tsc = async (path: string) => {
   await execaCommand(`npx tsc ${path} --noEmit`);
 };
 
-export function apiCodeGenPlugin(
-  options: apiCodeGenPluginOptions[],
-): PluginOption {
+export function apiCodeGenPlugin(options: apiCodeGenPluginOptions[]): PluginOption {
   let firstRun = true;
   return {
     name: PLUGIN_NAME,

@@ -2,12 +2,7 @@
  * Simple represenration for JSON object
  */
 export type JSONValue = {
-  [K: string]:
-    | string
-    | number
-    | boolean
-    | JSONValue
-    | (string | number | boolean | JSONValue)[];
+  [K: string]: string | number | boolean | JSONValue | (string | number | boolean | JSONValue)[];
 };
 
 export enum SchemaType {
@@ -18,35 +13,35 @@ export enum SchemaType {
 }
 
 export enum NonArraySchemaType {
-  "object" = "object",
-  "string" = "string",
-  "number" = "number",
-  "boolean" = "boolean",
-  "integer" = "integer",
-  "enum" = "enum",
-  "file" = "file",
+  object = "object",
+  string = "string",
+  number = "number",
+  boolean = "boolean",
+  integer = "integer",
+  enum = "enum",
+  file = "file",
 }
 
 export enum ArraySchemaType {
-  "array" = "array",
+  array = "array",
 }
 
 export enum SchemaFormatType {
-  "string" = "string",
-  "number" = "number",
-  "boolean" = "boolean",
-  "file" = "file",
-  "binary" = "binary",
-  "blob" = "blob",
+  string = "string",
+  number = "number",
+  boolean = "boolean",
+  file = "file",
+  binary = "binary",
+  blob = "blob",
 }
 
 export enum ParameterIn {
-  "header" = "header",
-  "body" = "body",
-  "query" = "query",
-  "cookie" = "cookie",
-  "path" = "path",
-  "formData" = "formData",
+  header = "header",
+  body = "body",
+  query = "query",
+  cookie = "cookie",
+  path = "path",
+  formData = "formData",
 }
 
 export interface ReferenceObject {

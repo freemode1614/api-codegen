@@ -9,7 +9,7 @@ import type {
   SchemaObject,
 } from "@apicodegen/core";
 import { Base, HttpMethods, NonArraySchemaType } from "@apicodegen/core";
-import { OpenAPIV3 } from "openapi-types";
+import type { OpenAPIV3 } from "openapi-types";
 
 export class V3 {
   doc!: OpenAPIV3.Document;
@@ -44,9 +44,7 @@ export class V3 {
           type: upLevelSchemaKey + refName,
         };
       }
-      const resolvedSchema = this.doc.components?.schemas?.[
-        Base.ref2name(schema.$ref, this.doc)
-      ];
+      const resolvedSchema = this.doc.components?.schemas?.[Base.ref2name(schema.$ref, this.doc)];
       if (!resolvedSchema) {
         return { type: "unknown" };
       }
@@ -65,9 +63,8 @@ export class V3 {
     upLevelSchemaKey = "",
   ): ParameterObject {
     if (Base.isRef(schema)) {
-      const resolvedSchema = this.doc.components?.parameters?.[
-        Base.ref2name(schema.$ref, this.doc)
-      ];
+      const resolvedSchema =
+        this.doc.components?.parameters?.[Base.ref2name(schema.$ref, this.doc)];
       if (!resolvedSchema) {
         return {
           name: "unknown",
@@ -77,19 +74,9 @@ export class V3 {
       schema = resolvedSchema as OpenAPIV3.ParameterObject;
     }
 
-    const {
-      name,
-      required,
-      deprecated,
-      description,
-      schema: parameterSchema,
-    } = schema;
+    const { name, required, deprecated, description, schema: parameterSchema } = schema;
 
-    if (
-      parameterSchema &&
-      !Base.isRef(parameterSchema) &&
-      parameterSchema.enum
-    ) {
+    if (parameterSchema && !Base.isRef(parameterSchema) && parameterSchema.enum) {
       const type =
         Base.upperCamelCase(Base.normalize(upLevelSchemaKey)) +
         Base.upperCamelCase(Base.normalize(name));
@@ -101,10 +88,7 @@ export class V3 {
 
       const sameEnum = Base.findSameSchema(enumSchema, enums);
 
-      if (
-        !sameEnum &&
-        Base.isValidEnumType(parameterSchema as unknown as SchemaObject)
-      ) {
+      if (!sameEnum && Base.isValidEnumType(parameterSchema as unknown as SchemaObject)) {
         enums.push(enumSchema);
       }
 
@@ -128,12 +112,7 @@ export class V3 {
       in: schema.in as ParameterIn,
       schema:
         schema.schema &&
-        this.getSchemaByRef(
-          schema.schema,
-          false,
-          enums,
-          upLevelSchemaKey + Base.capitalize(name),
-        ),
+        this.getSchemaByRef(schema.schema, false, enums, upLevelSchemaKey + Base.capitalize(name)),
     };
   }
 
@@ -144,9 +123,7 @@ export class V3 {
     schema: OpenAPIV3.ResponseObject | OpenAPIV3.ReferenceObject,
   ): MediaTypeObject[] {
     if (Base.isRef(schema)) {
-      const resolvedSchema = this.doc.components?.responses?.[
-        Base.ref2name(schema.$ref, this.doc)
-      ];
+      const resolvedSchema = this.doc.components?.responses?.[Base.ref2name(schema.$ref, this.doc)];
       if (!resolvedSchema) {
         return [];
       }
@@ -169,9 +146,8 @@ export class V3 {
     enums: EnumSchemaObject[] = [],
   ): MediaTypeObject[] {
     if (Base.isRef(schema)) {
-      const resolvedSchema = this.doc.components?.requestBodies?.[
-        Base.ref2name(schema.$ref, this.doc)
-      ];
+      const resolvedSchema =
+        this.doc.components?.requestBodies?.[Base.ref2name(schema.$ref, this.doc)];
       if (!resolvedSchema) {
         return [];
       }
@@ -182,9 +158,7 @@ export class V3 {
 
     return Object.keys(content).map((c) => ({
       type: c as MediaTypes,
-      schema:
-        content[c].schema &&
-        this.getSchemaByRef(content[c].schema, false, enums),
+      schema: content[c].schema && this.getSchemaByRef(content[c].schema, false, enums),
     }));
   }
 
@@ -242,10 +216,7 @@ export class V3 {
 
         const sameObject = Base.findSameSchema(enumObject, enums);
 
-        if (
-          !sameObject &&
-          Base.isValidEnumType(schema as unknown as SchemaObject)
-        ) {
+        if (!sameObject && Base.isValidEnumType(schema as unknown as SchemaObject)) {
           enums.push(enumObject);
         }
 
@@ -305,9 +276,7 @@ export class V3 {
             ...acc,
             [p]: Base.isRef(propSchema)
               ? {
-                  type: Base.capitalize(
-                    Base.ref2name(propSchema.$ref, this.doc),
-                  ),
+                  type: Base.capitalize(Base.ref2name(propSchema.$ref, this.doc)),
                 }
               : this.toBaseSchema(propSchema, enums, p, upLevelSchemaKey),
           };
@@ -319,12 +288,7 @@ export class V3 {
   public init() {
     const { components = {}, paths = {} } = this.doc;
     const enums: EnumSchemaObject[] = [];
-    const {
-      requestBodies = {},
-      responses = {},
-      parameters = {},
-      schemas = {},
-    } = components;
+    const { requestBodies = {}, responses = {}, parameters = {}, schemas = {} } = components;
 
     const schemas_ = Object.keys(schemas).reduce((acc, key) => {
       const schema = schemas[key];
@@ -384,16 +348,11 @@ export class V3 {
               requestBody = { content: {} },
             } = methodObject;
             const { parameters: parameters_ = [] } = methodObject;
-            const baseParameters = [...parameters, ...parameters_].map(
-              (parameter) => this.getParameterByRef(parameter, enums),
+            const baseParameters = [...parameters, ...parameters_].map((parameter) =>
+              this.getParameterByRef(parameter, enums),
             );
-            const baseRequestBody = this.getRequestBodyByRef(
-              requestBody,
-              enums,
-            );
-            const uniqueParameterName = [
-              ...new Set(baseParameters.map((p) => p.name)),
-            ];
+            const baseRequestBody = this.getRequestBodyByRef(requestBody, enums);
+            const uniqueParameterName = [...new Set(baseParameters.map((p) => p.name))];
 
             if (Object.keys(responses).length === 0) {
               Object.assign(responses, {

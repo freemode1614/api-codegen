@@ -1,19 +1,15 @@
-import type {
-  Adaptors,
-  ProviderInitOptions,
-  ProviderInitResult,
-} from "@apicodegen/core";
+import type { Adaptors, ProviderInitOptions, ProviderInitResult } from "@apicodegen/core";
 import {
-  Adapter,
-  Adaptors as ads,
+  type Adapter,
   AxiosAdapter,
+  Adaptors as ads,
   Base,
   FetchAdapter,
   Generator,
   Provider,
 } from "@apicodegen/core";
 import { createScopedLogger } from "@moccona/logger";
-import { OpenAPI, OpenAPIV2, OpenAPIV3, OpenAPIV3_1 } from "openapi-types";
+import type { OpenAPI, OpenAPIV2, OpenAPIV3, OpenAPIV3_1 } from "openapi-types";
 
 import { V2 } from "./V2";
 import { V3 } from "./V3";
@@ -94,14 +90,10 @@ export async function codeGen(initOptions: ProviderInitOptions) {
 
   logger.info(`Fech document from ${initOptions.docURL}`);
 
-  const doc = await Base.fetchDoc(
-    initOptions.docURL,
-    initOptions.requestOptions,
-  );
+  const doc = await Base.fetchDoc(initOptions.docURL, initOptions.requestOptions);
 
   const provider = new OpenAPIProvider(initOptions, doc);
-  const { enums, schemas, parameters, responses, requestBodies, apis } =
-    provider;
+  const { enums, schemas, parameters, responses, requestBodies, apis } = provider;
 
   const adaptor = getAdaptor(initOptions.adaptor ?? ads.fetch);
   const code = await Generator.genCode(
@@ -124,4 +116,4 @@ export async function codeGen(initOptions: ProviderInitOptions) {
   return code;
 }
 
-export { type ProviderInitOptions } from "@apicodegen/core";
+export type { ProviderInitOptions } from "@apicodegen/core";

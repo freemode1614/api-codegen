@@ -4,10 +4,7 @@
  * @description Base adapter implementation for various code generation tools
  */
 
-import type {
-  MediaTypeObject,
-  ParameterObject,
-} from "@apicodegen/core/interface";
+import type { MediaTypeObject, ParameterObject } from "@apicodegen/core/interface";
 import type { Statement } from "typescript";
 
 /**

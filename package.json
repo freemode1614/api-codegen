@@ -10,7 +10,10 @@
     "dev": "tsup --watch",
     "build": "tsup",
     "test": "vitest --watch false",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "npm run build",
+    "lint": "biome check .",
+    "lint:fix": "biome check . --write",
+    "format": "biome format . --write"
   },
   "exports": {
     "./package.json": "./package.json",
@@ -43,8 +46,8 @@
     "undici": "^7.8.0"
   },
   "devDependencies": {
+    "@biomejs/biome": "^2.4.4",
     "@changesets/cli": "^2.29.7",
-    "@moccona/eslint-config": "^1.0.6",
     "@moccona/preset-config": "^0.0.5",
     "@types/fs-extra": "^11.0.4",
     "@types/node": "^22.14.1",

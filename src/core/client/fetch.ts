@@ -2,9 +2,9 @@
 import { Adapter } from "@apicodegen/core/base/Adaptor";
 import { Base } from "@apicodegen/core/base/Base";
 import { Generator } from "@apicodegen/core/generator";
-import { MediaTypeObject, ParameterObject } from "@apicodegen/core/interface";
+import type { MediaTypeObject, ParameterObject } from "@apicodegen/core/interface";
 import type { Statement } from "typescript";
-import { factory as t, SyntaxKind } from "typescript";
+import { SyntaxKind, factory as t } from "typescript";
 
 /**
  * FetchAdapter is an adapter class that generates client-side fetch requests.
@@ -72,15 +72,9 @@ export class FetchAdapter extends Adapter {
                           t.createIdentifier("encodeURIComponent"),
                           undefined,
                           [
-                            t.createCallExpression(
-                              t.createIdentifier("String"),
-                              undefined,
-                              [
-                                t.createIdentifier(
-                                  Base.camelCase(Base.normalize(p.name)),
-                                ),
-                              ],
-                            ),
+                            t.createCallExpression(t.createIdentifier("String"), undefined, [
+                              t.createIdentifier(Base.camelCase(Base.normalize(p.name))),
+                            ]),
                           ],
                         ),
                       ),
@@ -96,8 +90,7 @@ export class FetchAdapter extends Adapter {
                   shouldUseFormData
                     ? t.createIdentifier("fd")
                     : inBody.length > 0 ||
-                        (requestBody?.schema &&
-                          !Generator.isBinarySchema(requestBody.schema))
+                        (requestBody?.schema && !Generator.isBinarySchema(requestBody.schema))
                       ? t.createCallExpression(
                           t.createPropertyAccessExpression(
                             t.createIdentifier("JSON"),
@@ -109,9 +102,7 @@ export class FetchAdapter extends Adapter {
                               ? t.createIdentifier("req")
                               : t.createObjectLiteralExpression(
                                   inBody.map((b) =>
-                                    t.createShorthandPropertyAssignment(
-                                      t.createIdentifier(b.name),
-                                    ),
+                                    t.createShorthandPropertyAssignment(t.createIdentifier(b.name)),
                                   ),
                                   true,
                                 ),
@@ -133,14 +124,10 @@ export class FetchAdapter extends Adapter {
           ? // Handle JSON response with proper type checking
             t.createCallExpression(
               t.createPropertyAccessExpression(
-                t.createCallExpression(
-                  t.createIdentifier(adapter.name),
-                  undefined,
-                  [
-                    Generator.toUrlTemplate(uri, parameters),
-                    toLiterlExpression(),
-                  ],
-                ),
+                t.createCallExpression(t.createIdentifier(adapter.name), undefined, [
+                  Generator.toUrlTemplate(uri, parameters),
+                  toLiterlExpression(),
+                ]),
                 t.createIdentifier("then"),
               ),
               undefined,
@@ -191,11 +178,10 @@ export class FetchAdapter extends Adapter {
               ],
             )
           : // Simple fetch call without JSON parsing
-            t.createCallExpression(
-              t.createIdentifier(adapter.name),
-              undefined,
-              [Generator.toUrlTemplate(uri, parameters), toLiterlExpression()],
-            ),
+            t.createCallExpression(t.createIdentifier(adapter.name), undefined, [
+              Generator.toUrlTemplate(uri, parameters),
+              toLiterlExpression(),
+            ]),
       ),
     );
 

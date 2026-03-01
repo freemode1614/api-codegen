@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-enum-comparison */
 /* eslint-disable no-case-declarations */
-import { Adapter } from "@apicodegen/core/base/Adaptor";
+import type { Adapter } from "@apicodegen/core/base/Adaptor";
 import { Base } from "@apicodegen/core/base/Base";
 import type {
   ArrayTypeSchemaObject,
@@ -32,9 +32,9 @@ import type {
 import {
   addSyntheticLeadingComment,
   createPrinter,
-  factory as t,
   NodeFlags,
   SyntaxKind,
+  factory as t,
 } from "typescript";
 
 /**
@@ -89,15 +89,9 @@ export class Generator {
    * @param basePath - Optional base path to prepend (default: "").
    * @returns A TypeScript template expressi
    */
-  static toUrlTemplate(
-    path: string,
-    parameters: ParameterObject[],
-    basePath = "",
-  ) {
+  static toUrlTemplate(path: string, parameters: ParameterObject[], basePath = "") {
     // Extract query parameters
-    const queryParameters = parameters.filter(
-      (p) => p.in === ParameterIn.query,
-    );
+    const queryParameters = parameters.filter((p) => p.in === ParameterIn.query);
 
     if (queryParameters.length > 0) {
       const queryString = queryParameters
@@ -129,9 +123,7 @@ export class Generator {
 
         return t.createTemplateSpan(
           t.createIdentifier(match[1]),
-          !isLastSegment
-            ? t.createTemplateMiddle(match[2])
-            : t.createTemplateTail(match[2] || ""),
+          !isLastSegment ? t.createTemplateMiddle(match[2]) : t.createTemplateTail(match[2] || ""),
         );
       }),
     );
@@ -144,24 +136,15 @@ export class Generator {
    * @param comments - Array of comment objects to add.
    */
   static addComments(node: Node, comments: Comments) {
-    if (!Array.isArray(comments) || comments.filter(Boolean).length === 0)
-      return;
+    if (!Array.isArray(comments) || comments.filter(Boolean).length === 0) return;
 
     const formatComment = (comment: CommentObject): string => {
-      return comment.tag
-        ? ` @${comment.tag} ${comment.comment ?? ""}`
-        : ` ${comment.comment}`;
+      return comment.tag ? ` @${comment.tag} ${comment.comment ?? ""}` : ` ${comment.comment}`;
     };
 
-    const formattedComments =
-      "*\n" + comments.map(formatComment).join("\n").trim() + "\n";
+    const formattedComments = "*\n" + comments.map(formatComment).join("\n").trim() + "\n";
 
-    addSyntheticLeadingComment(
-      node,
-      SyntaxKind.MultiLineCommentTrivia,
-      formattedComments,
-      true,
-    );
+    addSyntheticLeadingComment(node, SyntaxKind.MultiLineCommentTrivia, formattedComments, true);
   }
 
   /**
@@ -173,7 +156,7 @@ export class Generator {
   static isBinarySchema(schema: SchemaObject): boolean {
     if (schema.type === "array") {
       const arraySchema = schema as ArrayTypeSchemaObject;
-      return this.isBinarySchema(arraySchema.items!);
+      return Generator.isBinarySchema(arraySchema.items!);
     }
 
     const nonArraySchema = schema as SingleTypeSchemaObject;
@@ -190,7 +173,7 @@ export class Generator {
       undefined,
       t.createIdentifier("req"),
       undefined,
-      this.toTypeNode(schema),
+      Generator.toTypeNode(schema),
     );
   }
 
@@ -200,17 +183,16 @@ export class Generator {
     if (ref) {
       const identify = Base.ref2name(ref);
       return t.createTypeReferenceNode(
-        t.createIdentifier(
-          identify === "unknown" ? identify : Base.upperCamelCase(identify),
-        ),
+        t.createIdentifier(identify === "unknown" ? identify : Base.upperCamelCase(identify)),
       );
     }
 
     switch (type) {
-      case ArraySchemaType.array:
+      case ArraySchemaType.array: {
         const { items } = schema as ArrayTypeSchemaObject;
-        return t.createArrayTypeNode(this.toTypeNode(items!));
-      case NonArraySchemaType.object:
+        return t.createArrayTypeNode(Generator.toTypeNode(items!));
+      }
+      case NonArraySchemaType.object: {
         const propsCount = Object.keys(schema.properties ?? {}).length;
         if (!schema.properties || propsCount === 0) {
           // Record<string, unknown>
@@ -229,20 +211,19 @@ export class Generator {
               undefined,
               t.createStringLiteral(propKey),
               // When field is required, a refrence or binary value, don't add question mark.
-              schema.required || schema.ref || this.isBinarySchema(schema)
+              schema.required || schema.ref || Generator.isBinarySchema(schema)
                 ? undefined
                 : t.createToken(SyntaxKind.QuestionToken),
-              this.toTypeNode(propSchema),
+              Generator.toTypeNode(propSchema),
             );
           }),
         );
+      }
       case NonArraySchemaType.integer:
       case NonArraySchemaType.number:
         if (schema.enum) {
           return t.createUnionTypeNode(
-            schema.enum.map((e) =>
-              t.createLiteralTypeNode(t.createNumericLiteral(e)),
-            ),
+            schema.enum.map((e) => t.createLiteralTypeNode(t.createNumericLiteral(e))),
           );
         }
         return t.createToken(SyntaxKind.NumberKeyword);
@@ -251,15 +232,8 @@ export class Generator {
         return t.createToken(SyntaxKind.BooleanKeyword);
       case NonArraySchemaType.file:
         return t.createTypeReferenceNode(t.createIdentifier("Blob"));
-      default:
-        const {
-          format,
-          oneOf,
-          allOf,
-          anyOf,
-          type,
-          enum: enum_,
-        } = schema as SingleTypeSchemaObject;
+      default: {
+        const { format, oneOf, allOf, anyOf, type, enum: enum_ } = schema as SingleTypeSchemaObject;
 
         switch (format) {
           case SchemaFormatType.number:
@@ -276,9 +250,7 @@ export class Generator {
 
         if (enum_) {
           return t.createUnionTypeNode(
-            enum_.map((e) =>
-              t.createLiteralTypeNode(t.createStringLiteral(e as string)),
-            ),
+            enum_.map((e) => t.createLiteralTypeNode(t.createStringLiteral(e as string))),
           );
         }
 
@@ -287,21 +259,15 @@ export class Generator {
         }
 
         if (oneOf) {
-          return t.createUnionTypeNode(
-            oneOf.map((schema) => this.toTypeNode(schema)),
-          );
+          return t.createUnionTypeNode(oneOf.map((schema) => Generator.toTypeNode(schema)));
         }
 
         if (anyOf) {
-          return t.createUnionTypeNode(
-            anyOf.map((schema) => this.toTypeNode(schema)),
-          );
+          return t.createUnionTypeNode(anyOf.map((schema) => Generator.toTypeNode(schema)));
         }
 
         if (allOf) {
-          return t.createIntersectionTypeNode(
-            allOf.map((schema) => this.toTypeNode(schema)),
-          );
+          return t.createIntersectionTypeNode(allOf.map((schema) => Generator.toTypeNode(schema)));
         }
 
         if (type && typeof type === "string") {
@@ -311,14 +277,13 @@ export class Generator {
               : type,
           );
         }
+      }
     }
 
     return t.createToken(SyntaxKind.UnknownKeyword);
   }
 
-  static toDeclarationNodes(
-    parameters: ParameterObject[],
-  ): ParameterDeclaration[] {
+  static toDeclarationNodes(parameters: ParameterObject[]): ParameterDeclaration[] {
     const objectElements: BindingElement[] = [];
     const typeObjectElements: PropertySignature[] = [];
     const refParameters: ParameterDeclaration[] = [];
@@ -354,9 +319,7 @@ export class Generator {
             [],
             t.createIdentifier(Base.camelCase(Base.normalize(name))),
             required ? undefined : t.createToken(SyntaxKind.QuestionToken),
-            !schema
-              ? t.createToken(SyntaxKind.UnknownKeyword)
-              : this.toTypeNode(schema),
+            !schema ? t.createToken(SyntaxKind.UnknownKeyword) : Generator.toTypeNode(schema),
           ),
         );
       }
@@ -391,11 +354,7 @@ export class Generator {
             t.createIdentifier("fd"),
             undefined,
             undefined,
-            t.createNewExpression(
-              t.createIdentifier("FormData"),
-              undefined,
-              [],
-            ),
+            t.createNewExpression(t.createIdentifier("FormData"), undefined, []),
           ),
         ],
         NodeFlags.Const,
@@ -416,10 +375,7 @@ export class Generator {
                 t.createIdentifier("append"),
               ),
               undefined,
-              [
-                t.createStringLiteral(parameter.name),
-                t.createIdentifier(parameter.name),
-              ],
+              [t.createStringLiteral(parameter.name), t.createIdentifier(parameter.name)],
             ),
           ),
         ),
@@ -434,10 +390,7 @@ export class Generator {
     ) {
       Object.keys(requestBody.properties).forEach((key) => {
         const schemaByKey = requestBody.properties![key];
-        if (
-          schemaByKey.type === ArraySchemaType.array &&
-          this.isBinarySchema(schemaByKey)
-        ) {
+        if (schemaByKey.type === ArraySchemaType.array && Generator.isBinarySchema(schemaByKey)) {
           statements.push(
             t.createForOfStatement(
               undefined,
@@ -463,10 +416,7 @@ export class Generator {
                       t.createPropertyAccessExpression(
                         t.createAsExpression(
                           t.createIdentifier("file"),
-                          t.createTypeReferenceNode(
-                            t.createIdentifier("File"),
-                            undefined,
-                          ),
+                          t.createTypeReferenceNode(t.createIdentifier("File"), undefined),
                         ),
                         t.createIdentifier("name"),
                       ),
@@ -493,16 +443,12 @@ export class Generator {
                           t.createIdentifier("req"),
                           t.createStringLiteral(key),
                         )
-                      : t.createCallExpression(
-                          t.createIdentifier("String"),
-                          undefined,
-                          [
-                            t.createElementAccessExpression(
-                              t.createIdentifier("req"),
-                              t.createStringLiteral(key),
-                            ),
-                          ],
-                        ),
+                      : t.createCallExpression(t.createIdentifier("String"), undefined, [
+                          t.createElementAccessExpression(
+                            t.createIdentifier("req"),
+                            t.createStringLiteral(key),
+                          ),
+                        ]),
                   ],
                 ),
               ),
@@ -529,16 +475,12 @@ export class Generator {
                             t.createIdentifier("req"),
                             t.createStringLiteral(key),
                           )
-                        : t.createCallExpression(
-                            t.createIdentifier("String"),
-                            undefined,
-                            [
-                              t.createElementAccessExpression(
-                                t.createIdentifier("req"),
-                                t.createStringLiteral(key),
-                              ),
-                            ],
-                          ),
+                        : t.createCallExpression(t.createIdentifier("String"), undefined, [
+                            t.createElementAccessExpression(
+                              t.createIdentifier("req"),
+                              t.createStringLiteral(key),
+                            ),
+                          ]),
                     ],
                   ),
                 ),
@@ -562,9 +504,7 @@ export class Generator {
   ): Block {
     const isFormDataRequest =
       requestBody &&
-      ["multipart/form-data", "application/x-www-form-urlencoded"].includes(
-        requestBody.type,
-      );
+      ["multipart/form-data", "application/x-www-form-urlencoded"].includes(requestBody.type);
 
     const shouldParseResponseToJSON = "application/json" === response?.type;
 
@@ -572,12 +512,10 @@ export class Generator {
     const isRequestBodyBinary =
       requestBody?.schema &&
       requestBody.schema.type === ArraySchemaType.array &&
-      this.isBinarySchema(requestBody.schema);
+      Generator.isBinarySchema(requestBody.schema);
 
     const parametersShouldPutInFormData = parameters.filter(
-      (p) =>
-        p.in === ParameterIn.formData ||
-        (p.schema && this.isBinarySchema(p.schema)),
+      (p) => p.in === ParameterIn.formData || (p.schema && Generator.isBinarySchema(p.schema)),
     );
 
     const parametersShouldNotPutInFormData = parameters.filter(
@@ -587,12 +525,10 @@ export class Generator {
     const isRequestBodyContainsBinary =
       requestBody?.schema &&
       "properties" in requestBody.schema &&
-      Object.values(requestBody.schema?.properties ?? {}).some((p) =>
-        this.isBinarySchema(p),
-      );
+      Object.values(requestBody.schema?.properties ?? {}).some((p) => Generator.isBinarySchema(p));
 
     const hasBinaryInParameters = parameters.some(
-      (p) => p?.schema && this.isBinarySchema(p.schema),
+      (p) => p?.schema && Generator.isBinarySchema(p.schema),
     );
 
     const shouldPutParametersOrBodyInFormData =
@@ -604,10 +540,7 @@ export class Generator {
 
     return t.createBlock([
       ...(shouldPutParametersOrBodyInFormData
-        ? this.toFormDataStatement(
-            parametersShouldPutInFormData,
-            requestBody?.schema,
-          )
+        ? Generator.toFormDataStatement(parametersShouldPutInFormData, requestBody?.schema)
         : []),
       ...adapter.client(
         uri,
@@ -640,9 +573,7 @@ export class Generator {
           t.createIdentifier(Base.upperCamelCase(enumObject.name)),
           enumObject.enum.map((member) => {
             return t.createEnumMember(
-              t.createStringLiteral(
-                typeof member === "string" ? member : `${member}_`,
-              ),
+              t.createStringLiteral(typeof member === "string" ? member : `${member}_`),
               typeof member === "string"
                 ? t.createStringLiteral(member)
                 : t.createNumericLiteral(member),
@@ -654,7 +585,7 @@ export class Generator {
 
     for (const schemaKey in schemas) {
       if (
-        Object.hasOwnProperty.call(schemas, schemaKey) &&
+        Object.hasOwn(schemas, schemaKey) &&
         !enumNames.includes(Base.upperCamelCase(schemaKey))
       ) {
         const schema = schemas[schemaKey];
@@ -663,7 +594,7 @@ export class Generator {
             [t.createModifier(SyntaxKind.ExportKeyword)],
             t.createIdentifier(Base.upperCamelCase(schemaKey)),
             undefined,
-            this.toTypeNode(schema),
+            Generator.toTypeNode(schema),
           ),
         );
       }
@@ -695,26 +626,17 @@ export class Generator {
 
         for (const req of requestBody) {
           const statement = t.createFunctionDeclaration(
-            [
-              t.createModifier(SyntaxKind.ExportKeyword),
-              t.createModifier(SyntaxKind.AsyncKeyword),
-            ],
+            [t.createModifier(SyntaxKind.ExportKeyword), t.createModifier(SyntaxKind.AsyncKeyword)],
             undefined,
             Base.pathToFnName(uri, method, operationId) +
-              (shouldAddExtraMethodNameSuffix
-                ? Base.capitalize(req.type.split("/")[1])
-                : ""),
+              (shouldAddExtraMethodNameSuffix ? Base.capitalize(req.type.split("/")[1]) : ""),
             undefined,
             [
-              ...(parameters.length > 0
-                ? Generator.toDeclarationNodes(parameters)
-                : []),
-              ...(req?.schema
-                ? [Generator.toRequestBodyTypeNode(req.schema)]
-                : []),
+              ...(parameters.length > 0 ? Generator.toDeclarationNodes(parameters) : []),
+              ...(req?.schema ? [Generator.toRequestBodyTypeNode(req.schema)] : []),
             ].filter(Boolean) as ParameterDeclaration[],
             undefined,
-            this.bodyBlock(
+            Generator.bodyBlock(
               options.baseURL + uri,
               method,
               parameters,
@@ -724,7 +646,7 @@ export class Generator {
             ),
           );
 
-          this.addComments(
+          Generator.addComments(
             statement,
             [
               description && {
@@ -758,15 +680,15 @@ export class Generator {
     adaptor: Adapter,
   ) {
     const { importClientSource } = initOptions;
-    const statements = this.schemaToStatemets(schema, adaptor, {
+    const statements = Generator.schemaToStatemets(schema, adaptor, {
       baseURL: initOptions.baseURL ?? "",
     });
-    let code = this.toCode(statements);
+    let code = Generator.toCode(statements);
 
     if (importClientSource) {
       code = importClientSource + "\n\n" + code;
     }
 
-    return await this.prettier(code);
+    return await Generator.prettier(code);
   }
 }

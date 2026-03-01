@@ -69,7 +69,7 @@ export abstract class Base {
     }
 
     return (temporary as unknown as { $ref: string }).$ref
-      ? this.ref2name((temporary as unknown as { $ref: string }).$ref, doc)
+      ? Base.ref2name((temporary as unknown as { $ref: string }).$ref, doc)
       : lastPath;
   }
 
@@ -86,10 +86,8 @@ export abstract class Base {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     _operationId: string = "",
   ) {
-    const name = this.normalize(this.camelCase(this.normalize(path)));
-    const suffix = method
-      ? this.capitalize(this.upperCamelCase(`using_${method}`))
-      : "";
+    const name = Base.normalize(Base.camelCase(Base.normalize(path)));
+    const suffix = method ? Base.capitalize(Base.upperCamelCase(`using_${method}`)) : "";
 
     return name + suffix;
   }
@@ -129,7 +127,7 @@ export abstract class Base {
     return text
       .split("_")
       .filter(Boolean)
-      .map((t, index) => (index === 0 ? t : this.capitalize(t)))
+      .map((t, index) => (index === 0 ? t : Base.capitalize(t)))
       .join("");
   }
 
@@ -139,11 +137,11 @@ export abstract class Base {
    * @returns - UpperCamelCase string.
    */
   static upperCamelCase(text: string) {
-    return this.normalize(text)
+    return Base.normalize(text)
       .replaceAll("...", "")
       .split("_")
       .filter(Boolean)
-      .map(this.capitalize)
+      .map(Base.capitalize)
       .join("");
   }
 
@@ -168,9 +166,7 @@ export abstract class Base {
     });
 
     if (statusCode >= 400) {
-      throw new Error(
-        `Failed to fetch OpenAPI documentation from ${url}: HTTP ${statusCode}`,
-      );
+      throw new Error(`Failed to fetch OpenAPI documentation from ${url}: HTTP ${statusCode}`);
     }
 
     try {
@@ -189,9 +185,7 @@ export abstract class Base {
    */
   static getMediaType(mediaType: string): MediaTypes | undefined {
     const mediaTypeValues = Object.values(MediaTypes) as string[];
-    const found = mediaTypeValues.find((type) =>
-      mediaType.includes(type),
-    );
+    const found = mediaTypeValues.find((type) => mediaType.includes(type));
     return found as MediaTypes | undefined;
   }
 
@@ -201,7 +195,7 @@ export abstract class Base {
    * @returns - True if the schema is a valid non-boolean enum.
    */
   static isValidEnumType(a: SchemaObject) {
-    return a.type !== "boolean" && !this.isBooleanEnum(a);
+    return a.type !== "boolean" && !Base.isBooleanEnum(a);
   }
 
   /**
@@ -212,9 +206,7 @@ export abstract class Base {
   static isBooleanEnum(a: SchemaObject) {
     return (
       a.type === "boolean" ||
-      !!(a as SingleTypeSchemaObject).enum?.some(
-        (member) => typeof member === "boolean",
-      )
+      !!(a as SingleTypeSchemaObject).enum?.some((member) => typeof member === "boolean")
     );
   }
 
@@ -265,7 +257,7 @@ export abstract class Base {
    * @returns - The found schema or undefined.
    */
   static findSameSchema(a: EnumSchemaObject, enums: EnumSchemaObject[]) {
-    return enums.find((b) => this.isSameEnum(b, a));
+    return enums.find((b) => Base.isSameEnum(b, a));
   }
 
   /**

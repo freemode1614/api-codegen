@@ -7,7 +7,7 @@
 import { Adapter } from "@apicodegen/core/base/Adaptor";
 import { Base } from "@apicodegen/core/base/Base";
 import { Generator } from "@apicodegen/core/generator";
-import { MediaTypeObject, ParameterObject } from "@apicodegen/core/interface";
+import type { MediaTypeObject, ParameterObject } from "@apicodegen/core/interface";
 import type { Statement, TypeReferenceNode } from "typescript";
 import { factory as t } from "typescript";
 
@@ -90,15 +90,9 @@ export class AxiosAdapter extends Adapter {
                           t.createIdentifier("encodeURIComponent"),
                           undefined,
                           [
-                            t.createCallExpression(
-                              t.createIdentifier("String"),
-                              undefined,
-                              [
-                                t.createIdentifier(
-                                  Base.camelCase(Base.normalize(p.name)),
-                                ),
-                              ],
-                            ),
+                            t.createCallExpression(t.createIdentifier("String"), undefined, [
+                              t.createIdentifier(Base.camelCase(Base.normalize(p.name))),
+                            ]),
                           ],
                         ),
                       ),
@@ -114,8 +108,7 @@ export class AxiosAdapter extends Adapter {
                   shouldUseFormData
                     ? t.createIdentifier("fd")
                     : inBody.length > 0 ||
-                        (requestBody?.schema &&
-                          !Generator.isBinarySchema(requestBody.schema))
+                        (requestBody?.schema && !Generator.isBinarySchema(requestBody.schema))
                       ? t.createIdentifier("req")
                       : t.createIdentifier("req"),
                 )
@@ -131,11 +124,7 @@ export class AxiosAdapter extends Adapter {
         t.createCallExpression(
           t.createIdentifier(adapter.name),
           response?.schema
-            ? [
-                Generator.toTypeNode(
-                  response.schema,
-                ) as unknown as TypeReferenceNode,
-              ]
+            ? [Generator.toTypeNode(response.schema) as unknown as TypeReferenceNode]
             : undefined,
           [Generator.toUrlTemplate(uri, parameters), toLiterlExpression()],
         ),

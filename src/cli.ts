@@ -1,6 +1,6 @@
 #!/bin/env node
 
-import { Generator, ProviderInitOptions } from "@apicodegen/core";
+import { Generator, type ProviderInitOptions } from "@apicodegen/core";
 import { codeGen } from "@apicodegen/openapi";
 import { createCommand } from "commander";
 
