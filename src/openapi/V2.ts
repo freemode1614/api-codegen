@@ -1,425 +1,451 @@
 import {
-  type ArrayTypeSchemaObject,
-  Base,
-  type EnumSchemaObject,
-  HttpMethods,
-  type MediaTypeObject,
-  MediaTypes,
-  NonArraySchemaType,
-  type OperationObject,
-  type ParameterIn,
-  type ParameterObject,
-  type SchemaFormatType,
-  type SchemaObject,
-} from "@apicodegen/core";
-import type { OpenAPIV2 } from "openapi-types";
+	type ArrayTypeSchemaObject,
+	Base,
+	type EnumSchemaObject,
+	HttpMethods,
+	type MediaTypeObject,
+	MediaTypes,
+	NonArraySchemaType,
+	type OperationObject,
+	type ParameterIn,
+	type ParameterObject,
+	type SchemaFormatType,
+	type SchemaObject,
+} from '@apicodegen/core';
+import type { OpenAPIV2 } from 'openapi-types';
 
 export class V2 {
-  doc!: OpenAPIV2.Document;
+	doc!: OpenAPIV2.Document;
 
-  constructor(doc: OpenAPIV2.Document) {
-    this.doc = doc;
-  }
+	constructor(doc: OpenAPIV2.Document) {
+		this.doc = doc;
+	}
 
-  /**
-   * Resolves a path $ref to the actual path object.
-   */
-  private resolvePathRef($ref: string): OpenAPIV2.PathItemObject | undefined {
-    const refName = Base.ref2name($ref, this.doc);
-    return this.doc.paths?.[refName];
-  }
+	/**
+	 * Resolves a path $ref to the actual path object.
+	 */
+	private resolvePathRef($ref: string): OpenAPIV2.PathItemObject | undefined {
+		const refName = Base.ref2name($ref, this.doc);
+		return this.doc.paths?.[refName];
+	}
 
-  /**
-   * Is array schema.
-   */
-  private isOpenAPIArraySchema(schema: OpenAPIV2.SchemaObject): boolean {
-    return typeof schema === "object" && schema.type === "array";
-  }
+	/**
+	 * Is array schema.
+	 */
+	private isOpenAPIArraySchema(schema: OpenAPIV2.SchemaObject): boolean {
+		return typeof schema === 'object' && schema.type === 'array';
+	}
 
-  /**
-   * OpenAPI schema to base schema.
-   */
-  private getSchemaByRef(
-    schema: OpenAPIV2.SchemaObject | OpenAPIV2.ReferenceObject,
-    reserveRef = false,
-    enums: EnumSchemaObject[] = [],
-    upLevelSchemaKey = "",
-  ): SchemaObject {
-    let refName = "";
-    if (Base.isRef(schema)) {
-      refName = Base.upperCamelCase(Base.ref2name(schema.$ref));
-      if (reserveRef) {
-        return {
-          type: upLevelSchemaKey + refName,
-        };
-      }
+	/**
+	 * OpenAPI schema to base schema.
+	 */
+	private getSchemaByRef(
+		schema: OpenAPIV2.SchemaObject | OpenAPIV2.ReferenceObject,
+		reserveRef = false,
+		enums: EnumSchemaObject[] = [],
+		upLevelSchemaKey = ''
+	): SchemaObject {
+		let refName = '';
+		if (Base.isRef(schema)) {
+			refName = Base.upperCamelCase(Base.ref2name(schema.$ref));
+			if (reserveRef) {
+				return {
+					type: upLevelSchemaKey + refName,
+				};
+			}
 
-      if (!this.doc.definitions) {
-        this.doc.definitions = {};
-      }
+			if (!this.doc.definitions) {
+				this.doc.definitions = {};
+			}
 
-      schema = this.doc.definitions[Base.ref2name(schema.$ref, this.doc)];
-    }
+			schema = this.doc.definitions[Base.ref2name(schema.$ref, this.doc)];
+		}
 
-    return this.toBaseSchema(schema, enums, "", upLevelSchemaKey + refName);
-  }
+		return this.toBaseSchema(schema, enums, '', upLevelSchemaKey + refName);
+	}
 
-  /**
-   * Transform all OpenAPI schema to Base Schema
-   */
-  private toBaseSchema(
-    schema: OpenAPIV2.SchemaObject | OpenAPIV2.ReferenceObject | undefined,
-    enums: EnumSchemaObject[] = [],
-    schemaKey = "",
-    upLevelSchemaKey = "",
-  ): SchemaObject {
-    if (!schema) {
-      return {
-        type: "unknown",
-      };
-    }
+	/**
+	 * Transform all OpenAPI schema to Base Schema
+	 */
+	private toBaseSchema(
+		schema: OpenAPIV2.SchemaObject | OpenAPIV2.ReferenceObject | undefined,
+		enums: EnumSchemaObject[] = [],
+		schemaKey = '',
+		upLevelSchemaKey = ''
+	): SchemaObject {
+		if (!schema) {
+			return {
+				type: 'unknown',
+			};
+		}
 
-    if (Base.isRef(schema)) {
-      return this.getSchemaByRef(schema, true);
-    }
+		if (Base.isRef(schema)) {
+			return this.getSchemaByRef(schema, true);
+		}
 
-    if (this.isOpenAPIArraySchema(schema)) {
-      const { type, description, items, required } = schema;
+		if (this.isOpenAPIArraySchema(schema)) {
+			const { type, description, items, required } = schema;
 
-      return {
-        type: type as string,
-        required: !!required,
-        description,
-        items: this.toBaseSchema(items, enums, schemaKey, upLevelSchemaKey),
-      } as ArrayTypeSchemaObject;
-    } else {
-      const {
-        required = [],
-        allOf,
-        anyOf,
-        description,
-        enum: enum_,
-        format,
-        oneOf,
-        properties = {},
-      } = schema;
-      let { type } = schema;
+			return {
+				type: type as string,
+				required: !!required,
+				description,
+				items: this.toBaseSchema(items, enums, schemaKey, upLevelSchemaKey),
+			} as ArrayTypeSchemaObject;
+		} else {
+			const {
+				required = [],
+				allOf,
+				anyOf,
+				description,
+				enum: enum_,
+				format,
+				oneOf,
+				properties = {},
+			} = schema;
+			let { type } = schema;
 
-      if (enum_ && type !== "boolean") {
-        const name =
-          Base.upperCamelCase(Base.normalize(upLevelSchemaKey)) +
-          Base.upperCamelCase(Base.normalize(schemaKey));
+			if (enum_ && type !== 'boolean') {
+				const name =
+					Base.upperCamelCase(Base.normalize(upLevelSchemaKey)) +
+					Base.upperCamelCase(Base.normalize(schemaKey));
 
-        const enumObject = {
-          name,
-          enum: [...new Set(enum_ as (string | number)[])],
-        };
+				const enumObject = {
+					name,
+					enum: [...new Set(enum_ as (string | number)[])],
+				};
 
-        const sameObject = Base.findSameSchema(enumObject, enums);
+				const sameObject = Base.findSameSchema(enumObject, enums);
 
-        if (!sameObject && Base.isValidEnumType(schema as unknown as SchemaObject)) {
-          enums.push(enumObject);
-        }
+				if (
+					!sameObject &&
+					Base.isValidEnumType(schema as unknown as SchemaObject)
+				) {
+					enums.push(enumObject);
+				}
 
-        return {
-          type: sameObject
-            ? sameObject.name
-            : Base.isBooleanEnum(schema as unknown as SchemaObject)
-              ? "boolean"
-              : enumObject.name,
-          required,
-          description,
-        };
-      }
+				return {
+					type: sameObject
+						? sameObject.name
+						: Base.isBooleanEnum(schema as unknown as SchemaObject)
+							? 'boolean'
+							: enumObject.name,
+					required,
+					description,
+				};
+			}
 
-      if (type === undefined && Object.keys(properties).length > 0) {
-        type = NonArraySchemaType.object;
-      }
+			if (type === undefined && Object.keys(properties).length > 0) {
+				type = NonArraySchemaType.object;
+			}
 
-      return {
-        type: type as unknown as NonArraySchemaType,
-        required,
-        description,
-        enum: enum_,
-        format: format as unknown as SchemaFormatType,
-        allOf: allOf?.map((s) =>
-          Base.isRef(s)
-            ? {
-                ...s,
-                ref: s.$ref,
-                type: Base.capitalize(Base.ref2name(s.$ref, this.doc)),
-              }
-            : this.toBaseSchema(s as OpenAPIV2.SchemaObject, enums),
-        ),
-        anyOf: anyOf?.map((s) =>
-          Base.isRef(s)
-            ? {
-                ...s,
-                ref: s.$ref,
-                type: Base.capitalize(Base.ref2name(s.$ref, this.doc)),
-              }
-            : this.toBaseSchema(s as OpenAPIV2.SchemaObject, enums),
-        ),
-        oneOf: oneOf?.map((s) =>
-          Base.isRef(s)
-            ? {
-                ...s,
-                ref: s.$ref,
-                type: Base.capitalize(Base.ref2name(s.$ref, this.doc)),
-              }
-            : this.toBaseSchema(s as OpenAPIV2.SchemaObject, enums),
-        ),
-        properties: Object.keys(properties).reduce((acc, p) => {
-          const propSchema = properties[p];
-          return {
-            ...acc,
-            [p]: Base.isRef(propSchema)
-              ? {
-                  type: Base.capitalize(Base.ref2name(propSchema.$ref, this.doc)),
-                }
-              : this.toBaseSchema(propSchema, enums, p, upLevelSchemaKey),
-          };
-        }, {}),
-      };
-    }
-  }
+			return {
+				type: type as unknown as NonArraySchemaType,
+				required,
+				description,
+				enum: enum_,
+				format: format as unknown as SchemaFormatType,
+				allOf: allOf?.map((s) =>
+					Base.isRef(s)
+						? {
+								...s,
+								ref: s.$ref,
+								type: Base.capitalize(Base.ref2name(s.$ref, this.doc)),
+							}
+						: this.toBaseSchema(s as OpenAPIV2.SchemaObject, enums)
+				),
+				anyOf: anyOf?.map((s) =>
+					Base.isRef(s)
+						? {
+								...s,
+								ref: s.$ref,
+								type: Base.capitalize(Base.ref2name(s.$ref, this.doc)),
+							}
+						: this.toBaseSchema(s as OpenAPIV2.SchemaObject, enums)
+				),
+				oneOf: oneOf?.map((s) =>
+					Base.isRef(s)
+						? {
+								...s,
+								ref: s.$ref,
+								type: Base.capitalize(Base.ref2name(s.$ref, this.doc)),
+							}
+						: this.toBaseSchema(s as OpenAPIV2.SchemaObject, enums)
+				),
+				properties: Object.keys(properties).reduce((acc, p) => {
+					const propSchema = properties[p];
+					return {
+						...acc,
+						[p]: Base.isRef(propSchema)
+							? {
+									type: Base.capitalize(
+										Base.ref2name(propSchema.$ref, this.doc)
+									),
+								}
+							: this.toBaseSchema(propSchema, enums, p, upLevelSchemaKey),
+					};
+				}, {}),
+			};
+		}
+	}
 
-  /**
-   * OpenAPI parameter to base parameter.
-   */
-  private getParameterByRef(
-    parameter: OpenAPIV2.ParameterObject | OpenAPIV2.ReferenceObject,
-    enums: EnumSchemaObject[] = [],
-    upLevelSchemaKey = "",
-  ): ParameterObject {
-    if (Base.isRef(parameter)) {
-      parameter = this.doc.parameters?.[Base.ref2name(parameter.$ref, this.doc)];
-    }
+	/**
+	 * OpenAPI parameter to base parameter.
+	 */
+	private getParameterByRef(
+		parameter: OpenAPIV2.ParameterObject | OpenAPIV2.ReferenceObject,
+		enums: EnumSchemaObject[] = [],
+		upLevelSchemaKey = ''
+	): ParameterObject {
+		if (Base.isRef(parameter)) {
+			parameter =
+				this.doc.parameters?.[Base.ref2name(parameter.$ref, this.doc)];
+		}
 
-    const { name, required, description, type, items, enum: enum_, properties, schema } = parameter;
+		const {
+			name,
+			required,
+			description,
+			type,
+			items,
+			enum: enum_,
+			properties,
+			schema,
+		} = parameter;
 
-    if (enum_) {
-      const type =
-        Base.upperCamelCase(Base.normalize(upLevelSchemaKey)) +
-        Base.upperCamelCase(Base.normalize(name));
+		if (enum_) {
+			const type =
+				Base.upperCamelCase(Base.normalize(upLevelSchemaKey)) +
+				Base.upperCamelCase(Base.normalize(name));
 
-      const enumSchema = {
-        name: type,
-        enum: [...new Set(enum_ as (string | number)[])],
-      };
+			const enumSchema = {
+				name: type,
+				enum: [...new Set(enum_ as (string | number)[])],
+			};
 
-      const sameEnum = Base.findSameSchema(enumSchema, enums);
+			const sameEnum = Base.findSameSchema(enumSchema, enums);
 
-      if (!sameEnum && Base.isValidEnumType({ type, enum: enum_ } as SchemaObject)) {
-        enums.push(enumSchema);
-      }
+			if (
+				!sameEnum &&
+				Base.isValidEnumType({ type, enum: enum_ } as SchemaObject)
+			) {
+				enums.push(enumSchema);
+			}
 
-      return {
-        name,
-        required,
-        description,
-        in: parameter.in as ParameterIn,
-        schema: {
-          type: sameEnum?.name ?? type,
-        },
-      };
-    }
+			return {
+				name,
+				required,
+				description,
+				in: parameter.in as ParameterIn,
+				schema: {
+					type: sameEnum?.name ?? type,
+				},
+			};
+		}
 
-    if (items) {
-      return {
-        name,
-        required,
-        description,
-        in: parameter.in as ParameterIn,
-        schema: {
-          type: type as string,
-          items: items as OpenAPIV2.SchemaObject | undefined,
-        } as ArrayTypeSchemaObject,
-      };
-    }
+		if (items) {
+			return {
+				name,
+				required,
+				description,
+				in: parameter.in as ParameterIn,
+				schema: {
+					type: type as string,
+					items: items as OpenAPIV2.SchemaObject | undefined,
+				} as ArrayTypeSchemaObject,
+			};
+		}
 
-    if (schema && Base.isRef(schema)) {
-      return {
-        name,
-        required,
-        description,
-        in: parameter.in as ParameterIn,
-        schema: {
-          type: Base.capitalize(Base.ref2name(schema.$ref)),
-        },
-      };
-    }
+		if (schema && Base.isRef(schema)) {
+			return {
+				name,
+				required,
+				description,
+				in: parameter.in as ParameterIn,
+				schema: {
+					type: Base.capitalize(Base.ref2name(schema.$ref)),
+				},
+			};
+		}
 
-    return {
-      name,
-      required,
-      description,
-      in: parameter.in as ParameterIn,
-      schema: {
-        type: type as string,
-        properties,
-      } as SchemaObject,
-    };
-  }
+		return {
+			name,
+			required,
+			description,
+			in: parameter.in as ParameterIn,
+			schema: {
+				type: type as string,
+				properties,
+			} as SchemaObject,
+		};
+	}
 
-  /**
-   * OpenAPI schema to base response
-   */
-  private getResponseByRef(
-    schema: OpenAPIV2.ResponseObject | OpenAPIV2.ReferenceObject,
-  ): MediaTypeObject[] {
-    if (Base.isRef(schema)) {
-      schema = this.doc.responses![Base.ref2name(schema.$ref, this.doc)]!;
-    }
+	/**
+	 * OpenAPI schema to base response
+	 */
+	private getResponseByRef(
+		schema: OpenAPIV2.ResponseObject | OpenAPIV2.ReferenceObject
+	): MediaTypeObject[] {
+		if (Base.isRef(schema)) {
+			schema = this.doc.responses![Base.ref2name(schema.$ref, this.doc)]!;
+		}
 
-    const { schema: responseSchema } = schema;
+		const { schema: responseSchema } = schema;
 
-    return [
-      {
-        type: MediaTypes.JSON,
-        schema: responseSchema && this.getSchemaByRef(responseSchema, true),
-      },
-    ];
-  }
+		return [
+			{
+				type: MediaTypes.JSON,
+				schema: responseSchema && this.getSchemaByRef(responseSchema, true),
+			},
+		];
+	}
 
-  public init() {
-    const { definitions = {}, responses = {}, paths = {} } = this.doc;
-    const enums: EnumSchemaObject[] = [];
+	public init() {
+		const { definitions = {}, responses = {}, paths = {} } = this.doc;
+		const enums: EnumSchemaObject[] = [];
 
-    const definitions_ = Object.keys(definitions).reduce((acc, key) => {
-      const schema = definitions[key];
+		const definitions_ = Object.keys(definitions).reduce((acc, key) => {
+			const schema = definitions[key];
 
-      return {
-        ...acc,
-        [key]: this.getSchemaByRef(schema, false, enums, key),
-      };
-    }, {});
+			return {
+				...acc,
+				[key]: this.getSchemaByRef(schema, false, enums, key),
+			};
+		}, {});
 
-    const responses_ = Object.keys(responses).reduce((acc, key) => {
-      const response = responses[key];
+		const responses_ = Object.keys(responses).reduce((acc, key) => {
+			const response = responses[key];
 
-      return {
-        ...acc,
-        [key]: this.getResponseByRef(response),
-      };
-    }, {});
+			return {
+				...acc,
+				[key]: this.getResponseByRef(response),
+			};
+		}, {});
 
-    const apis = Object.keys(paths).reduce((acc, path) => {
-      let pathObject = paths[path] ?? {};
+		const apis = Object.keys(paths).reduce((acc, path) => {
+			let pathObject = paths[path] ?? {};
 
-      // Handle path-level $ref
-      if (pathObject.$ref) {
-        const resolved = this.resolvePathRef(pathObject.$ref);
-        if (resolved) {
-          pathObject = resolved;
-        }
-      }
+			// Handle path-level $ref
+			if (pathObject.$ref) {
+				const resolved = this.resolvePathRef(pathObject.$ref);
+				if (resolved) {
+					pathObject = resolved;
+				}
+			}
 
-      const { parameters = [] } = pathObject;
-      const methodApis: OperationObject[] = [];
+			const { parameters = [] } = pathObject;
+			const methodApis: OperationObject[] = [];
 
-      Object.values(HttpMethods).forEach((method) => {
-        const methodObject = pathObject[method as OpenAPIV2.HttpMethods];
+			Object.values(HttpMethods).forEach((method) => {
+				const methodObject = pathObject[method as OpenAPIV2.HttpMethods];
 
-        if (methodObject) {
-          const {
-            deprecated,
-            operationId,
-            summary: summary_,
-            description: description_,
-            responses = {},
-          } = methodObject;
-          const { parameters: parameters_ = [] } = methodObject;
-          const baseParameters = [...parameters, ...parameters_].map((parameter) =>
-            this.getParameterByRef(parameter, enums),
-          );
-          const uniqueParameterName = [...new Set(baseParameters.map((p) => p.name))];
+				if (methodObject) {
+					const {
+						deprecated,
+						operationId,
+						summary: summary_,
+						description: description_,
+						responses = {},
+					} = methodObject;
+					const { parameters: parameters_ = [] } = methodObject;
+					const baseParameters = [...parameters, ...parameters_].map(
+						(parameter) => this.getParameterByRef(parameter, enums)
+					);
+					const uniqueParameterName = [
+						...new Set(baseParameters.map((p) => p.name)),
+					];
 
-          if (Object.keys(responses).length === 0) {
-            Object.assign(responses, {
-              200: {
-                description: "Successful response",
-              },
-            });
-          }
+					if (Object.keys(responses).length === 0) {
+						Object.assign(responses, {
+							200: {
+								description: 'Successful response',
+							},
+						});
+					}
 
-          const inBody = baseParameters.filter((p) => p.in === "body" || p.in === "formData");
+					const inBody = baseParameters.filter(
+						(p) => p.in === 'body' || p.in === 'formData'
+					);
 
-          const notInBody = baseParameters.filter((p) => p.in !== "body" && p.in !== "formData");
+					const notInBody = baseParameters.filter(
+						(p) => p.in !== 'body' && p.in !== 'formData'
+					);
 
-          const httpCodes = Object.keys(responses);
-          for (const code of httpCodes) {
-            if (code in responses) {
-              const response = responses[code]!;
-              const responseSchema = this.getResponseByRef(response);
+					const httpCodes = Object.keys(responses);
+					for (const code of httpCodes) {
+						if (code in responses) {
+							const response = responses[code]!;
+							const responseSchema = this.getResponseByRef(response);
 
-              const inBodyOnlyHasBody =
-                inBody &&
-                inBody.length === 1 &&
-                inBody[0].in === "body" &&
-                inBody[0].name === "body";
+							const inBodyOnlyHasBody =
+								inBody &&
+								inBody.length === 1 &&
+								inBody[0].in === 'body' &&
+								inBody[0].name === 'body';
 
-              methodApis.push({
-                method,
-                operationId,
-                summary: summary_,
-                deprecated: deprecated,
-                description: description_,
-                parameters: uniqueParameterName
-                  .map((name) => notInBody.find((p) => p.name === name)!)
-                  .filter(Boolean),
-                responses: responseSchema,
-                requestBody:
-                  inBody.length > 0
-                    ? inBodyOnlyHasBody
-                      ? [
-                          {
-                            type: MediaTypes.JSON,
-                            schema: inBody[0].schema,
-                          },
-                        ]
-                      : [
-                          {
-                            type: MediaTypes.JSON,
-                            schema: {
-                              type: NonArraySchemaType.object,
-                              properties: inBody.reduce<Record<string, SchemaObject>>((a, p) => {
-                                return {
-                                  ...a,
-                                  [p.name]: {
-                                    type: p.schema?.type ?? "unknown",
-                                    required: p.schema?.required,
-                                    // @ts-expect-error items can be undefined
-                                    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-                                    items: p.schema?.items,
-                                    description: p.schema?.description,
-                                  } as SchemaObject,
-                                };
-                              }, {}),
-                            },
-                          },
-                        ]
-                    : undefined,
-              });
-              break;
-            }
-          }
-        }
-      });
+							methodApis.push({
+								method,
+								operationId,
+								summary: summary_,
+								deprecated: deprecated,
+								description: description_,
+								parameters: uniqueParameterName
+									.map((name) => notInBody.find((p) => p.name === name)!)
+									.filter(Boolean),
+								responses: responseSchema,
+								requestBody:
+									inBody.length > 0
+										? inBodyOnlyHasBody
+											? [
+													{
+														type: MediaTypes.JSON,
+														schema: inBody[0].schema,
+													},
+												]
+											: [
+													{
+														type: MediaTypes.JSON,
+														schema: {
+															type: NonArraySchemaType.object,
+															properties: inBody.reduce<
+																Record<string, SchemaObject>
+															>((a, p) => {
+																return {
+																	...a,
+																	[p.name]: {
+																		type: p.schema?.type ?? 'unknown',
+																		required: p.schema?.required,
+																		// @ts-expect-error items can be undefined
+																		// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+																		items: p.schema?.items,
+																		description: p.schema?.description,
+																	} as SchemaObject,
+																};
+															}, {}),
+														},
+													},
+												]
+										: undefined,
+							});
+							break;
+						}
+					}
+				}
+			});
 
-      return {
-        ...acc,
-        [path]: methodApis,
-      };
-    }, {});
+			return {
+				...acc,
+				[path]: methodApis,
+			};
+		}, {});
 
-    return {
-      enums: Base.uniqueEnums(enums),
-      schemas: definitions_,
-      responses: responses_,
-      parameters: {},
-      requestBodies: {},
-      apis,
-    };
-  }
+		return {
+			enums: Base.uniqueEnums(enums),
+			schemas: definitions_,
+			responses: responses_,
+			parameters: {},
+			requestBodies: {},
+			apis,
+		};
+	}
 }
