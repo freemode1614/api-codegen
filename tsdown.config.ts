@@ -11,9 +11,9 @@ export default defineConfig([
     sourcemap: true,
   },
   {
-    entry: ["./src/cli.ts"],
+    entry: "./src/cli.ts",
     outDir: "./bin",
-    format: "esm",
+    format: "cjs",
     shims: true,
     clean: true,
     sourcemap: false,

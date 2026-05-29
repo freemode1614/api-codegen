@@ -4,7 +4,7 @@
   "description": "",
   "type": "module",
   "bin": {
-    "apicodegen": "./bin/cli.mjs"
+    "apicodegen": "./bin/cli.cjs"
   },
   "scripts": {
     "dev": "tsdown --watch",

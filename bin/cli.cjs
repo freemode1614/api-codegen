@@ -1,12 +1,36 @@
 #!/bin/env node
-import path from "node:path";
-import fs from "fs-extra";
-import { Agent, request } from "undici";
-import { writeFile } from "fs/promises";
-import { format } from "prettier";
-import { NodeFlags, SyntaxKind, addSyntheticLeadingComment, createPrinter, factory } from "typescript";
-import { createScopedLogger } from "@moccona/logger";
-import { createCommand } from "commander";
+//#region \0rolldown/runtime.js
+var __create = Object.create;
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __getOwnPropNames = Object.getOwnPropertyNames;
+var __getProtoOf = Object.getPrototypeOf;
+var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __copyProps = (to, from, except, desc) => {
+	if (from && typeof from === "object" || typeof from === "function") for (var keys = __getOwnPropNames(from), i = 0, n = keys.length, key; i < n; i++) {
+		key = keys[i];
+		if (!__hasOwnProp.call(to, key) && key !== except) __defProp(to, key, {
+			get: ((k) => from[k]).bind(null, key),
+			enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable
+		});
+	}
+	return to;
+};
+var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps(isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", {
+	value: mod,
+	enumerable: true
+}) : target, mod));
+//#endregion
+let node_path = require("node:path");
+node_path = __toESM(node_path, 1);
+let fs_extra = require("fs-extra");
+fs_extra = __toESM(fs_extra, 1);
+let undici = require("undici");
+let fs_promises = require("fs/promises");
+let prettier = require("prettier");
+let typescript = require("typescript");
+let _moccona_logger = require("@moccona/logger");
+let commander = require("commander");
 //#region src/core/errors.ts
 /**
 * Error handling utilities for api-codegen
@@ -282,10 +306,10 @@ function loadFromEnv() {
 * Load config from a file
 */
 async function loadFromFile(filePath) {
-	const ext = path.extname(filePath).toLowerCase();
+	const ext = node_path.default.extname(filePath).toLowerCase();
 	try {
 		if (ext === ".json" || ext === ".jsonc") {
-			const content = await fs.readFile(filePath, "utf-8");
+			const content = await fs_extra.default.readFile(filePath, "utf-8");
 			return JSON.parse(content);
 		}
 		if (ext === ".js" || ext === ".cjs" || ext === ".mjs") {
@@ -293,7 +317,7 @@ async function loadFromFile(filePath) {
 			return mod.default || mod;
 		}
 		if (ext === ".ts") {
-			const content = await fs.readFile(filePath, "utf-8");
+			const content = await fs_extra.default.readFile(filePath, "utf-8");
 			try {
 				return JSON.parse(content);
 			} catch {
@@ -301,7 +325,7 @@ async function loadFromFile(filePath) {
 				if (jsonMatch) return JSON.parse(jsonMatch[1]);
 			}
 		}
-		const content = await fs.readFile(filePath, "utf-8");
+		const content = await fs_extra.default.readFile(filePath, "utf-8");
 		return JSON.parse(content);
 	} catch (error) {
 		throw new Error(`Failed to load config from ${filePath}: ${error}`);
@@ -320,13 +344,13 @@ async function findConfigFile(cwd) {
 		".apicodegenrc.js",
 		".apicodegenrc.mjs"
 	]) {
-		const filePath = path.join(cwd, fileName);
-		if (await fs.pathExists(filePath)) return filePath;
+		const filePath = node_path.default.join(cwd, fileName);
+		if (await fs_extra.default.pathExists(filePath)) return filePath;
 	}
-	const packageJsonPath = path.join(cwd, "package.json");
-	if (await fs.pathExists(packageJsonPath)) try {
-		const pkg = JSON.parse(await fs.readFile(packageJsonPath, "utf-8"));
-		if (pkg.apicodegen && typeof pkg.apicodegen === "string") return path.resolve(cwd, pkg.apicodegen);
+	const packageJsonPath = node_path.default.join(cwd, "package.json");
+	if (await fs_extra.default.pathExists(packageJsonPath)) try {
+		const pkg = JSON.parse(await fs_extra.default.readFile(packageJsonPath, "utf-8"));
+		if (pkg.apicodegen && typeof pkg.apicodegen === "string") return node_path.default.resolve(cwd, pkg.apicodegen);
 	} catch {}
 	return null;
 }
@@ -359,7 +383,7 @@ async function loadConfig(options = {}) {
 	let fileConfig = {};
 	let configFilePath;
 	if (options.configFile) {
-		configFilePath = path.resolve(cwd, options.configFile);
+		configFilePath = node_path.default.resolve(cwd, options.configFile);
 		fileConfig = await loadFromFile(configFilePath);
 	} else {
 		const foundPath = await findConfigFile(cwd);
@@ -368,10 +392,10 @@ async function loadConfig(options = {}) {
 			fileConfig = await loadFromFile(foundPath);
 		}
 	}
-	const packageJsonPath = path.join(cwd, "package.json");
+	const packageJsonPath = node_path.default.join(cwd, "package.json");
 	let inlineConfig = {};
-	if (await fs.pathExists(packageJsonPath)) try {
-		const pkg = JSON.parse(await fs.readFile(packageJsonPath, "utf-8"));
+	if (await fs_extra.default.pathExists(packageJsonPath)) try {
+		const pkg = JSON.parse(await fs_extra.default.readFile(packageJsonPath, "utf-8"));
 		if (pkg.apicodegen && typeof pkg.apicodegen === "object") inlineConfig = pkg.apicodegen;
 	} catch {}
 	const merged = mergeConfigs({
@@ -591,9 +615,9 @@ var Base = class Base {
 	* @returns - A promise resolving to the fetched documentation data.
 	*/
 	static async fetchDoc(url, requestInit = {}) {
-		const { body, statusCode } = await request(url, {
+		const { body, statusCode } = await (0, undici.request)(url, {
 			method: "GET",
-			dispatcher: new Agent({ connect: { rejectUnauthorized: false } }),
+			dispatcher: new undici.Agent({ connect: { rejectUnauthorized: false } }),
 			...requestInit
 		});
 		if (statusCode >= 400) throw new Error(`Failed to fetch OpenAPI documentation from ${url}: HTTP ${statusCode}`);
@@ -760,12 +784,12 @@ var Generator = class Generator {
 	*/
 	static toCode(statements) {
 		if (statements.length === 0) return "// No api declaration found.";
-		const sourceFile = factory.createSourceFile(statements, factory.createToken(SyntaxKind.EndOfFileToken), NodeFlags.None);
-		return createPrinter().printFile(sourceFile);
+		const sourceFile = typescript.factory.createSourceFile(statements, typescript.factory.createToken(typescript.SyntaxKind.EndOfFileToken), typescript.NodeFlags.None);
+		return (0, typescript.createPrinter)().printFile(sourceFile);
 	}
 	static async write(code, filepath) {
 		try {
-			await writeFile(filepath, code);
+			await (0, fs_promises.writeFile)(filepath, code);
 		} catch (error) {
 			console.error(error);
 		}
@@ -786,12 +810,12 @@ var Generator = class Generator {
 			path += queryString;
 		}
 		const pathSegments = path.replaceAll("{", "${").split("$").filter(Boolean);
-		if (pathSegments.length === 1) return factory.createNoSubstitutionTemplateLiteral(basePath + path);
-		return factory.createTemplateExpression(factory.createTemplateHead(basePath + pathSegments[0]), pathSegments.slice(1).map((segment, index) => {
+		if (pathSegments.length === 1) return typescript.factory.createNoSubstitutionTemplateLiteral(basePath + path);
+		return typescript.factory.createTemplateExpression(typescript.factory.createTemplateHead(basePath + pathSegments[0]), pathSegments.slice(1).map((segment, index) => {
 			const match = /^{(.+)}(.+)?/gm.exec(segment);
 			const isLastSegment = index === pathSegments.length - 2;
 			if (!match) throw new Error(`Invalid path segment: ${segment}`);
-			return factory.createTemplateSpan(factory.createIdentifier(match[1]), !isLastSegment ? factory.createTemplateMiddle(match[2]) : factory.createTemplateTail(match[2] || ""));
+			return typescript.factory.createTemplateSpan(typescript.factory.createIdentifier(match[1]), !isLastSegment ? typescript.factory.createTemplateMiddle(match[2]) : typescript.factory.createTemplateTail(match[2] || ""));
 		}));
 	}
 	/**
@@ -806,7 +830,7 @@ var Generator = class Generator {
 			return comment.tag ? ` @${comment.tag} ${comment.comment ?? ""}` : ` ${comment.comment}`;
 		};
 		const formattedComments = "*\n" + comments.map(formatComment).join("\n").trim() + "\n";
-		addSyntheticLeadingComment(node, SyntaxKind.MultiLineCommentTrivia, formattedComments, true);
+		(0, typescript.addSyntheticLeadingComment)(node, typescript.SyntaxKind.MultiLineCommentTrivia, formattedComments, true);
 	}
 	/**
 	* Checks if a schema represents a binary type.
@@ -823,53 +847,53 @@ var Generator = class Generator {
 		return nonArraySchema.format === "blob" || nonArraySchema.format === "binary" || nonArraySchema.type === "file";
 	}
 	static toRequestBodyTypeNode(schema) {
-		return factory.createParameterDeclaration(void 0, void 0, factory.createIdentifier("req"), void 0, Generator.toTypeNode(schema));
+		return typescript.factory.createParameterDeclaration(void 0, void 0, typescript.factory.createIdentifier("req"), void 0, Generator.toTypeNode(schema));
 	}
 	static toTypeNode(schema) {
 		const { type, ref } = schema;
 		if (ref) {
 			const identify = Base.ref2name(ref);
-			return factory.createTypeReferenceNode(factory.createIdentifier(identify === "unknown" ? identify : Base.upperCamelCase(identify)));
+			return typescript.factory.createTypeReferenceNode(typescript.factory.createIdentifier(identify === "unknown" ? identify : Base.upperCamelCase(identify)));
 		}
 		switch (type) {
 			case "array": {
 				const { items } = schema;
-				return factory.createArrayTypeNode(Generator.toTypeNode(items));
+				return typescript.factory.createArrayTypeNode(Generator.toTypeNode(items));
 			}
 			case "object": {
 				const propsCount = Object.keys(schema.properties ?? {}).length;
-				if (!schema.properties || propsCount === 0) return factory.createTypeReferenceNode(factory.createIdentifier("Record"), [factory.createToken(SyntaxKind.StringKeyword), factory.createToken(SyntaxKind.UnknownKeyword)]);
+				if (!schema.properties || propsCount === 0) return typescript.factory.createTypeReferenceNode(typescript.factory.createIdentifier("Record"), [typescript.factory.createToken(typescript.SyntaxKind.StringKeyword), typescript.factory.createToken(typescript.SyntaxKind.UnknownKeyword)]);
 				const props = Object.keys(schema.properties);
-				return factory.createTypeLiteralNode(props.map((propKey) => {
+				return typescript.factory.createTypeLiteralNode(props.map((propKey) => {
 					const propSchema = schema.properties[propKey];
-					return factory.createPropertySignature(void 0, factory.createStringLiteral(propKey), schema.required || schema.ref || Generator.isBinarySchema(schema) ? void 0 : factory.createToken(SyntaxKind.QuestionToken), Generator.toTypeNode(propSchema));
+					return typescript.factory.createPropertySignature(void 0, typescript.factory.createStringLiteral(propKey), schema.required || schema.ref || Generator.isBinarySchema(schema) ? void 0 : typescript.factory.createToken(typescript.SyntaxKind.QuestionToken), Generator.toTypeNode(propSchema));
 				}));
 			}
 			case "integer":
 			case "number":
-				if (schema.enum) return factory.createUnionTypeNode(schema.enum.map((e) => factory.createLiteralTypeNode(factory.createNumericLiteral(e))));
-				return factory.createToken(SyntaxKind.NumberKeyword);
-			case "boolean": return factory.createToken(SyntaxKind.BooleanKeyword);
-			case "file": return factory.createTypeReferenceNode(factory.createIdentifier("Blob"));
+				if (schema.enum) return typescript.factory.createUnionTypeNode(schema.enum.map((e) => typescript.factory.createLiteralTypeNode(typescript.factory.createNumericLiteral(e))));
+				return typescript.factory.createToken(typescript.SyntaxKind.NumberKeyword);
+			case "boolean": return typescript.factory.createToken(typescript.SyntaxKind.BooleanKeyword);
+			case "file": return typescript.factory.createTypeReferenceNode(typescript.factory.createIdentifier("Blob"));
 			default: {
 				const { format, oneOf, allOf, anyOf, type, enum: enum_ } = schema;
 				switch (format) {
-					case "number": return factory.createToken(SyntaxKind.NumberKeyword);
-					case "string": return factory.createToken(SyntaxKind.StringKeyword);
-					case "boolean": return factory.createToken(SyntaxKind.BooleanKeyword);
+					case "number": return typescript.factory.createToken(typescript.SyntaxKind.NumberKeyword);
+					case "string": return typescript.factory.createToken(typescript.SyntaxKind.StringKeyword);
+					case "boolean": return typescript.factory.createToken(typescript.SyntaxKind.BooleanKeyword);
 					case "blob":
-					case "binary": return factory.createTypeReferenceNode(factory.createIdentifier("Blob"));
+					case "binary": return typescript.factory.createTypeReferenceNode(typescript.factory.createIdentifier("Blob"));
 					default:
 				}
-				if (enum_) return factory.createUnionTypeNode(enum_.map((e) => factory.createLiteralTypeNode(factory.createStringLiteral(e))));
-				if (type === "string") return factory.createToken(SyntaxKind.StringKeyword);
-				if (oneOf) return factory.createUnionTypeNode(oneOf.map((schema) => Generator.toTypeNode(schema)));
-				if (anyOf) return factory.createUnionTypeNode(anyOf.map((schema) => Generator.toTypeNode(schema)));
-				if (allOf) return factory.createIntersectionTypeNode(allOf.map((schema) => Generator.toTypeNode(schema)));
-				if (type && typeof type === "string") return factory.createTypeReferenceNode(type !== "unknown" && type !== "null" ? factory.createIdentifier(Base.upperCamelCase(type)) : type);
+				if (enum_) return typescript.factory.createUnionTypeNode(enum_.map((e) => typescript.factory.createLiteralTypeNode(typescript.factory.createStringLiteral(e))));
+				if (type === "string") return typescript.factory.createToken(typescript.SyntaxKind.StringKeyword);
+				if (oneOf) return typescript.factory.createUnionTypeNode(oneOf.map((schema) => Generator.toTypeNode(schema)));
+				if (anyOf) return typescript.factory.createUnionTypeNode(anyOf.map((schema) => Generator.toTypeNode(schema)));
+				if (allOf) return typescript.factory.createIntersectionTypeNode(allOf.map((schema) => Generator.toTypeNode(schema)));
+				if (type && typeof type === "string") return typescript.factory.createTypeReferenceNode(type !== "unknown" && type !== "null" ? typescript.factory.createIdentifier(Base.upperCamelCase(type)) : type);
 			}
 		}
-		return factory.createToken(SyntaxKind.UnknownKeyword);
+		return typescript.factory.createToken(typescript.SyntaxKind.UnknownKeyword);
 	}
 	static toDeclarationNodes(parameters) {
 		const objectElements = [];
@@ -877,31 +901,31 @@ var Generator = class Generator {
 		const refParameters = [];
 		for (const parameter of parameters) if (parameter.ref) {
 			const refName = Base.ref2name(parameter.ref);
-			refParameters.push(factory.createParameterDeclaration(void 0, void 0, factory.createIdentifier(Base.camelCase(Base.normalize(refName))), void 0, factory.createTypeReferenceNode(factory.createIdentifier(Base.upperCamelCase(Base.normalize(refName)))), void 0));
+			refParameters.push(typescript.factory.createParameterDeclaration(void 0, void 0, typescript.factory.createIdentifier(Base.camelCase(Base.normalize(refName))), void 0, typescript.factory.createTypeReferenceNode(typescript.factory.createIdentifier(Base.upperCamelCase(Base.normalize(refName)))), void 0));
 		} else {
 			const { name, schema, required } = parameter;
-			objectElements.push(factory.createBindingElement(void 0, void 0, factory.createIdentifier(Base.camelCase(Base.normalize(name)))));
-			typeObjectElements.push(factory.createPropertySignature([], factory.createIdentifier(Base.camelCase(Base.normalize(name))), required ? void 0 : factory.createToken(SyntaxKind.QuestionToken), !schema ? factory.createToken(SyntaxKind.UnknownKeyword) : Generator.toTypeNode(schema)));
+			objectElements.push(typescript.factory.createBindingElement(void 0, void 0, typescript.factory.createIdentifier(Base.camelCase(Base.normalize(name)))));
+			typeObjectElements.push(typescript.factory.createPropertySignature([], typescript.factory.createIdentifier(Base.camelCase(Base.normalize(name))), required ? void 0 : typescript.factory.createToken(typescript.SyntaxKind.QuestionToken), !schema ? typescript.factory.createToken(typescript.SyntaxKind.UnknownKeyword) : Generator.toTypeNode(schema)));
 		}
-		if (objectElements.length > 0) return [factory.createParameterDeclaration(void 0, void 0, factory.createObjectBindingPattern(objectElements), void 0, factory.createTypeLiteralNode(typeObjectElements), void 0), ...refParameters];
+		if (objectElements.length > 0) return [typescript.factory.createParameterDeclaration(void 0, void 0, typescript.factory.createObjectBindingPattern(objectElements), void 0, typescript.factory.createTypeLiteralNode(typeObjectElements), void 0), ...refParameters];
 		return refParameters;
 	}
 	static toFormDataStatement(parameters, requestBody) {
 		const statements = [];
-		const fdDeclaration = factory.createVariableStatement(void 0, factory.createVariableDeclarationList([factory.createVariableDeclaration(factory.createIdentifier("fd"), void 0, void 0, factory.createNewExpression(factory.createIdentifier("FormData"), void 0, []))], NodeFlags.Const));
+		const fdDeclaration = typescript.factory.createVariableStatement(void 0, typescript.factory.createVariableDeclarationList([typescript.factory.createVariableDeclaration(typescript.factory.createIdentifier("fd"), void 0, void 0, typescript.factory.createNewExpression(typescript.factory.createIdentifier("FormData"), void 0, []))], typescript.NodeFlags.Const));
 		statements.push(fdDeclaration);
 		parameters.forEach((parameter) => {
-			statements.push(factory.createExpressionStatement(factory.createBinaryExpression(factory.createIdentifier(parameter.name), factory.createToken(SyntaxKind.AmpersandAmpersandToken), factory.createCallExpression(factory.createPropertyAccessExpression(factory.createIdentifier("fd"), factory.createIdentifier("append")), void 0, [factory.createStringLiteral(parameter.name), factory.createIdentifier(parameter.name)]))));
+			statements.push(typescript.factory.createExpressionStatement(typescript.factory.createBinaryExpression(typescript.factory.createIdentifier(parameter.name), typescript.factory.createToken(typescript.SyntaxKind.AmpersandAmpersandToken), typescript.factory.createCallExpression(typescript.factory.createPropertyAccessExpression(typescript.factory.createIdentifier("fd"), typescript.factory.createIdentifier("append")), void 0, [typescript.factory.createStringLiteral(parameter.name), typescript.factory.createIdentifier(parameter.name)]))));
 		});
 		if (requestBody && requestBody.type === "object" && requestBody.properties && Object.keys(requestBody.properties).length !== 0) Object.keys(requestBody.properties).forEach((key) => {
 			const schemaByKey = requestBody.properties[key];
-			if (schemaByKey.type === "array" && Generator.isBinarySchema(schemaByKey)) statements.push(factory.createForOfStatement(void 0, factory.createVariableDeclarationList([factory.createVariableDeclaration("file")], NodeFlags.Const), factory.createElementAccessExpression(factory.createIdentifier("req"), factory.createStringLiteral(key)), factory.createBlock([factory.createExpressionStatement(factory.createCallExpression(factory.createPropertyAccessExpression(factory.createIdentifier("fd"), factory.createIdentifier("append")), [], [
-				factory.createStringLiteral(key),
-				factory.createIdentifier("file"),
-				factory.createPropertyAccessExpression(factory.createAsExpression(factory.createIdentifier("file"), factory.createTypeReferenceNode(factory.createIdentifier("File"), void 0)), factory.createIdentifier("name"))
+			if (schemaByKey.type === "array" && Generator.isBinarySchema(schemaByKey)) statements.push(typescript.factory.createForOfStatement(void 0, typescript.factory.createVariableDeclarationList([typescript.factory.createVariableDeclaration("file")], typescript.NodeFlags.Const), typescript.factory.createElementAccessExpression(typescript.factory.createIdentifier("req"), typescript.factory.createStringLiteral(key)), typescript.factory.createBlock([typescript.factory.createExpressionStatement(typescript.factory.createCallExpression(typescript.factory.createPropertyAccessExpression(typescript.factory.createIdentifier("fd"), typescript.factory.createIdentifier("append")), [], [
+				typescript.factory.createStringLiteral(key),
+				typescript.factory.createIdentifier("file"),
+				typescript.factory.createPropertyAccessExpression(typescript.factory.createAsExpression(typescript.factory.createIdentifier("file"), typescript.factory.createTypeReferenceNode(typescript.factory.createIdentifier("File"), void 0)), typescript.factory.createIdentifier("name"))
 			]))])));
-			else if (schemaByKey.required) statements.push(factory.createExpressionStatement(factory.createCallExpression(factory.createPropertyAccessExpression(factory.createIdentifier("fd"), factory.createIdentifier("append")), void 0, [factory.createStringLiteral(key), schemaByKey.type === "string" ? factory.createElementAccessExpression(factory.createIdentifier("req"), factory.createStringLiteral(key)) : factory.createCallExpression(factory.createIdentifier("String"), void 0, [factory.createElementAccessExpression(factory.createIdentifier("req"), factory.createStringLiteral(key))])])));
-			else statements.push(factory.createExpressionStatement(factory.createBinaryExpression(factory.createElementAccessExpression(factory.createIdentifier("req"), factory.createStringLiteral(key)), factory.createToken(SyntaxKind.AmpersandAmpersandToken), factory.createCallExpression(factory.createPropertyAccessExpression(factory.createIdentifier("fd"), factory.createIdentifier("append")), void 0, [factory.createStringLiteral(key), schemaByKey.type === "string" ? factory.createElementAccessExpression(factory.createIdentifier("req"), factory.createStringLiteral(key)) : factory.createCallExpression(factory.createIdentifier("String"), void 0, [factory.createElementAccessExpression(factory.createIdentifier("req"), factory.createStringLiteral(key))])]))));
+			else if (schemaByKey.required) statements.push(typescript.factory.createExpressionStatement(typescript.factory.createCallExpression(typescript.factory.createPropertyAccessExpression(typescript.factory.createIdentifier("fd"), typescript.factory.createIdentifier("append")), void 0, [typescript.factory.createStringLiteral(key), schemaByKey.type === "string" ? typescript.factory.createElementAccessExpression(typescript.factory.createIdentifier("req"), typescript.factory.createStringLiteral(key)) : typescript.factory.createCallExpression(typescript.factory.createIdentifier("String"), void 0, [typescript.factory.createElementAccessExpression(typescript.factory.createIdentifier("req"), typescript.factory.createStringLiteral(key))])])));
+			else statements.push(typescript.factory.createExpressionStatement(typescript.factory.createBinaryExpression(typescript.factory.createElementAccessExpression(typescript.factory.createIdentifier("req"), typescript.factory.createStringLiteral(key)), typescript.factory.createToken(typescript.SyntaxKind.AmpersandAmpersandToken), typescript.factory.createCallExpression(typescript.factory.createPropertyAccessExpression(typescript.factory.createIdentifier("fd"), typescript.factory.createIdentifier("append")), void 0, [typescript.factory.createStringLiteral(key), schemaByKey.type === "string" ? typescript.factory.createElementAccessExpression(typescript.factory.createIdentifier("req"), typescript.factory.createStringLiteral(key)) : typescript.factory.createCallExpression(typescript.factory.createIdentifier("String"), void 0, [typescript.factory.createElementAccessExpression(typescript.factory.createIdentifier("req"), typescript.factory.createStringLiteral(key))])]))));
 		});
 		return statements;
 	}
@@ -914,7 +938,7 @@ var Generator = class Generator {
 		const isRequestBodyContainsBinary = requestBody?.schema && "properties" in requestBody.schema && Object.values(requestBody.schema?.properties ?? {}).some((p) => Generator.isBinarySchema(p));
 		const hasBinaryInParameters = parameters.some((p) => p?.schema && Generator.isBinarySchema(p.schema));
 		const shouldPutParametersOrBodyInFormData = isFormDataRequest || isRequestBodyBinary || hasBinaryInParameters || isRequestBodyContainsBinary || parametersShouldPutInFormData.length > 0;
-		return factory.createBlock([...shouldPutParametersOrBodyInFormData ? Generator.toFormDataStatement(parametersShouldPutInFormData, requestBody?.schema) : [], ...adapter.client(uri, method, parametersShouldNotPutInFormData, requestBody, response, adapter, shouldPutParametersOrBodyInFormData, shouldParseResponseToJSON)]);
+		return typescript.factory.createBlock([...shouldPutParametersOrBodyInFormData ? Generator.toFormDataStatement(parametersShouldPutInFormData, requestBody?.schema) : [], ...adapter.client(uri, method, parametersShouldNotPutInFormData, requestBody, response, adapter, shouldPutParametersOrBodyInFormData, shouldParseResponseToJSON)]);
 	}
 	static schemaToStatemets(parsedDoc, adaptor, options) {
 		const statements = [];
@@ -922,13 +946,13 @@ var Generator = class Generator {
 		const enumNames = [];
 		for (const enumObject of enums) {
 			enumNames.push(Base.upperCamelCase(enumObject.name));
-			statements.push(factory.createEnumDeclaration([factory.createToken(SyntaxKind.ExportKeyword)], factory.createIdentifier(Base.upperCamelCase(enumObject.name)), enumObject.enum.map((member) => {
-				return factory.createEnumMember(factory.createStringLiteral(typeof member === "string" ? member : `${member}_`), typeof member === "string" ? factory.createStringLiteral(member) : factory.createNumericLiteral(member));
+			statements.push(typescript.factory.createEnumDeclaration([typescript.factory.createToken(typescript.SyntaxKind.ExportKeyword)], typescript.factory.createIdentifier(Base.upperCamelCase(enumObject.name)), enumObject.enum.map((member) => {
+				return typescript.factory.createEnumMember(typescript.factory.createStringLiteral(typeof member === "string" ? member : `${member}_`), typeof member === "string" ? typescript.factory.createStringLiteral(member) : typescript.factory.createNumericLiteral(member));
 			})));
 		}
 		for (const schemaKey in schemas) if (Object.hasOwn(schemas, schemaKey) && !enumNames.includes(Base.upperCamelCase(schemaKey))) {
 			const schema = schemas[schemaKey];
-			statements.push(factory.createTypeAliasDeclaration([factory.createModifier(SyntaxKind.ExportKeyword)], factory.createIdentifier(Base.upperCamelCase(schemaKey)), void 0, Generator.toTypeNode(schema)));
+			statements.push(typescript.factory.createTypeAliasDeclaration([typescript.factory.createModifier(typescript.SyntaxKind.ExportKeyword)], typescript.factory.createIdentifier(Base.upperCamelCase(schemaKey)), void 0, Generator.toTypeNode(schema)));
 		}
 		for (const uri in apis) {
 			const operations = apis[uri];
@@ -939,7 +963,7 @@ var Generator = class Generator {
 				if (requestBody.length === 0) requestBody.push({ type: "application/json" });
 				const shouldAddExtraMethodNameSuffix = requestBody.length > 1;
 				for (const req of requestBody) {
-					const statement = factory.createFunctionDeclaration([factory.createModifier(SyntaxKind.ExportKeyword), factory.createModifier(SyntaxKind.AsyncKeyword)], void 0, Base.pathToFnName(uri, method, operationId) + (shouldAddExtraMethodNameSuffix ? Base.capitalize(req.type.split("/")[1]) : ""), void 0, [...parameters.length > 0 ? Generator.toDeclarationNodes(parameters) : [], ...req?.schema ? [Generator.toRequestBodyTypeNode(req.schema)] : []].filter(Boolean), void 0, Generator.bodyBlock(options.baseURL + uri, method, parameters, req, responses[0], adaptor));
+					const statement = typescript.factory.createFunctionDeclaration([typescript.factory.createModifier(typescript.SyntaxKind.ExportKeyword), typescript.factory.createModifier(typescript.SyntaxKind.AsyncKeyword)], void 0, Base.pathToFnName(uri, method, operationId) + (shouldAddExtraMethodNameSuffix ? Base.capitalize(req.type.split("/")[1]) : ""), void 0, [...parameters.length > 0 ? Generator.toDeclarationNodes(parameters) : [], ...req?.schema ? [Generator.toRequestBodyTypeNode(req.schema)] : []].filter(Boolean), void 0, Generator.bodyBlock(options.baseURL + uri, method, parameters, req, responses[0], adaptor));
 					Generator.addComments(statement, [
 						description && { comment: description },
 						summary && { comment: summary },
@@ -952,7 +976,7 @@ var Generator = class Generator {
 		return statements;
 	}
 	static async prettier(code) {
-		return await format(code, { parser: "typescript" });
+		return await (0, prettier.format)(code, { parser: "typescript" });
 	}
 	static async genCode(schema, initOptions, adaptor) {
 		const { importClientSource } = initOptions;
@@ -1010,9 +1034,9 @@ var AxiosAdapter = class extends Adapter {
 		* @returns - The constructed fetch options object
 		*/
 		const toLiterlExpression = () => {
-			return factory.createObjectLiteralExpression([factory.createPropertyAssignment(factory.createIdentifier(adapter.methodFieldName), factory.createStringLiteral(method.toUpperCase()))].concat(inHeader.length > 0 ? factory.createPropertyAssignment(factory.createIdentifier(adapter.headersFieldName), factory.createObjectLiteralExpression(inHeader.map((p) => factory.createPropertyAssignment(factory.createStringLiteral(p.name), factory.createCallExpression(factory.createIdentifier("encodeURIComponent"), void 0, [factory.createCallExpression(factory.createIdentifier("String"), void 0, [factory.createIdentifier(Base.camelCase(Base.normalize(p.name)))])]))))) : []).concat(shouldUseFormData || inBody.length > 0 || requestBody?.schema ? factory.createPropertyAssignment(factory.createIdentifier(adapter.bodyFieldName), shouldUseFormData ? factory.createIdentifier("fd") : inBody.length > 0 || requestBody?.schema && !Generator.isBinarySchema(requestBody.schema) ? factory.createIdentifier("req") : factory.createIdentifier("req")) : []), true);
+			return typescript.factory.createObjectLiteralExpression([typescript.factory.createPropertyAssignment(typescript.factory.createIdentifier(adapter.methodFieldName), typescript.factory.createStringLiteral(method.toUpperCase()))].concat(inHeader.length > 0 ? typescript.factory.createPropertyAssignment(typescript.factory.createIdentifier(adapter.headersFieldName), typescript.factory.createObjectLiteralExpression(inHeader.map((p) => typescript.factory.createPropertyAssignment(typescript.factory.createStringLiteral(p.name), typescript.factory.createCallExpression(typescript.factory.createIdentifier("encodeURIComponent"), void 0, [typescript.factory.createCallExpression(typescript.factory.createIdentifier("String"), void 0, [typescript.factory.createIdentifier(Base.camelCase(Base.normalize(p.name)))])]))))) : []).concat(shouldUseFormData || inBody.length > 0 || requestBody?.schema ? typescript.factory.createPropertyAssignment(typescript.factory.createIdentifier(adapter.bodyFieldName), shouldUseFormData ? typescript.factory.createIdentifier("fd") : inBody.length > 0 || requestBody?.schema && !Generator.isBinarySchema(requestBody.schema) ? typescript.factory.createIdentifier("req") : typescript.factory.createIdentifier("req")) : []), true);
 		};
-		statements.push(factory.createReturnStatement(factory.createCallExpression(factory.createIdentifier(adapter.name), response?.schema ? [Generator.toTypeNode(response.schema)] : void 0, [Generator.toUrlTemplate(uri, parameters), toLiterlExpression()])));
+		statements.push(typescript.factory.createReturnStatement(typescript.factory.createCallExpression(typescript.factory.createIdentifier(adapter.name), response?.schema ? [Generator.toTypeNode(response.schema)] : void 0, [Generator.toUrlTemplate(uri, parameters), toLiterlExpression()])));
 		return statements;
 	}
 };
@@ -1050,9 +1074,9 @@ var FetchAdapter = class extends Adapter {
 		* @returns - The constructed fetch options object
 		*/
 		const toLiterlExpression = () => {
-			return factory.createObjectLiteralExpression([factory.createPropertyAssignment(factory.createIdentifier(adapter.methodFieldName), factory.createStringLiteral(method.toUpperCase()))].concat(inHeader.length > 0 ? factory.createPropertyAssignment(factory.createIdentifier(adapter.headersFieldName), factory.createObjectLiteralExpression(inHeader.map((p) => factory.createPropertyAssignment(factory.createStringLiteral(p.name), factory.createCallExpression(factory.createIdentifier("encodeURIComponent"), void 0, [factory.createCallExpression(factory.createIdentifier("String"), void 0, [factory.createIdentifier(Base.camelCase(Base.normalize(p.name)))])]))))) : []).concat(shouldUseFormData || inBody.length > 0 || requestBody?.schema ? factory.createPropertyAssignment(factory.createIdentifier(adapter.bodyFieldName), shouldUseFormData ? factory.createIdentifier("fd") : inBody.length > 0 || requestBody?.schema && !Generator.isBinarySchema(requestBody.schema) ? factory.createCallExpression(factory.createPropertyAccessExpression(factory.createIdentifier("JSON"), factory.createIdentifier("stringify")), [], [requestBody ? factory.createIdentifier("req") : factory.createObjectLiteralExpression(inBody.map((b) => factory.createShorthandPropertyAssignment(factory.createIdentifier(b.name))), true)]) : factory.createIdentifier("req")) : []), true);
+			return typescript.factory.createObjectLiteralExpression([typescript.factory.createPropertyAssignment(typescript.factory.createIdentifier(adapter.methodFieldName), typescript.factory.createStringLiteral(method.toUpperCase()))].concat(inHeader.length > 0 ? typescript.factory.createPropertyAssignment(typescript.factory.createIdentifier(adapter.headersFieldName), typescript.factory.createObjectLiteralExpression(inHeader.map((p) => typescript.factory.createPropertyAssignment(typescript.factory.createStringLiteral(p.name), typescript.factory.createCallExpression(typescript.factory.createIdentifier("encodeURIComponent"), void 0, [typescript.factory.createCallExpression(typescript.factory.createIdentifier("String"), void 0, [typescript.factory.createIdentifier(Base.camelCase(Base.normalize(p.name)))])]))))) : []).concat(shouldUseFormData || inBody.length > 0 || requestBody?.schema ? typescript.factory.createPropertyAssignment(typescript.factory.createIdentifier(adapter.bodyFieldName), shouldUseFormData ? typescript.factory.createIdentifier("fd") : inBody.length > 0 || requestBody?.schema && !Generator.isBinarySchema(requestBody.schema) ? typescript.factory.createCallExpression(typescript.factory.createPropertyAccessExpression(typescript.factory.createIdentifier("JSON"), typescript.factory.createIdentifier("stringify")), [], [requestBody ? typescript.factory.createIdentifier("req") : typescript.factory.createObjectLiteralExpression(inBody.map((b) => typescript.factory.createShorthandPropertyAssignment(typescript.factory.createIdentifier(b.name))), true)]) : typescript.factory.createIdentifier("req")) : []), true);
 		};
-		statements.push(factory.createReturnStatement(shouldUseJSONResponse ? factory.createCallExpression(factory.createPropertyAccessExpression(factory.createCallExpression(factory.createIdentifier(adapter.name), void 0, [Generator.toUrlTemplate(uri, parameters), toLiterlExpression()]), factory.createIdentifier("then")), void 0, [factory.createArrowFunction([factory.createModifier(SyntaxKind.AsyncKeyword)], [], [factory.createParameterDeclaration(void 0, void 0, factory.createIdentifier("response"))], void 0, factory.createToken(SyntaxKind.EqualsGreaterThanToken), response?.schema ? factory.createAsExpression(factory.createParenthesizedExpression(factory.createAwaitExpression(factory.createCallExpression(factory.createPropertyAccessExpression(factory.createIdentifier("response"), factory.createIdentifier("json")), void 0, []))), response?.schema ? Generator.toTypeNode(response.schema) : factory.createToken(SyntaxKind.UnknownKeyword)) : factory.createParenthesizedExpression(factory.createAwaitExpression(factory.createCallExpression(factory.createPropertyAccessExpression(factory.createIdentifier("response"), factory.createIdentifier("json")), void 0, []))))]) : factory.createCallExpression(factory.createIdentifier(adapter.name), void 0, [Generator.toUrlTemplate(uri, parameters), toLiterlExpression()])));
+		statements.push(typescript.factory.createReturnStatement(shouldUseJSONResponse ? typescript.factory.createCallExpression(typescript.factory.createPropertyAccessExpression(typescript.factory.createCallExpression(typescript.factory.createIdentifier(adapter.name), void 0, [Generator.toUrlTemplate(uri, parameters), toLiterlExpression()]), typescript.factory.createIdentifier("then")), void 0, [typescript.factory.createArrowFunction([typescript.factory.createModifier(typescript.SyntaxKind.AsyncKeyword)], [], [typescript.factory.createParameterDeclaration(void 0, void 0, typescript.factory.createIdentifier("response"))], void 0, typescript.factory.createToken(typescript.SyntaxKind.EqualsGreaterThanToken), response?.schema ? typescript.factory.createAsExpression(typescript.factory.createParenthesizedExpression(typescript.factory.createAwaitExpression(typescript.factory.createCallExpression(typescript.factory.createPropertyAccessExpression(typescript.factory.createIdentifier("response"), typescript.factory.createIdentifier("json")), void 0, []))), response?.schema ? Generator.toTypeNode(response.schema) : typescript.factory.createToken(typescript.SyntaxKind.UnknownKeyword)) : typescript.factory.createParenthesizedExpression(typescript.factory.createAwaitExpression(typescript.factory.createCallExpression(typescript.factory.createPropertyAccessExpression(typescript.factory.createIdentifier("response"), typescript.factory.createIdentifier("json")), void 0, []))))]) : typescript.factory.createCallExpression(typescript.factory.createIdentifier(adapter.name), void 0, [Generator.toUrlTemplate(uri, parameters), toLiterlExpression()])));
 		return statements;
 	}
 };
@@ -1787,7 +1811,7 @@ var V3_1 = class {
 };
 //#endregion
 //#region src/openapi/index.ts
-const logger = createScopedLogger("OpenAPI");
+const logger = (0, _moccona_logger.createScopedLogger)("OpenAPI");
 function getDocVersion(doc) {
 	switch ((doc.openapi || doc.swagger).slice(0, 3)) {
 		case "3.1": return "v3_1";
@@ -1884,7 +1908,7 @@ function resolveDocURL(docURL, baseURL) {
 	if (docURL.startsWith("http://") || docURL.startsWith("https://")) return docURL;
 	if (docURL.startsWith("/") || docURL.match(/^[A-Za-z]:/)) return `file://${docURL}`;
 	if (baseURL) return new URL(docURL, baseURL).href;
-	return path.resolve(process.cwd(), docURL);
+	return node_path.default.resolve(process.cwd(), docURL);
 }
 /**
 * Check if spec file/directory exists
@@ -1892,8 +1916,8 @@ function resolveDocURL(docURL, baseURL) {
 async function validateSpecPath(specPath) {
 	if (specPath.startsWith("http://") || specPath.startsWith("https://")) return;
 	const filePath = specPath.replace(/^file:\/\//, "");
-	const absolutePath = path.isAbsolute(filePath) ? filePath : path.resolve(process.cwd(), filePath);
-	if (!await fs.pathExists(absolutePath)) throw createErrors.specNotFound(absolutePath);
+	const absolutePath = node_path.default.isAbsolute(filePath) ? filePath : node_path.default.resolve(process.cwd(), filePath);
+	if (!await fs_extra.default.pathExists(absolutePath)) throw createErrors.specNotFound(absolutePath);
 }
 /**
 * Check if URL is remote (http/https)
@@ -1901,7 +1925,7 @@ async function validateSpecPath(specPath) {
 function isRemoteURL(url) {
 	return url.startsWith("http://") || url.startsWith("https://");
 }
-const cli = createCommand("apicodegen");
+const cli = (0, commander.createCommand)("apicodegen");
 cli.name("apicodegen").version(version).description("API code generation from OpenAPI specifications").argument("[spec]", "URL or path to OpenAPI documentation").option("-s, --spec <path>", "OpenAPI spec file path or URL").option("-o, --output <path>", "Output file path").option("-a, --adaptor <type>", "HTTP client adaptor (fetch|axios)", "fetch").option("-b, --baseURL <url>", "Base URL for API endpoints").option("-c, --config <path>", "Path to config file").option("-w, --watch", "Watch for file changes and regenerate").option("-v, --verbose", "Enable verbose logging").option("--importClientSource <path>", "Custom client import source path").action(async (specArg, options) => {
 	const cliOptions = {};
 	if (options.spec) cliOptions.spec = options.spec;
@@ -1929,7 +1953,7 @@ cli.name("apicodegen").version(version).description("API code generation from Op
 			const watchPatterns = [];
 			if (!resolvedDocURL.startsWith("http")) {
 				const docPath = resolvedDocURL.replace(/^file:\/\//, "");
-				const dir = path.dirname(docPath);
+				const dir = node_path.default.dirname(docPath);
 				watchPatterns.push(`${dir}/**/*.json`, `${dir}/**/*.yaml`, `${dir}/**/*.yml`);
 			}
 			const watcher = await watchAndGenerate(codeGenOptions);
@@ -1959,4 +1983,3 @@ cli.name("apicodegen").version(version).description("API code generation from Op
 });
 cli.parse();
 //#endregion
-export {};
