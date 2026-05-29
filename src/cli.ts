@@ -2,7 +2,7 @@
 
 import path from "node:path";
 
-import { formatError, isApicodegenError, wrapError, createErrors } from "@apicodegen/core/errors";
+import { isApicodegenError, wrapError } from "@apicodegen/core/errors";
 import { loadConfig, toProviderOptions } from "@apicodegen/core/config";
 import { codeGen } from "@apicodegen/openapi";
 import { createCommand } from "commander";
@@ -10,6 +10,7 @@ import fs from "fs-extra";
 import type { Watchvest } from "vite";
 
 import { version } from "../package.json";
+import { logger } from "./cli/logger";
 
 interface CLIOptions {
   spec?: string;
@@ -21,9 +22,6 @@ interface CLIOptions {
   verbose?: boolean;
 }
 
-/**
- * Watch file changes and regenerate on change
- */
 async function watchAndGenerate(options: Parameters<typeof codeGen>[0]): Promise<Watchvest> {
   const { createWatch } = await import("vite");
   let watcher: Awaited<ReturnType<typeof createWatch>> | null = null;
@@ -32,18 +30,16 @@ async function watchAndGenerate(options: Parameters<typeof codeGen>[0]): Promise
     try {
       const result = await codeGen(options);
       const { endpoints, schemas, duration } = result.stats;
-      console.log(
-        `\x1b[32m✓\x1b[0m Regenerated: ${options.output} (${endpoints} endpoints, ${schemas} schemas) ${duration}ms`,
+      logger.success(
+        `Regenerated ${options.output} (${endpoints} endpoints, ${schemas} schemas) ${duration}ms`,
       );
     } catch (error) {
-      console.error(formatError(error, true));
+      logger.error(error, true);
     }
   };
 
-  // Watch spec file
   const patterns = [options.docURL].filter(Boolean) as string[];
 
-  // Use vite's watch for cross-platform support
   watcher = createWatch(patterns, {
     ignoreInitial: false,
     awaitWriteFinish: {
@@ -53,33 +49,27 @@ async function watchAndGenerate(options: Parameters<typeof codeGen>[0]): Promise
   });
 
   watcher.on("change", async (filePath) => {
-    console.log(`\x1b[33m↓\x1b[0m File changed: ${filePath}`);
+    logger.fileChange(filePath);
     await generate();
   });
 
   watcher.on("add", async (filePath) => {
-    console.log(`\x1b[32m+\x1b[0m File added: ${filePath}`);
+    logger.fileAdd(filePath);
     await generate();
   });
 
   return watcher;
 }
 
-/**
- * Resolve document URL from various formats
- */
 function resolveDocURL(docURL: string, baseURL?: string): string {
-  // If already absolute URL, return as-is
   if (docURL.startsWith("http://") || docURL.startsWith("https://")) {
     return docURL;
   }
 
-  // If file path, convert to absolute
   if (docURL.startsWith("/") || docURL.match(/^[A-Za-z]:/)) {
     return `file://${docURL}`;
   }
 
-  // Relative path - resolve against baseURL or cwd
   if (baseURL) {
     return new URL(docURL, baseURL).href;
   }
@@ -87,16 +77,11 @@ function resolveDocURL(docURL: string, baseURL?: string): string {
   return path.resolve(process.cwd(), docURL);
 }
 
-/**
- * Check if spec file/directory exists
- */
 async function validateSpecPath(specPath: string): Promise<void> {
-  // For URLs, skip file existence check
   if (specPath.startsWith("http://") || specPath.startsWith("https://")) {
     return;
   }
 
-  // Remove file:// prefix if present
   const filePath = specPath.replace(/^file:\/\//, "");
   const absolutePath = path.isAbsolute(filePath) ? filePath : path.resolve(process.cwd(), filePath);
 
@@ -106,9 +91,6 @@ async function validateSpecPath(specPath: string): Promise<void> {
   }
 }
 
-/**
- * Check if URL is remote (http/https)
- */
 function isRemoteURL(url: string): boolean {
   return url.startsWith("http://") || url.startsWith("https://");
 }
@@ -129,7 +111,14 @@ cli
   .option("-v, --verbose", "Enable verbose logging")
   .option("--importClientSource <path>", "Custom client import source path")
   .action(async (specArg: string | undefined, options: CLIOptions) => {
-    // Build CLI options from command line
+    logger.banner(version);
+
+    if (!specArg && !options.spec) {
+      logger.info("Usage: apicodegen [options] [spec]");
+      logger.info("Run 'apicodegen --help' for full options.");
+      return;
+    }
+
     const cliOptions: Record<string, unknown> = {};
     if (options.spec) cliOptions.spec = options.spec;
     if (options.output) cliOptions.output = options.output;
@@ -140,34 +129,28 @@ cli
     if (options.importClientSource) cliOptions.importClientSource = options.importClientSource;
     if (options.config) cliOptions.configFile = options.config;
 
-    // Override positional arg
     if (specArg) {
       cliOptions.spec = specArg;
     }
 
     try {
-      // Load and resolve config from all sources
       const config = await loadConfig({
         cwd: process.cwd(),
         cliOptions,
       });
 
-      // Validate spec exists
       await validateSpecPath(config.spec);
 
-      // Resolve docURL to absolute path or URL
       const resolvedDocURL = resolveDocURL(config.spec, config.baseURL);
 
-      // Convert to provider options
       const codeGenOptions = {
         ...toProviderOptions(config),
         docURL: resolvedDocURL,
       };
 
       if (config.watch) {
-        console.log("\x1b[33m🔄\x1b[0m Watching for changes...");
+        logger.watching("Watching for changes...");
 
-        // Determine watch patterns based on docURL
         const watchPatterns: string[] = [];
         if (!resolvedDocURL.startsWith("http")) {
           const docPath = resolvedDocURL.replace(/^file:\/\//, "");
@@ -177,9 +160,8 @@ cli
 
         const watcher = await watchAndGenerate(codeGenOptions);
 
-        // Handle graceful shutdown
         const shutdown = async () => {
-          console.log("\n\x1b[90m👋 Shutting down...\x1b[0m");
+          logger.shutdown();
           if (watcher) {
             await watcher.close();
           }
@@ -189,27 +171,24 @@ cli
         process.on("SIGINT", shutdown);
         process.on("SIGTERM", shutdown);
       } else {
-        // Single generation
         if (isRemoteURL(resolvedDocURL)) {
-          console.log(`\x1b[33m🔄\x1b[0m Fetching spec from ${resolvedDocURL}...`);
+          logger.loading(`Fetching spec from ${resolvedDocURL}...`);
         }
         const result = await codeGen(codeGenOptions);
         const { endpoints, schemas, duration } = result.stats;
-        console.log(
-          `\x1b[32m✓\x1b[0m Generated: ${config.output} (${endpoints} endpoints, ${schemas} schemas) ${duration}ms`,
+        logger.success(
+          `Generated ${config.output} (${endpoints} endpoints, ${schemas} schemas) ${duration}ms`,
         );
       }
     } catch (error) {
-      // Handle specific error types
       if (isApicodegenError(error)) {
-        console.error(formatError(error, options.verbose));
+        logger.error(error, options.verbose);
       } else {
-        // Wrap unknown errors
         const wrapped = wrapError(error, {
           code: "E_GENERATION_FAILED",
           message: "An unexpected error occurred",
         });
-        console.error(formatError(wrapped, options.verbose));
+        logger.error(wrapped, options.verbose);
       }
       process.exit(1);
     }

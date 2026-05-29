@@ -11,6 +11,9 @@ importers:
       '@moccona/logger':
         specifier: ^0.0.2
         version: 0.0.2
+      chalk:
+        specifier: ^5.6.2
+        version: 5.6.2
       commander:
         specifier: ^13.1.0
         version: 13.1.0
@@ -1630,8 +1633,8 @@ packages:
     resolution: {integrity: sha512-Fo07WOYGqMfCWHOzSXOt2CxDbC6skS/jO9ynEcmpANMoPrD+W1r1K6Vx7iNm+AQmETU1Xr2t+n8nzkV9t6xh3w==}
     engines: {node: ^12.17.0 || ^14.13 || >=16.0.0}
 
-  chalk@5.4.1:
-    resolution: {integrity: sha512-zgVZuo2WcZgfUEmsn6eO3kINexW8RAE4maiQ8QNs8CtpPCSyMiYsULR3HQYkm3w8FIA3SberyMJMSldGsW+U3w==}
+  chalk@5.6.2:
+    resolution: {integrity: sha512-7NzBL0rN6fMUW+f7A6Io4h40qQlG+xGmtMxfbnH/K7TAtt8JQWVQK+6g0UXKMeVJoyV5EkkNsErQ8pVD3bLHbA==}
     engines: {node: ^12.17.0 || ^14.13 || >=16.0.0}
 
   chardet@2.1.0:
@@ -3747,7 +3750,7 @@ snapshots:
 
   '@moccona/logger@0.0.2':
     dependencies:
-      chalk: 5.4.1
+      chalk: 5.6.2
 
   '@moccona/preset-config@0.0.5': {}
 
@@ -4377,7 +4380,7 @@ snapshots:
     dependencies:
       ansi-align: 3.0.1
       camelcase: 7.0.1
-      chalk: 5.0.1
+      chalk: 5.6.2
       cli-boxes: 3.0.0
       string-width: 5.1.2
       type-fest: 2.19.0
@@ -4440,7 +4443,7 @@ snapshots:
 
   chalk@5.0.1: {}
 
-  chalk@5.4.1: {}
+  chalk@5.6.2: {}
 
   chardet@2.1.0: {}
 

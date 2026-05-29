@@ -134,3 +134,7 @@ dist
 npm
 output.ts
 __tests__/apis/
+
+# Local docs (design specs, plans)
+docs/
+!.gitkeep
