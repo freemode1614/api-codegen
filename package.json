@@ -14,19 +14,23 @@
     "lint": "pnpm exec oxlint src",
     "lint:fix": "pnpm exec oxlint src --fix",
     "format": "pnpm exec oxfmt src --write",
-    "debug": "node --inspect-brk=9229 bin/cli.js",
+    "debug": "node --inspect-brk=9229 bin/cli.cjs",
     "prepare": "husky"
   },
   "exports": {
     "./package.json": "./package.json",
+    "./vite": {
+      "types": "./npm/vite/index.d.mts",
+      "import": "./npm/vite/index.mjs"
+    },
     "./*": {
-      "types": "./npm/*/index.d.ts",
-      "import": "./npm/*/index.js",
+      "types": "./npm/*/index.d.mts",
+      "import": "./npm/*/index.mjs",
       "require": "./npm/*/index.cjs"
     },
     ".": {
-      "types": "./npm/index.d.ts",
-      "import": "./npm/index.js",
+      "types": "./npm/index.d.mts",
+      "import": "./npm/index.mjs",
       "require": "./npm/index.cjs"
     }
   },

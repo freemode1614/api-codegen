@@ -2,12 +2,11 @@ import { defineConfig } from "tsdown";
 
 export default defineConfig([
   {
-    entry: ["./src/index.ts"],
+    entry: "./src/index.ts",
     outDir: "./npm",
     format: ["esm", "cjs"],
     shims: true,
     dts: true,
-    clean: true,
     sourcemap: true,
   },
   {
@@ -19,12 +18,11 @@ export default defineConfig([
     sourcemap: false,
   },
   {
-    entry: ["./src/vite-plugin/index.ts"],
+    entry: "./src/vite-plugin/index.ts",
     outDir: "./npm/vite",
     format: "esm",
     shims: true,
-    clean: true,
+    dts: true,
     sourcemap: true,
-    dts: true
   }
 ]);
