@@ -16,6 +16,7 @@ export default defineConfig([
     shims: true,
     clean: true,
     sourcemap: false,
+    minify: true,
   },
   {
     entry: "./src/vite-plugin/index.ts",
