@@ -19,6 +19,14 @@ export class V3 {
   }
 
   /**
+   * Resolves a path $ref to the actual path object.
+   */
+  private resolvePathRef($ref: string): OpenAPIV3.PathObject | undefined {
+    const refName = Base.ref2name($ref, this.doc);
+    return this.doc.paths?.[refName];
+  }
+
+  /**
    * Is array schema.
    */
   private isOpenAPIArraySchema(
@@ -327,63 +335,67 @@ export class V3 {
     }, {});
 
     const apis = Object.keys(paths).reduce((acc, path) => {
-      const pathObject = paths[path] ?? {};
-      const { $ref } = pathObject;
+      let pathObject = paths[path] ?? {};
 
+      // Handle path-level $ref
+      if (pathObject.$ref) {
+        const resolved = this.resolvePathRef(pathObject.$ref);
+        if (resolved) {
+          pathObject = resolved;
+        }
+      }
+
+      const { parameters = [], description, summary } = pathObject;
       const methodApis: OperationObject[] = [];
-      if ($ref) {
-        // TODO: Need to handle ref senario
-      } else {
-        const { parameters = [], description, summary } = pathObject;
-        Object.values(HttpMethods).forEach((method) => {
-          const methodObject = pathObject[method as OpenAPIV3.HttpMethods];
 
-          if (methodObject) {
-            const {
-              deprecated,
-              operationId,
-              responses = {},
-              summary: summary_,
-              description: description_,
-              requestBody = { content: {} },
-            } = methodObject;
-            const { parameters: parameters_ = [] } = methodObject;
-            const baseParameters = [...parameters, ...parameters_].map((parameter) =>
-              this.getParameterByRef(parameter, enums),
-            );
-            const baseRequestBody = this.getRequestBodyByRef(requestBody, enums);
-            const uniqueParameterName = [...new Set(baseParameters.map((p) => p.name))];
+      Object.values(HttpMethods).forEach((method) => {
+        const methodObject = pathObject[method as OpenAPIV3.HttpMethods];
 
-            if (Object.keys(responses).length === 0) {
-              Object.assign(responses, {
-                200: {
-                  description: "Successful response",
-                },
+        if (methodObject) {
+          const {
+            deprecated,
+            operationId,
+            responses = {},
+            summary: summary_,
+            description: description_,
+            requestBody = { content: {} },
+          } = methodObject;
+          const { parameters: parameters_ = [] } = methodObject;
+          const baseParameters = [...parameters, ...parameters_].map((parameter) =>
+            this.getParameterByRef(parameter, enums),
+          );
+          const baseRequestBody = this.getRequestBodyByRef(requestBody, enums);
+          const uniqueParameterName = [...new Set(baseParameters.map((p) => p.name))];
+
+          if (Object.keys(responses).length === 0) {
+            Object.assign(responses, {
+              200: {
+                description: "Successful response",
+              },
+            });
+          }
+          const httpCodes = Object.keys(responses);
+          for (const code of httpCodes) {
+            if (code in responses) {
+              const response = responses[code];
+              const responseSchema = this.getResponseByRef(response);
+              methodApis.push({
+                method,
+                operationId,
+                summary: summary_ ?? summary,
+                description: description_ ?? description,
+                deprecated: deprecated,
+                parameters: uniqueParameterName.map(
+                  (name) => baseParameters.find((p) => p.name === name)!,
+                ),
+                responses: responseSchema,
+                requestBody: baseRequestBody,
               });
-            }
-            const httpCodes = Object.keys(responses);
-            for (const code of httpCodes) {
-              if (code in responses) {
-                const response = responses[code];
-                const responseSchema = this.getResponseByRef(response);
-                methodApis.push({
-                  method,
-                  operationId,
-                  summary: summary_ ?? summary,
-                  description: description_ ?? description,
-                  deprecated: deprecated,
-                  parameters: uniqueParameterName.map(
-                    (name) => baseParameters.find((p) => p.name === name)!,
-                  ),
-                  responses: responseSchema,
-                  requestBody: baseRequestBody,
-                });
-                break;
-              }
+              break;
             }
           }
-        });
-      }
+        }
+      });
 
       return {
         ...acc,

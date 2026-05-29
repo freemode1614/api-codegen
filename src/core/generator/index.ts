@@ -566,7 +566,7 @@ export class Generator {
     const enumNames: string[] = [];
 
     for (const enumObject of enums) {
-      enumNames.push(Base.capitalize(enumObject.name));
+      enumNames.push(Base.upperCamelCase(enumObject.name));
       statements.push(
         t.createEnumDeclaration(
           [t.createToken(SyntaxKind.ExportKeyword)],

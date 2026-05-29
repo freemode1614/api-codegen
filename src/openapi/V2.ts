@@ -22,6 +22,14 @@ export class V2 {
   }
 
   /**
+   * Resolves a path $ref to the actual path object.
+   */
+  private resolvePathRef($ref: string): OpenAPIV2.PathObject | undefined {
+    const refName = Base.ref2name($ref, this.doc);
+    return this.doc.paths?.[refName];
+  }
+
+  /**
    * Is array schema.
    */
   private isOpenAPIArraySchema(schema: OpenAPIV2.SchemaObject): boolean {
@@ -98,7 +106,9 @@ export class V2 {
       let { type } = schema;
 
       if (enum_ && type !== "boolean") {
-        const name = Base.upperCamelCase(upLevelSchemaKey) + Base.upperCamelCase(schemaKey);
+        const name =
+          Base.upperCamelCase(Base.normalize(upLevelSchemaKey)) +
+          Base.upperCamelCase(Base.normalize(schemaKey));
 
         const enumObject = {
           name,
@@ -137,7 +147,7 @@ export class V2 {
             ? {
                 ...s,
                 ref: s.$ref,
-                type: Base.upperCamelCase(Base.ref2name(s.$ref, this.doc)),
+                type: Base.capitalize(Base.ref2name(s.$ref, this.doc)),
               }
             : this.toBaseSchema(s as OpenAPIV2.SchemaObject, enums),
         ),
@@ -146,7 +156,7 @@ export class V2 {
             ? {
                 ...s,
                 ref: s.$ref,
-                type: Base.upperCamelCase(Base.ref2name(s.$ref, this.doc)),
+                type: Base.capitalize(Base.ref2name(s.$ref, this.doc)),
               }
             : this.toBaseSchema(s as OpenAPIV2.SchemaObject, enums),
         ),
@@ -155,7 +165,7 @@ export class V2 {
             ? {
                 ...s,
                 ref: s.$ref,
-                type: Base.upperCamelCase(Base.ref2name(s.$ref, this.doc)),
+                type: Base.capitalize(Base.ref2name(s.$ref, this.doc)),
               }
             : this.toBaseSchema(s as OpenAPIV2.SchemaObject, enums),
         ),
@@ -165,7 +175,7 @@ export class V2 {
             ...acc,
             [p]: Base.isRef(propSchema)
               ? {
-                  type: Base.upperCamelCase(Base.ref2name(propSchema.$ref, this.doc)),
+                  type: Base.capitalize(Base.ref2name(propSchema.$ref, this.doc)),
                 }
               : this.toBaseSchema(propSchema, enums, p, upLevelSchemaKey),
           };
@@ -189,7 +199,9 @@ export class V2 {
     const { name, required, description, type, items, enum: enum_, properties, schema } = parameter;
 
     if (enum_) {
-      const type = Base.upperCamelCase(upLevelSchemaKey) + Base.upperCamelCase(name);
+      const type =
+        Base.upperCamelCase(Base.normalize(upLevelSchemaKey)) +
+        Base.upperCamelCase(Base.normalize(name));
 
       const enumSchema = {
         name: type,
@@ -198,7 +210,7 @@ export class V2 {
 
       const sameEnum = Base.findSameSchema(enumSchema, enums);
 
-      if (!sameEnum && Base.isValidEnumType({ type, enum: enums } as SchemaObject)) {
+      if (!sameEnum && Base.isValidEnumType({ type, enum: enum_ } as SchemaObject)) {
         enums.push(enumSchema);
       }
 
@@ -233,7 +245,7 @@ export class V2 {
         description,
         in: parameter.in as ParameterIn,
         schema: {
-          type: Base.upperCamelCase(Base.ref2name(schema.$ref)),
+          type: Base.capitalize(Base.ref2name(schema.$ref)),
         },
       };
     }
@@ -293,103 +305,107 @@ export class V2 {
     }, {});
 
     const apis = Object.keys(paths).reduce((acc, path) => {
-      const pathObject = paths[path] ?? {};
-      const { $ref } = pathObject;
+      let pathObject = paths[path] ?? {};
 
+      // Handle path-level $ref
+      if (pathObject.$ref) {
+        const resolved = this.resolvePathRef(pathObject.$ref);
+        if (resolved) {
+          pathObject = resolved;
+        }
+      }
+
+      const { parameters = [] } = pathObject;
       const methodApis: OperationObject[] = [];
-      if ($ref) {
-        // TODO: Need to handle ref senario
-      } else {
-        const { parameters = [] } = pathObject;
-        Object.values(HttpMethods).forEach((method) => {
-          const methodObject = pathObject[method as OpenAPIV2.HttpMethods];
 
-          if (methodObject) {
-            const {
-              deprecated,
-              operationId,
-              summary: summary_,
-              description: description_,
-              responses = {},
-            } = methodObject;
-            const { parameters: parameters_ = [] } = methodObject;
-            const baseParameters = [...parameters, ...parameters_].map((parameter) =>
-              this.getParameterByRef(parameter, enums),
-            );
-            const uniqueParameterName = [...new Set(baseParameters.map((p) => p.name))];
+      Object.values(HttpMethods).forEach((method) => {
+        const methodObject = pathObject[method as OpenAPIV2.HttpMethods];
 
-            if (Object.keys(responses).length === 0) {
-              Object.assign(responses, {
-                200: {
-                  description: "Successful response",
-                },
+        if (methodObject) {
+          const {
+            deprecated,
+            operationId,
+            summary: summary_,
+            description: description_,
+            responses = {},
+          } = methodObject;
+          const { parameters: parameters_ = [] } = methodObject;
+          const baseParameters = [...parameters, ...parameters_].map((parameter) =>
+            this.getParameterByRef(parameter, enums),
+          );
+          const uniqueParameterName = [...new Set(baseParameters.map((p) => p.name))];
+
+          if (Object.keys(responses).length === 0) {
+            Object.assign(responses, {
+              200: {
+                description: "Successful response",
+              },
+            });
+          }
+
+          const inBody = baseParameters.filter((p) => p.in === "body" || p.in === "formData");
+
+          const notInBody = baseParameters.filter((p) => p.in !== "body" && p.in !== "formData");
+
+          const httpCodes = Object.keys(responses);
+          for (const code of httpCodes) {
+            if (code in responses) {
+              const response = responses[code]!;
+              const responseSchema = this.getResponseByRef(response);
+
+              const inBodyOnlyHasBody =
+                inBody &&
+                inBody.length === 1 &&
+                inBody[0].in === "body" &&
+                inBody[0].name === "body";
+
+              methodApis.push({
+                method,
+                operationId,
+                summary: summary_,
+                deprecated: deprecated,
+                description: description_,
+                parameters: uniqueParameterName
+                  .map((name) => notInBody.find((p) => p.name === name)!)
+                  .filter(Boolean),
+                responses: responseSchema,
+                requestBody:
+                  inBody.length > 0
+                    ? inBodyOnlyHasBody
+                      ? [
+                          {
+                            type: MediaTypes.JSON,
+                            schema: inBody[0].schema,
+                          },
+                        ]
+                      : [
+                          {
+                            type: MediaTypes.JSON,
+                            schema: {
+                              type: NonArraySchemaType.object,
+                              properties: inBody.reduce<Record<string, SchemaObject>>((a, p) => {
+                                return {
+                                  ...a,
+                                  [p.name]: {
+                                    type: p.schema?.type ?? "unknown",
+                                    required: p.schema?.required,
+                                    // @ts-expect-error items can be undefined
+                                    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+                                    items: p.schema?.items,
+                                    description: p.schema?.description,
+                                  } as SchemaObject,
+                                };
+                              }, {}),
+                            },
+                          },
+                        ]
+                    : undefined,
               });
-            }
-
-            const inBody = baseParameters.filter((p) => p.in === "body" || p.in === "formData");
-
-            const notInBody = baseParameters.filter((p) => p.in !== "body" && p.in !== "formData");
-
-            const httpCodes = Object.keys(responses);
-            for (const code of httpCodes) {
-              if (code in responses) {
-                const response = responses[code]!;
-                const responseSchema = this.getResponseByRef(response);
-
-                const inBodyOnlyHasBody =
-                  inBody &&
-                  inBody.length === 1 &&
-                  inBody[0].in === "body" &&
-                  inBody[0].name === "body";
-
-                methodApis.push({
-                  method,
-                  operationId,
-                  summary: summary_,
-                  deprecated: deprecated,
-                  description: description_,
-                  parameters: uniqueParameterName
-                    .map((name) => notInBody.find((p) => p.name === name)!)
-                    .filter(Boolean),
-                  responses: responseSchema,
-                  requestBody:
-                    inBody.length > 0
-                      ? inBodyOnlyHasBody
-                        ? [
-                            {
-                              type: MediaTypes.JSON,
-                              schema: inBody[0].schema,
-                            },
-                          ]
-                        : [
-                            {
-                              type: MediaTypes.JSON,
-                              schema: {
-                                type: NonArraySchemaType.object,
-                                properties: inBody.reduce<Record<string, SchemaObject>>((a, p) => {
-                                  return {
-                                    ...a,
-                                    [p.name]: {
-                                      type: p.schema?.type ?? "unknown",
-                                      required: p.schema?.required,
-                                      // @ts-expect-error items can be undefined
-                                      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-                                      items: p.schema?.items,
-                                      description: p.schema?.description,
-                                    } as SchemaObject,
-                                  };
-                                }, {}),
-                              },
-                            },
-                          ]
-                      : undefined,
-                });
-                break;
-              }
+              break;
             }
           }
-        });
-      }
+        }
+      });
 
       return {
         ...acc,

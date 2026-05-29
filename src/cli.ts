@@ -1,6 +1,6 @@
 #!/bin/env node
 
-import { Generator, type ProviderInitOptions } from "@apicodegen/core";
+import { type ProviderInitOptions } from "@apicodegen/core";
 import { codeGen } from "@apicodegen/openapi";
 import { createCommand } from "commander";
 
@@ -24,10 +24,9 @@ cli
         "output" | "adaptor" | "baseURL" | "verbose" | "importClientSource"
       >,
     ) => {
-      // Generate code based on the provided OpenAPI documentation
-      // This action will create a new file at output.ts containing the generated TypeScript code
       try {
-        const code = await codeGen({
+        // codeGen writes to output when provided
+        await codeGen({
           docURL,
           baseURL: options.baseURL,
           output: options.output,
@@ -35,7 +34,6 @@ cli
           adaptor: options.adaptor,
           importClientSource: options.importClientSource,
         });
-        await Generator.write(code, options.output);
       } catch (err: unknown) {
         cli.error((err as Error).message);
       }

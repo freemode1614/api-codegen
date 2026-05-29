@@ -30,12 +30,12 @@ function getDocVersion(doc: OpenAPI.Document) {
   ).slice(0, 3);
 
   switch (version) {
-    case "2.0":
-      return OpenAPIVersion.v2;
-    case "3.0":
-      return OpenAPIVersion.v3;
     case "3.1":
       return OpenAPIVersion.v3_1;
+    case "3.0":
+      return OpenAPIVersion.v3;
+    case "2.0":
+      return OpenAPIVersion.v2;
     default:
       return OpenAPIVersion.unknown;
   }
@@ -47,24 +47,16 @@ export class OpenAPIProvider extends Provider {
 
     logger.debug(`openapi version ${version}`);
 
-    let returnValue: ProviderInitResult;
-
     switch (version) {
       case OpenAPIVersion.v2:
-        returnValue = new V2(doc as unknown as OpenAPIV2.Document).init();
-        break;
+        return new V2(doc as unknown as OpenAPIV2.Document).init();
       case OpenAPIVersion.v3:
-        returnValue = new V3(doc as unknown as OpenAPIV3.Document).init();
-        break;
+        return new V3(doc as unknown as OpenAPIV3.Document).init();
       case OpenAPIVersion.v3_1:
-        returnValue = new V3_1(doc as unknown as OpenAPIV3_1.Document).init();
-        break;
+        return new V3_1(doc as unknown as OpenAPIV3_1.Document).init();
       default:
-        logger.error(`Not a valid OpenAPI version ${version}`);
-        process.exit(1);
+        throw new Error(`Not a valid OpenAPI version: ${version}`);
     }
-
-    return returnValue!;
   }
 }
 
@@ -73,9 +65,8 @@ function getAdaptor(type: keyof typeof Adaptors): Adapter {
     case ads.axios:
       return new AxiosAdapter();
     case ads.fetch:
-      return new FetchAdapter();
     default:
-      throw TypeError(`Not Supported Adaptor ${type}`);
+      return new FetchAdapter();
   }
 }
 
@@ -88,7 +79,7 @@ export async function codeGen(initOptions: ProviderInitOptions) {
     logger.setLevel("info");
   }
 
-  logger.info(`Fech document from ${initOptions.docURL}`);
+  logger.info(`Fetch document from ${initOptions.docURL}`);
 
   const doc = await Base.fetchDoc(initOptions.docURL, initOptions.requestOptions);
 
@@ -109,7 +100,7 @@ export async function codeGen(initOptions: ProviderInitOptions) {
     adaptor,
   );
 
-  if (process.env.NODE_ENV === "test") {
+  if (initOptions.output) {
     await Generator.write(code, initOptions.output);
   }
 

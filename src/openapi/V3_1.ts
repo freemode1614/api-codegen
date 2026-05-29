@@ -21,6 +21,14 @@ export class V3_1 {
   }
 
   /**
+   * Resolves a path $ref to the actual path object.
+   */
+  private resolvePathRef($ref: string): OpenAPIV3_1.PathObject | undefined {
+    const refName = Base.ref2name($ref, this.doc);
+    return this.doc.paths?.[refName];
+  }
+
+  /**
    * Is array schema.
    */
   private isOpenAPIArraySchema(
@@ -76,7 +84,9 @@ export class V3_1 {
     const { name, required, deprecated, description, schema: parameterSchema } = schema;
 
     if (parameterSchema && !Base.isRef(parameterSchema) && parameterSchema.enum) {
-      const type = Base.upperCamelCase(upLevelSchemaKey) + Base.upperCamelCase(name);
+      const type =
+        Base.upperCamelCase(Base.normalize(upLevelSchemaKey)) +
+        Base.upperCamelCase(Base.normalize(name));
 
       const enumSchema = {
         name: type,
@@ -139,7 +149,6 @@ export class V3_1 {
   private getRequestBodyByRef(
     schema: OpenAPIV3_1.RequestBodyObject | OpenAPIV3_1.ReferenceObject,
     enums: EnumSchemaObject[] = [],
-    reserveRef = false,
   ): MediaTypeObject[] {
     if (Base.isRef(schema)) {
       schema = this.doc.components?.requestBodies?.[
@@ -151,7 +160,7 @@ export class V3_1 {
 
     return Object.keys(content).map((c) => ({
       type: c as MediaTypes,
-      schema: content[c].schema && this.getSchemaByRef(content[c].schema, reserveRef, enums),
+      schema: content[c].schema && this.getSchemaByRef(content[c].schema, true, enums),
     }));
   }
 
@@ -198,7 +207,9 @@ export class V3_1 {
       let { type } = schema;
 
       if (enum_ && type !== "boolean") {
-        const name = Base.upperCamelCase(upLevelSchemaKey) + Base.upperCamelCase(schemaKey);
+        const name =
+          Base.upperCamelCase(Base.normalize(upLevelSchemaKey)) +
+          Base.upperCamelCase(Base.normalize(schemaKey));
 
         const enumObject = {
           name,
@@ -239,7 +250,7 @@ export class V3_1 {
             ? {
                 ...s,
                 ref: s.$ref,
-                type: Base.upperCamelCase(Base.ref2name(s.$ref, this.doc)),
+                type: Base.capitalize(Base.ref2name(s.$ref, this.doc)),
               }
             : this.toBaseSchema(s, enums),
         ),
@@ -248,7 +259,7 @@ export class V3_1 {
             ? {
                 ...s,
                 ref: s.$ref,
-                type: Base.upperCamelCase(Base.ref2name(s.$ref, this.doc)),
+                type: Base.capitalize(Base.ref2name(s.$ref, this.doc)),
               }
             : this.toBaseSchema(s, enums),
         ),
@@ -257,7 +268,7 @@ export class V3_1 {
             ? {
                 ...s,
                 ref: s.$ref,
-                type: Base.upperCamelCase(Base.ref2name(s.$ref, this.doc)),
+                type: Base.capitalize(Base.ref2name(s.$ref, this.doc)),
               }
             : this.toBaseSchema(s, enums),
         ),
@@ -267,7 +278,7 @@ export class V3_1 {
             ...acc,
             [p]: Base.isRef(propSchema)
               ? {
-                  type: Base.upperCamelCase(Base.ref2name(propSchema.$ref, this.doc)),
+                  type: Base.capitalize(Base.ref2name(propSchema.$ref, this.doc)),
                 }
               : this.toBaseSchema(propSchema, enums, p, upLevelSchemaKey),
           };
@@ -318,63 +329,67 @@ export class V3_1 {
     }, {});
 
     const apis = Object.keys(paths).reduce((acc, path) => {
-      const pathObject = paths[path] ?? {};
-      const { $ref } = pathObject;
+      let pathObject = paths[path] ?? {};
 
+      // Handle path-level $ref
+      if (pathObject.$ref) {
+        const resolved = this.resolvePathRef(pathObject.$ref);
+        if (resolved) {
+          pathObject = resolved;
+        }
+      }
+
+      const { parameters = [], description, summary } = pathObject;
       const methodApis: OperationObject[] = [];
-      if ($ref) {
-        // TODO: Need to handle ref senario
-      } else {
-        const { parameters = [], description, summary } = pathObject;
-        Object.values(HttpMethods).forEach((method) => {
-          const methodObject = pathObject[method as OpenAPIV3_1.HttpMethods];
 
-          if (methodObject) {
-            const {
-              deprecated,
-              operationId,
-              summary: summary_,
-              description: description_,
-              responses = {},
-              requestBody = { content: {} },
-            } = methodObject;
-            const { parameters: parameters_ = [] } = methodObject;
-            const baseParameters = [...parameters, ...parameters_].map((parameter) =>
-              this.getParameterByRef(parameter, enums),
-            );
-            const baseRequestBody = this.getRequestBodyByRef(requestBody, enums, true);
-            const uniqueParameterName = [...new Set(baseParameters.map((p) => p.name))];
+      Object.values(HttpMethods).forEach((method) => {
+        const methodObject = pathObject[method as OpenAPIV3_1.HttpMethods];
 
-            if (Object.keys(responses).length === 0) {
-              Object.assign(responses, {
-                200: {
-                  description: "Successful response",
-                },
+        if (methodObject) {
+          const {
+            deprecated,
+            operationId,
+            summary: summary_,
+            description: description_,
+            responses = {},
+            requestBody = { content: {} },
+          } = methodObject;
+          const { parameters: parameters_ = [] } = methodObject;
+          const baseParameters = [...parameters, ...parameters_].map((parameter) =>
+            this.getParameterByRef(parameter, enums),
+          );
+          const baseRequestBody = this.getRequestBodyByRef(requestBody, enums);
+          const uniqueParameterName = [...new Set(baseParameters.map((p) => p.name))];
+
+          if (Object.keys(responses).length === 0) {
+            Object.assign(responses, {
+              200: {
+                description: "Successful response",
+              },
+            });
+          }
+          const httpCodes = Object.keys(responses);
+          for (const code of httpCodes) {
+            if (code in responses) {
+              const response = responses[code];
+              const responseSchema = this.getResponseByRef(response);
+              methodApis.push({
+                method,
+                operationId,
+                summary: summary_ ?? summary,
+                description: description_ ?? description,
+                deprecated: deprecated,
+                parameters: uniqueParameterName.map(
+                  (name) => baseParameters.find((p) => p.name === name)!,
+                ),
+                responses: responseSchema,
+                requestBody: baseRequestBody,
               });
-            }
-            const httpCodes = Object.keys(responses);
-            for (const code of httpCodes) {
-              if (code in responses) {
-                const response = responses[code];
-                const responseSchema = this.getResponseByRef(response);
-                methodApis.push({
-                  method,
-                  operationId,
-                  summary: summary_ ?? summary,
-                  description: description_ ?? description,
-                  deprecated: deprecated,
-                  parameters: uniqueParameterName.map(
-                    (name) => baseParameters.find((p) => p.name === name)!,
-                  ),
-                  responses: responseSchema,
-                  requestBody: baseRequestBody,
-                });
-                break;
-              }
+              break;
             }
           }
-        });
-      }
+        }
+      });
 
       return {
         ...acc,

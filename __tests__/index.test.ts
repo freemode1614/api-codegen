@@ -120,7 +120,7 @@ describe("OenAPI 3.1 codegen", () => {
     it(`${docUrl}`, async () => {
       await codeGen({
         docURL: docUrl,
-        output: "output.ts",
+        output: output,
       });
 
       const { stderr } = await exec(`tsc ${output} --noEmit`);

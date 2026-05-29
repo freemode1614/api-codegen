@@ -1,22 +1,22 @@
 import { codeGen, type ProviderInitOptions } from "@apicodegen/openapi";
 import { createScopedLogger } from "@moccona/logger";
-import { execaCommand } from "execa";
+import { execa } from "execa";
 import fs from "fs-extra";
 import type { PluginOption, ServerOptions } from "vite";
 
 const PLUGIN_NAME = "apiCodeGen";
 const logger = createScopedLogger("api-codegen-vite-plugin");
 
-export type apiCodeGenPluginOptions = ProviderInitOptions & {
+export type ApiCodeGenPluginOptions = ProviderInitOptions & {
   name: string;
   proxy?: ServerOptions["proxy"];
 };
 
-export const tsc = async (path: string) => {
-  await execaCommand(`npx tsc ${path} --noEmit`);
+export const runTypeCheck = async (path: string) => {
+  await execa("npx", ["tsc", path, "--noEmit"]);
 };
 
-export function apiCodeGenPlugin(options: apiCodeGenPluginOptions[]): PluginOption {
+export function apiCodeGenPlugin(options: ApiCodeGenPluginOptions[]): PluginOption {
   let firstRun = true;
   return {
     name: PLUGIN_NAME,
@@ -32,10 +32,9 @@ export function apiCodeGenPlugin(options: apiCodeGenPluginOptions[]): PluginOpti
 
           try {
             const code = await codeGen(codeGenInitOptions);
-            await fs.createFile(codeGenInitOptions.output);
             await fs.writeFile(codeGenInitOptions.output, code);
             try {
-              await tsc(codeGenInitOptions.output);
+              await runTypeCheck(codeGenInitOptions.output);
             } catch (error) {
               logger.error(error);
             }
