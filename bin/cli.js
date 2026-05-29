@@ -1,5 +1,416 @@
 #!/bin/env node
 
+// src/cli.ts
+import path2 from "path";
+
+// src/core/errors.ts
+var ErrorCodes = {
+  SPEC_NOT_FOUND: "E_SPEC_NOT_FOUND",
+  SPEC_FETCH_FAILED: "E_SPEC_FETCH_FAILED",
+  SPEC_PARSE_FAILED: "E_SPEC_PARSE_FAILED",
+  OUTPUT_DIR_MISSING: "E_OUTPUT_DIR_MISSING",
+  CONFIG_INVALID: "E_CONFIG_INVALID",
+  VALIDATION_FAILED: "E_VALIDATION_FAILED",
+  GENERATION_FAILED: "E_GENERATION_FAILED",
+  TYPE_CHECK_FAILED: "E_TYPE_CHECK_FAILED"
+};
+var ApicodegenError = class _ApicodegenError extends Error {
+  code;
+  location;
+  line;
+  column;
+  path;
+  suggestions;
+  cause;
+  constructor(context) {
+    super(context.message);
+    this.name = "ApicodegenError";
+    this.code = context.code;
+    this.location = context.location;
+    this.line = context.line;
+    this.column = context.column;
+    this.path = context.path;
+    this.suggestions = context.suggestions || [];
+    this.cause = context.cause;
+    if (Error.captureStackTrace) {
+      Error.captureStackTrace(this, _ApicodegenError);
+    }
+  }
+  /**
+   * Convert error to formatted string for CLI output
+   */
+  toString(verbose = false) {
+    const lines = [];
+    lines.push(`\x1B[1;31mError [${this.code}]\x1B[0m ${this.message}`);
+    if (this.location) {
+      lines.push(`  \x1B[36m\u2192 Location:\x1B[0m ${this.location}`);
+    }
+    if (this.path) {
+      lines.push(`  \x1B[36m\u2192 Path:\x1B[0m ${this.path}`);
+    }
+    if (this.line !== void 0) {
+      let lineInfo = `  \x1B[36m\u2192 Line:\x1B[0m ${this.line}`;
+      if (this.column !== void 0) {
+        lineInfo += `, Column: ${this.column}`;
+      }
+      lines.push(lineInfo);
+    }
+    if (this.suggestions.length > 0) {
+      for (const suggestion of this.suggestions) {
+        lines.push(`  \x1B[32m\u2192 Suggestion:\x1B[0m ${suggestion}`);
+      }
+    }
+    if (verbose && this.cause) {
+      lines.push(`
+  \x1B[90mOriginal Error:\x1B[0m ${this.cause.message}`);
+      if (this.stack) {
+        const stackLines = this.stack.split("\n").slice(1).join("\n");
+        lines.push(`\x1B[90m${stackLines}\x1B[0m`);
+      }
+    }
+    return lines.join("\n");
+  }
+  /**
+   * Convert to JSON-serializable object
+   */
+  toJSON() {
+    return {
+      name: this.name,
+      code: this.code,
+      message: this.message,
+      location: this.location,
+      line: this.line,
+      column: this.column,
+      path: this.path,
+      suggestions: this.suggestions,
+      cause: this.cause?.message
+    };
+  }
+};
+var Colors = {
+  reset: "\x1B[0m",
+  bold: "\x1B[1m",
+  red: "\x1B[31m",
+  green: "\x1B[32m",
+  yellow: "\x1B[33m",
+  blue: "\x1B[34m",
+  cyan: "\x1B[36m",
+  gray: "\x1B[90m",
+  brightRed: "\x1B[91m",
+  brightGreen: "\x1B[92m"
+};
+function formatError(error, verbose = false) {
+  if (error instanceof ApicodegenError) {
+    return error.toString(verbose);
+  }
+  if (error instanceof Error) {
+    return `${Colors.red}${Colors.bold}Error${Colors.reset}: ${error.message}${verbose && error.stack ? `
+
+${Colors.gray}${error.stack}${Colors.reset}` : ""}`;
+  }
+  return `${Colors.red}${Colors.bold}Error${Colors.reset}: ${String(error)}`;
+}
+var createErrors = {
+  specNotFound(path3, cause) {
+    return new ApicodegenError({
+      code: ErrorCodes.SPEC_NOT_FOUND,
+      message: "OpenAPI spec file not found",
+      location: path3,
+      suggestions: [
+        "Check if the file exists using 'ls -la'",
+        "Use --spec to provide the correct path",
+        "For remote specs, ensure the URL is accessible"
+      ],
+      cause
+    });
+  },
+  specFetchFailed(url, statusCode, cause) {
+    const message = statusCode ? `Failed to fetch OpenAPI spec (HTTP ${statusCode})` : "Failed to fetch OpenAPI spec from URL";
+    return new ApicodegenError({
+      code: ErrorCodes.SPEC_FETCH_FAILED,
+      message,
+      location: url,
+      suggestions: [
+        "Check if the URL is accessible in a browser",
+        "Download the spec file locally and use the local path",
+        "Verify CORS settings if fetching from a different origin"
+      ],
+      cause
+    });
+  },
+  specParseFailed(path3, line, column, cause) {
+    return new ApicodegenError({
+      code: ErrorCodes.SPEC_PARSE_FAILED,
+      message: "Failed to parse OpenAPI spec (invalid JSON or YAML)",
+      location: path3,
+      line,
+      column,
+      suggestions: [
+        "Validate JSON syntax using https://jsonlint.com",
+        "For YAML specs, ensure proper indentation",
+        "Check for trailing commas or unquoted special characters"
+      ],
+      cause
+    });
+  },
+  outputDirMissing(path3, cause) {
+    return new ApicodegenError({
+      code: ErrorCodes.OUTPUT_DIR_MISSING,
+      message: "Output directory does not exist",
+      location: path3,
+      suggestions: [
+        "Create the directory: mkdir -p $(dirname <output>)",
+        "Check if the path is correct"
+      ],
+      cause
+    });
+  },
+  configInvalid(path3, cause) {
+    return new ApicodegenError({
+      code: ErrorCodes.CONFIG_INVALID,
+      message: "Invalid configuration file",
+      location: path3,
+      suggestions: [
+        "Validate JSON syntax in the config file",
+        "Check for required fields (spec, output)",
+        "See documentation for config file format"
+      ],
+      cause
+    });
+  },
+  validationFailed(path3, details, cause) {
+    return new ApicodegenError({
+      code: ErrorCodes.VALIDATION_FAILED,
+      message: "OpenAPI spec validation failed",
+      location: path3,
+      path: details,
+      suggestions: [
+        "Check OpenAPI spec structure at the specified path",
+        "Ensure all required fields are present",
+        "Validate using https://editor.swagger.io/"
+      ],
+      cause
+    });
+  },
+  generationFailed(cause) {
+    return new ApicodegenError({
+      code: ErrorCodes.GENERATION_FAILED,
+      message: "Code generation failed",
+      suggestions: [
+        "Check for unsupported OpenAPI features",
+        "Ensure spec follows OpenAPI 2.0, 3.0, or 3.1 specification",
+        "Try with --verbose flag for more details"
+      ],
+      cause
+    });
+  },
+  typeCheckFailed(path3, errors, cause) {
+    return new ApicodegenError({
+      code: ErrorCodes.TYPE_CHECK_FAILED,
+      message: "TypeScript type check failed",
+      location: path3,
+      suggestions: [
+        "Review type errors above",
+        "Check for schema inconsistencies",
+        "Update generated types or fix source schema"
+      ],
+      cause
+    });
+  },
+  missingRequiredField(field, context) {
+    return new ApicodegenError({
+      code: ErrorCodes.VALIDATION_FAILED,
+      message: `Missing required field: ${field}`,
+      path: context,
+      suggestions: [`Add the '${field}' field to your configuration`]
+    });
+  }
+};
+function wrapError(error, context) {
+  if (error instanceof ApicodegenError) {
+    return error;
+  }
+  if (error instanceof Error) {
+    return new ApicodegenError({
+      code: context?.code || ErrorCodes.GENERATION_FAILED,
+      message: context?.message || error.message,
+      location: context?.location,
+      suggestions: context?.suggestions,
+      cause: error
+    });
+  }
+  return new ApicodegenError({
+    code: context?.code || ErrorCodes.GENERATION_FAILED,
+    message: String(error),
+    suggestions: context?.suggestions
+  });
+}
+function isApicodegenError(error) {
+  return error instanceof ApicodegenError;
+}
+
+// src/core/config.ts
+import fs from "fs-extra";
+import path from "path";
+var ENV_MAPPINGS = {
+  APICODEGEN_SPEC: "spec",
+  APICODEGEN_OUTPUT: "output",
+  APICODEGEN_BASE_URL: "baseURL",
+  APICODEGEN_ADAPTOR: "adaptor",
+  APICODEGEN_VERBOSE: "verbose",
+  APICODEGEN_WATCH: "watch",
+  APICODEGEN_TYPE_CHECK: "typeCheck"
+};
+function loadFromEnv() {
+  const config = {};
+  for (const [envKey, configKey] of Object.entries(ENV_MAPPINGS)) {
+    const value = process.env[envKey];
+    if (value !== void 0) {
+      switch (configKey) {
+        case "verbose":
+        case "watch":
+        case "typeCheck":
+          config[configKey] = value === "true" || value === "1";
+          break;
+        case "adaptor":
+          config[configKey] = value;
+          break;
+        default:
+          config[configKey] = value;
+      }
+    }
+  }
+  return config;
+}
+async function loadFromFile(filePath) {
+  const ext = path.extname(filePath).toLowerCase();
+  try {
+    if (ext === ".json" || ext === ".jsonc") {
+      const content2 = await fs.readFile(filePath, "utf-8");
+      return JSON.parse(content2);
+    }
+    if (ext === ".js" || ext === ".cjs" || ext === ".mjs") {
+      const mod = await import(filePath);
+      return mod.default || mod;
+    }
+    if (ext === ".ts") {
+      const content2 = await fs.readFile(filePath, "utf-8");
+      try {
+        return JSON.parse(content2);
+      } catch {
+        const jsonMatch = content2.match(/export\s+default\s+(\{.+\})/s);
+        if (jsonMatch) {
+          return JSON.parse(jsonMatch[1]);
+        }
+      }
+    }
+    const content = await fs.readFile(filePath, "utf-8");
+    return JSON.parse(content);
+  } catch (error) {
+    throw new Error(`Failed to load config from ${filePath}: ${error}`);
+  }
+}
+async function findConfigFile(cwd) {
+  const configFiles = [
+    "apicodegen.config.json",
+    "apicodegen.config.js",
+    "apicodegen.config.mjs",
+    ".apicodegenrc",
+    ".apicodegenrc.json",
+    ".apicodegenrc.js",
+    ".apicodegenrc.mjs"
+  ];
+  for (const fileName of configFiles) {
+    const filePath = path.join(cwd, fileName);
+    if (await fs.pathExists(filePath)) {
+      return filePath;
+    }
+  }
+  const packageJsonPath = path.join(cwd, "package.json");
+  if (await fs.pathExists(packageJsonPath)) {
+    try {
+      const pkg = JSON.parse(await fs.readFile(packageJsonPath, "utf-8"));
+      if (pkg.apicodegen && typeof pkg.apicodegen === "string") {
+        return path.resolve(cwd, pkg.apicodegen);
+      }
+    } catch {
+    }
+  }
+  return null;
+}
+function mergeConfigs(base, ...sources) {
+  const result = { ...base };
+  for (const source of sources) {
+    if (!source) continue;
+    for (const [key, value] of Object.entries(source)) {
+      if (value !== void 0) {
+        result[key] = value;
+      }
+    }
+  }
+  return result;
+}
+function validateConfig(config) {
+  if (!config.spec) {
+    throw new Error("Missing required field: spec (OpenAPI spec file path or URL)");
+  }
+  return true;
+}
+async function loadConfig(options = {}) {
+  const cwd = options.cwd || process.cwd();
+  const cliOptions = options.cliOptions || {};
+  const envConfig = loadFromEnv();
+  let fileConfig = {};
+  let configFilePath;
+  if (options.configFile) {
+    configFilePath = path.resolve(cwd, options.configFile);
+    fileConfig = await loadFromFile(configFilePath);
+  } else {
+    const foundPath = await findConfigFile(cwd);
+    if (foundPath) {
+      configFilePath = foundPath;
+      fileConfig = await loadFromFile(foundPath);
+    }
+  }
+  const packageJsonPath = path.join(cwd, "package.json");
+  let inlineConfig = {};
+  if (await fs.pathExists(packageJsonPath)) {
+    try {
+      const pkg = JSON.parse(await fs.readFile(packageJsonPath, "utf-8"));
+      if (pkg.apicodegen && typeof pkg.apicodegen === "object") {
+        inlineConfig = pkg.apicodegen;
+      }
+    } catch {
+    }
+  }
+  const merged = mergeConfigs(
+    { spec: "", output: "./output.ts" },
+    // defaults
+    envConfig,
+    inlineConfig,
+    fileConfig,
+    cliOptions
+  );
+  validateConfig(merged);
+  const name = options.name || merged.baseURL || merged.spec;
+  return {
+    ...merged,
+    configFilePath,
+    name
+  };
+}
+function toProviderOptions(config) {
+  return {
+    docURL: config.spec,
+    output: config.output,
+    adaptor: config.adaptor,
+    baseURL: config.baseURL,
+    importClientSource: config.importClientSource,
+    verbose: config.verbose,
+    requestOptions: config.requestOptions
+  };
+}
+
 // src/core/base/Adaptor.ts
 var Adapter = class {
 };
@@ -124,8 +535,8 @@ var Base = class _Base {
     }
     let temporary = doc;
     let lastPath = "";
-    for (const path of paths) {
-      const adjustedPath = path.replaceAll("~1", "/");
+    for (const path3 of paths) {
+      const adjustedPath = path3.replaceAll("~1", "/");
       temporary = temporary[adjustedPath];
       lastPath = adjustedPath;
     }
@@ -141,8 +552,8 @@ var Base = class _Base {
    * @param [operationId] - Unique identifier for the operation.
    * @returns - The generated function name.
    */
-  static pathToFnName(path, method, _operationId = "") {
-    const name = _Base.normalize(_Base.camelCase(_Base.normalize(path)));
+  static pathToFnName(path3, method, _operationId = "") {
+    const name = _Base.normalize(_Base.camelCase(_Base.normalize(path3)));
     const suffix = method ? _Base.capitalize(_Base.upperCamelCase(`using_${method}`)) : "";
     return name + suffix;
   }
@@ -375,17 +786,17 @@ var Generator = class _Generator {
    * @param basePath - Optional base path to prepend (default: "").
    * @returns A TypeScript template expressi
    */
-  static toUrlTemplate(path, parameters, basePath = "") {
+  static toUrlTemplate(path3, parameters, basePath = "") {
     const queryParameters = parameters.filter((p) => p.in === "query" /* query */);
     if (queryParameters.length > 0) {
       const queryString = queryParameters.map(
         (qp, index) => `${index === 0 ? "?" : "&"}${encodeURIComponent(qp.name)}={${Base.camelCase(Base.normalize(qp.name))}}`
       ).join("");
-      path += queryString;
+      path3 += queryString;
     }
-    const pathSegments = path.replaceAll("{", "${").split("$").filter(Boolean);
+    const pathSegments = path3.replaceAll("{", "${").split("$").filter(Boolean);
     if (pathSegments.length === 1) {
-      return t.createNoSubstitutionTemplateLiteral(basePath + path);
+      return t.createNoSubstitutionTemplateLiteral(basePath + path3);
     }
     return t.createTemplateExpression(
       t.createTemplateHead(basePath + pathSegments[0]),
@@ -748,7 +1159,7 @@ var Generator = class _Generator {
     const { apis, schemas = {}, enums } = parsedDoc;
     const enumNames = [];
     for (const enumObject of enums) {
-      enumNames.push(Base.capitalize(enumObject.name));
+      enumNames.push(Base.upperCamelCase(enumObject.name));
       statements.push(
         t.createEnumDeclaration(
           [t.createToken(SyntaxKind.ExportKeyword)],
@@ -1093,6 +1504,13 @@ var V2 = class {
     this.doc = doc;
   }
   /**
+   * Resolves a path $ref to the actual path object.
+   */
+  resolvePathRef($ref) {
+    const refName = Base.ref2name($ref, this.doc);
+    return this.doc.paths?.[refName];
+  }
+  /**
    * Is array schema.
    */
   isOpenAPIArraySchema(schema) {
@@ -1150,7 +1568,7 @@ var V2 = class {
       } = schema;
       let { type } = schema;
       if (enum_ && type !== "boolean") {
-        const name = Base.upperCamelCase(upLevelSchemaKey) + Base.upperCamelCase(schemaKey);
+        const name = Base.upperCamelCase(Base.normalize(upLevelSchemaKey)) + Base.upperCamelCase(Base.normalize(schemaKey));
         const enumObject = {
           name,
           enum: [...new Set(enum_)]
@@ -1178,21 +1596,21 @@ var V2 = class {
           (s) => Base.isRef(s) ? {
             ...s,
             ref: s.$ref,
-            type: Base.upperCamelCase(Base.ref2name(s.$ref, this.doc))
+            type: Base.capitalize(Base.ref2name(s.$ref, this.doc))
           } : this.toBaseSchema(s, enums)
         ),
         anyOf: anyOf?.map(
           (s) => Base.isRef(s) ? {
             ...s,
             ref: s.$ref,
-            type: Base.upperCamelCase(Base.ref2name(s.$ref, this.doc))
+            type: Base.capitalize(Base.ref2name(s.$ref, this.doc))
           } : this.toBaseSchema(s, enums)
         ),
         oneOf: oneOf?.map(
           (s) => Base.isRef(s) ? {
             ...s,
             ref: s.$ref,
-            type: Base.upperCamelCase(Base.ref2name(s.$ref, this.doc))
+            type: Base.capitalize(Base.ref2name(s.$ref, this.doc))
           } : this.toBaseSchema(s, enums)
         ),
         properties: Object.keys(properties).reduce((acc, p) => {
@@ -1200,7 +1618,7 @@ var V2 = class {
           return {
             ...acc,
             [p]: Base.isRef(propSchema) ? {
-              type: Base.upperCamelCase(Base.ref2name(propSchema.$ref, this.doc))
+              type: Base.capitalize(Base.ref2name(propSchema.$ref, this.doc))
             } : this.toBaseSchema(propSchema, enums, p, upLevelSchemaKey)
           };
         }, {})
@@ -1212,17 +1630,17 @@ var V2 = class {
    */
   getParameterByRef(parameter, enums = [], upLevelSchemaKey = "") {
     if (Base.isRef(parameter)) {
-      parameter = this.doc.parameters[Base.ref2name(parameter.$ref, this.doc)];
+      parameter = this.doc.parameters?.[Base.ref2name(parameter.$ref, this.doc)];
     }
     const { name, required, description, type, items, enum: enum_, properties, schema } = parameter;
     if (enum_) {
-      const type2 = Base.upperCamelCase(upLevelSchemaKey) + Base.upperCamelCase(name);
+      const type2 = Base.upperCamelCase(Base.normalize(upLevelSchemaKey)) + Base.upperCamelCase(Base.normalize(name));
       const enumSchema = {
         name: type2,
         enum: [...new Set(enum_)]
       };
       const sameEnum = Base.findSameSchema(enumSchema, enums);
-      if (!sameEnum && Base.isValidEnumType({ type: type2, enum: enums })) {
+      if (!sameEnum && Base.isValidEnumType({ type: type2, enum: enum_ })) {
         enums.push(enumSchema);
       }
       return {
@@ -1254,7 +1672,7 @@ var V2 = class {
         description,
         in: parameter.in,
         schema: {
-          type: Base.upperCamelCase(Base.ref2name(schema.$ref))
+          type: Base.capitalize(Base.ref2name(schema.$ref))
         }
       };
     }
@@ -1301,87 +1719,89 @@ var V2 = class {
         [key]: this.getResponseByRef(response)
       };
     }, {});
-    const apis = Object.keys(paths).reduce((acc, path) => {
-      const pathObject = paths[path] ?? {};
-      const { $ref } = pathObject;
+    const apis = Object.keys(paths).reduce((acc, path3) => {
+      let pathObject = paths[path3] ?? {};
+      if (pathObject.$ref) {
+        const resolved = this.resolvePathRef(pathObject.$ref);
+        if (resolved) {
+          pathObject = resolved;
+        }
+      }
+      const { parameters = [] } = pathObject;
       const methodApis = [];
-      if ($ref) {
-      } else {
-        const { parameters = [] } = pathObject;
-        Object.values(HttpMethods).forEach((method) => {
-          const methodObject = pathObject[method];
-          if (methodObject) {
-            const {
-              deprecated,
-              operationId,
-              summary: summary_,
-              description: description_,
-              responses: responses2 = {}
-            } = methodObject;
-            const { parameters: parameters_ = [] } = methodObject;
-            const baseParameters = [...parameters, ...parameters_].map(
-              (parameter) => this.getParameterByRef(parameter, enums)
-            );
-            const uniqueParameterName = [...new Set(baseParameters.map((p) => p.name))];
-            if (Object.keys(responses2).length === 0) {
-              Object.assign(responses2, {
-                200: {
-                  description: "Successful response"
-                }
-              });
-            }
-            const inBody = baseParameters.filter((p) => p.in === "body" || p.in === "formData");
-            const notInBody = baseParameters.filter((p) => p.in !== "body" && p.in !== "formData");
-            const httpCodes = Object.keys(responses2);
-            for (const code of httpCodes) {
-              if (code in responses2) {
-                const response = responses2[code];
-                const responseSchema = this.getResponseByRef(response);
-                const inBodyOnlyHasBody = inBody && inBody.length === 1 && inBody[0].in === "body" && inBody[0].name === "body";
-                methodApis.push({
-                  method,
-                  operationId,
-                  summary: summary_,
-                  deprecated,
-                  description: description_,
-                  parameters: uniqueParameterName.map((name) => notInBody.find((p) => p.name === name)).filter(Boolean),
-                  responses: responseSchema,
-                  requestBody: inBody.length > 0 ? inBodyOnlyHasBody ? [
-                    {
-                      type: "application/json" /* JSON */,
-                      schema: inBody[0].schema
-                    }
-                  ] : [
-                    {
-                      type: "application/json" /* JSON */,
-                      schema: {
-                        type: "object" /* object */,
-                        properties: inBody.reduce((a, p) => {
-                          return {
-                            ...a,
-                            [p.name]: {
-                              type: p.schema?.type ?? "unknown",
-                              required: p.schema?.required,
-                              // @ts-expect-error items can be undefined
-                              // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-                              items: p.schema?.items,
-                              description: p.schema?.description
-                            }
-                          };
-                        }, {})
-                      }
-                    }
-                  ] : void 0
-                });
-                break;
+      Object.values(HttpMethods).forEach((method) => {
+        const methodObject = pathObject[method];
+        if (methodObject) {
+          const {
+            deprecated,
+            operationId,
+            summary: summary_,
+            description: description_,
+            responses: responses2 = {}
+          } = methodObject;
+          const { parameters: parameters_ = [] } = methodObject;
+          const baseParameters = [...parameters, ...parameters_].map(
+            (parameter) => this.getParameterByRef(parameter, enums)
+          );
+          const uniqueParameterName = [...new Set(baseParameters.map((p) => p.name))];
+          if (Object.keys(responses2).length === 0) {
+            Object.assign(responses2, {
+              200: {
+                description: "Successful response"
               }
+            });
+          }
+          const inBody = baseParameters.filter((p) => p.in === "body" || p.in === "formData");
+          const notInBody = baseParameters.filter((p) => p.in !== "body" && p.in !== "formData");
+          const httpCodes = Object.keys(responses2);
+          for (const code of httpCodes) {
+            if (code in responses2) {
+              const response = responses2[code];
+              const responseSchema = this.getResponseByRef(response);
+              const inBodyOnlyHasBody = inBody && inBody.length === 1 && inBody[0].in === "body" && inBody[0].name === "body";
+              methodApis.push({
+                method,
+                operationId,
+                summary: summary_,
+                deprecated,
+                description: description_,
+                parameters: uniqueParameterName.map((name) => notInBody.find((p) => p.name === name)).filter(Boolean),
+                responses: responseSchema,
+                requestBody: inBody.length > 0 ? inBodyOnlyHasBody ? [
+                  {
+                    type: "application/json" /* JSON */,
+                    schema: inBody[0].schema
+                  }
+                ] : [
+                  {
+                    type: "application/json" /* JSON */,
+                    schema: {
+                      type: "object" /* object */,
+                      properties: inBody.reduce((a, p) => {
+                        return {
+                          ...a,
+                          [p.name]: {
+                            type: p.schema?.type ?? "unknown",
+                            required: p.schema?.required,
+                            // @ts-expect-error items can be undefined
+                            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+                            items: p.schema?.items,
+                            description: p.schema?.description
+                          }
+                        };
+                      }, {})
+                    }
+                  }
+                ] : void 0
+              });
+              break;
             }
           }
-        });
-      }
+        }
+      });
       return {
         ...acc,
-        [path]: methodApis
+        [path3]: methodApis
       };
     }, {});
     return {
@@ -1400,6 +1820,13 @@ var V3 = class {
   doc;
   constructor(doc) {
     this.doc = doc;
+  }
+  /**
+   * Resolves a path $ref to the actual path object.
+   */
+  resolvePathRef($ref) {
+    const refName = Base.ref2name($ref, this.doc);
+    return this.doc.paths?.[refName];
   }
   /**
    * Is array schema.
@@ -1631,63 +2058,65 @@ var V3 = class {
         [key]: this.getRequestBodyByRef(requestBody, enums)
       };
     }, {});
-    const apis = Object.keys(paths).reduce((acc, path) => {
-      const pathObject = paths[path] ?? {};
-      const { $ref } = pathObject;
+    const apis = Object.keys(paths).reduce((acc, path3) => {
+      let pathObject = paths[path3] ?? {};
+      if (pathObject.$ref) {
+        const resolved = this.resolvePathRef(pathObject.$ref);
+        if (resolved) {
+          pathObject = resolved;
+        }
+      }
+      const { parameters: parameters2 = [], description, summary } = pathObject;
       const methodApis = [];
-      if ($ref) {
-      } else {
-        const { parameters: parameters2 = [], description, summary } = pathObject;
-        Object.values(HttpMethods).forEach((method) => {
-          const methodObject = pathObject[method];
-          if (methodObject) {
-            const {
-              deprecated,
-              operationId,
-              responses: responses2 = {},
-              summary: summary_,
-              description: description_,
-              requestBody = { content: {} }
-            } = methodObject;
-            const { parameters: parameters_2 = [] } = methodObject;
-            const baseParameters = [...parameters2, ...parameters_2].map(
-              (parameter) => this.getParameterByRef(parameter, enums)
-            );
-            const baseRequestBody = this.getRequestBodyByRef(requestBody, enums);
-            const uniqueParameterName = [...new Set(baseParameters.map((p) => p.name))];
-            if (Object.keys(responses2).length === 0) {
-              Object.assign(responses2, {
-                200: {
-                  description: "Successful response"
-                }
-              });
-            }
-            const httpCodes = Object.keys(responses2);
-            for (const code of httpCodes) {
-              if (code in responses2) {
-                const response = responses2[code];
-                const responseSchema = this.getResponseByRef(response);
-                methodApis.push({
-                  method,
-                  operationId,
-                  summary: summary_ ?? summary,
-                  description: description_ ?? description,
-                  deprecated,
-                  parameters: uniqueParameterName.map(
-                    (name) => baseParameters.find((p) => p.name === name)
-                  ),
-                  responses: responseSchema,
-                  requestBody: baseRequestBody
-                });
-                break;
+      Object.values(HttpMethods).forEach((method) => {
+        const methodObject = pathObject[method];
+        if (methodObject) {
+          const {
+            deprecated,
+            operationId,
+            responses: responses2 = {},
+            summary: summary_,
+            description: description_,
+            requestBody = { content: {} }
+          } = methodObject;
+          const { parameters: parameters_2 = [] } = methodObject;
+          const baseParameters = [...parameters2, ...parameters_2].map(
+            (parameter) => this.getParameterByRef(parameter, enums)
+          );
+          const baseRequestBody = this.getRequestBodyByRef(requestBody, enums);
+          const uniqueParameterName = [...new Set(baseParameters.map((p) => p.name))];
+          if (Object.keys(responses2).length === 0) {
+            Object.assign(responses2, {
+              200: {
+                description: "Successful response"
               }
+            });
+          }
+          const httpCodes = Object.keys(responses2);
+          for (const code of httpCodes) {
+            if (code in responses2) {
+              const response = responses2[code];
+              const responseSchema = this.getResponseByRef(response);
+              methodApis.push({
+                method,
+                operationId,
+                summary: summary_ ?? summary,
+                description: description_ ?? description,
+                deprecated,
+                parameters: uniqueParameterName.map(
+                  (name) => baseParameters.find((p) => p.name === name)
+                ),
+                responses: responseSchema,
+                requestBody: baseRequestBody
+              });
+              break;
             }
           }
-        });
-      }
+        }
+      });
       return {
         ...acc,
-        [path]: methodApis
+        [path3]: methodApis
       };
     }, {});
     return {
@@ -1706,6 +2135,13 @@ var V3_1 = class {
   doc;
   constructor(doc) {
     this.doc = doc;
+  }
+  /**
+   * Resolves a path $ref to the actual path object.
+   */
+  resolvePathRef($ref) {
+    const refName = Base.ref2name($ref, this.doc);
+    return this.doc.paths?.[refName];
   }
   /**
    * Is array schema.
@@ -1730,7 +2166,7 @@ var V3_1 = class {
           schemas: {}
         };
       }
-      schema = this.doc.components.schemas[Base.ref2name(schema.$ref, this.doc)];
+      schema = this.doc.components.schemas?.[Base.ref2name(schema.$ref, this.doc)];
     }
     return this.toBaseSchema(schema, enums, "", upLevelSchemaKey + refName);
   }
@@ -1743,7 +2179,7 @@ var V3_1 = class {
     }
     const { name, required, deprecated, description, schema: parameterSchema } = schema;
     if (parameterSchema && !Base.isRef(parameterSchema) && parameterSchema.enum) {
-      const type = Base.upperCamelCase(upLevelSchemaKey) + Base.upperCamelCase(name);
+      const type = Base.upperCamelCase(Base.normalize(upLevelSchemaKey)) + Base.upperCamelCase(Base.normalize(name));
       const enumSchema = {
         name: type,
         enum: [...new Set(parameterSchema.enum)]
@@ -1795,7 +2231,7 @@ var V3_1 = class {
     const { content = {} } = schema;
     return Object.keys(content).map((c) => ({
       type: c,
-      schema: content[c].schema && this.getSchemaByRef(content[c].schema, enums)
+      schema: content[c].schema && this.getSchemaByRef(content[c].schema, true, enums)
     }));
   }
   /**
@@ -1862,21 +2298,21 @@ var V3_1 = class {
           (s) => Base.isRef(s) ? {
             ...s,
             ref: s.$ref,
-            type: Base.upperCamelCase(Base.ref2name(s.$ref, this.doc))
+            type: Base.capitalize(Base.ref2name(s.$ref, this.doc))
           } : this.toBaseSchema(s, enums)
         ),
         anyOf: anyOf?.map(
           (s) => Base.isRef(s) ? {
             ...s,
             ref: s.$ref,
-            type: Base.upperCamelCase(Base.ref2name(s.$ref, this.doc))
+            type: Base.capitalize(Base.ref2name(s.$ref, this.doc))
           } : this.toBaseSchema(s, enums)
         ),
         oneOf: oneOf?.map(
           (s) => Base.isRef(s) ? {
             ...s,
             ref: s.$ref,
-            type: Base.upperCamelCase(Base.ref2name(s.$ref, this.doc))
+            type: Base.capitalize(Base.ref2name(s.$ref, this.doc))
           } : this.toBaseSchema(s, enums)
         ),
         properties: Object.keys(properties).reduce((acc, p) => {
@@ -1884,7 +2320,7 @@ var V3_1 = class {
           return {
             ...acc,
             [p]: Base.isRef(propSchema) ? {
-              type: Base.upperCamelCase(Base.ref2name(propSchema.$ref, this.doc))
+              type: Base.capitalize(Base.ref2name(propSchema.$ref, this.doc))
             } : this.toBaseSchema(propSchema, enums, p, upLevelSchemaKey)
           };
         }, {})
@@ -1923,63 +2359,65 @@ var V3_1 = class {
         [key]: this.getRequestBodyByRef(requestBody, enums)
       };
     }, {});
-    const apis = Object.keys(paths).reduce((acc, path) => {
-      const pathObject = paths[path] ?? {};
-      const { $ref } = pathObject;
+    const apis = Object.keys(paths).reduce((acc, path3) => {
+      let pathObject = paths[path3] ?? {};
+      if (pathObject.$ref) {
+        const resolved = this.resolvePathRef(pathObject.$ref);
+        if (resolved) {
+          pathObject = resolved;
+        }
+      }
+      const { parameters: parameters2 = [], description, summary } = pathObject;
       const methodApis = [];
-      if ($ref) {
-      } else {
-        const { parameters: parameters2 = [], description, summary } = pathObject;
-        Object.values(HttpMethods).forEach((method) => {
-          const methodObject = pathObject[method];
-          if (methodObject) {
-            const {
-              deprecated,
-              operationId,
-              summary: summary_,
-              description: description_,
-              responses: responses2 = {},
-              requestBody = { content: {} }
-            } = methodObject;
-            const { parameters: parameters_2 = [] } = methodObject;
-            const baseParameters = [...parameters2, ...parameters_2].map(
-              (parameter) => this.getParameterByRef(parameter, enums)
-            );
-            const baseRequestBody = this.getRequestBodyByRef(requestBody, enums);
-            const uniqueParameterName = [...new Set(baseParameters.map((p) => p.name))];
-            if (Object.keys(responses2).length === 0) {
-              Object.assign(responses2, {
-                200: {
-                  description: "Successful response"
-                }
-              });
-            }
-            const httpCodes = Object.keys(responses2);
-            for (const code of httpCodes) {
-              if (code in responses2) {
-                const response = responses2[code];
-                const responseSchema = this.getResponseByRef(response);
-                methodApis.push({
-                  method,
-                  operationId,
-                  summary: summary_ ?? summary,
-                  description: description_ ?? description,
-                  deprecated,
-                  parameters: uniqueParameterName.map(
-                    (name) => baseParameters.find((p) => p.name === name)
-                  ),
-                  responses: responseSchema,
-                  requestBody: baseRequestBody
-                });
-                break;
+      Object.values(HttpMethods).forEach((method) => {
+        const methodObject = pathObject[method];
+        if (methodObject) {
+          const {
+            deprecated,
+            operationId,
+            summary: summary_,
+            description: description_,
+            responses: responses2 = {},
+            requestBody = { content: {} }
+          } = methodObject;
+          const { parameters: parameters_2 = [] } = methodObject;
+          const baseParameters = [...parameters2, ...parameters_2].map(
+            (parameter) => this.getParameterByRef(parameter, enums)
+          );
+          const baseRequestBody = this.getRequestBodyByRef(requestBody, enums);
+          const uniqueParameterName = [...new Set(baseParameters.map((p) => p.name))];
+          if (Object.keys(responses2).length === 0) {
+            Object.assign(responses2, {
+              200: {
+                description: "Successful response"
               }
+            });
+          }
+          const httpCodes = Object.keys(responses2);
+          for (const code of httpCodes) {
+            if (code in responses2) {
+              const response = responses2[code];
+              const responseSchema = this.getResponseByRef(response);
+              methodApis.push({
+                method,
+                operationId,
+                summary: summary_ ?? summary,
+                description: description_ ?? description,
+                deprecated,
+                parameters: uniqueParameterName.map(
+                  (name) => baseParameters.find((p) => p.name === name)
+                ),
+                responses: responseSchema,
+                requestBody: baseRequestBody
+              });
+              break;
             }
           }
-        });
-      }
+        }
+      });
       return {
         ...acc,
-        [path]: methodApis
+        [path3]: methodApis
       };
     }, {});
     return {
@@ -1998,12 +2436,12 @@ var logger = createScopedLogger("OpenAPI");
 function getDocVersion(doc) {
   const version2 = (doc.openapi || doc.swagger).slice(0, 3);
   switch (version2) {
-    case "2.0":
-      return "v2" /* v2 */;
-    case "3.0":
-      return "v3" /* v3 */;
     case "3.1":
       return "v3_1" /* v3_1 */;
+    case "3.0":
+      return "v3" /* v3 */;
+    case "2.0":
+      return "v2" /* v2 */;
     default:
       return "unknown" /* unknown */;
   }
@@ -2012,32 +2450,24 @@ var OpenAPIProvider = class extends Provider {
   parse(doc) {
     const version2 = getDocVersion(doc);
     logger.debug(`openapi version ${version2}`);
-    let returnValue;
     switch (version2) {
       case "v2" /* v2 */:
-        returnValue = new V2(doc).init();
-        break;
+        return new V2(doc).init();
       case "v3" /* v3 */:
-        returnValue = new V3(doc).init();
-        break;
+        return new V3(doc).init();
       case "v3_1" /* v3_1 */:
-        returnValue = new V3_1(doc).init();
-        break;
+        return new V3_1(doc).init();
       default:
-        logger.error(`Not a valid OpenAPI version ${version2}`);
-        process.exit(1);
+        throw new Error(`Not a valid OpenAPI version: ${version2}`);
     }
-    return returnValue;
   }
 };
 function getAdaptor(type) {
   switch (type) {
     case "axios" /* axios */:
       return new AxiosAdapter();
-    case "fetch" /* fetch */:
-      return new FetchAdapter();
     default:
-      throw TypeError(`Not Supported Adaptor ${type}`);
+      return new FetchAdapter();
   }
 }
 async function codeGen(initOptions) {
@@ -2064,7 +2494,7 @@ async function codeGen(initOptions) {
     initOptions,
     adaptor
   );
-  if (process.env.NODE_ENV === "test") {
+  if (initOptions.output) {
     await Generator.write(code, initOptions.output);
   }
   return code;
@@ -2072,27 +2502,122 @@ async function codeGen(initOptions) {
 
 // src/cli.ts
 import { createCommand } from "commander";
+import fs2 from "fs-extra";
 
 // package.json
 var version = "0.0.3";
 
 // src/cli.ts
-var cli = createCommand("apicodegen");
-cli.version(version).argument("<docURL>", "URL of the OpenAPI documentation").option("-o, --output <path>", "Output file path", "./output.ts").option("-a, --adaptor <type>", "HTTP client adaptor (fetch|axios)", "fetch").option("-b, --baseURL <url>", "Base URL for API endpoints").option("-v, --verbose", "Enable verbose logging", false).option("--importClientSource <path>", "Custom client import source path").action(
-  async (docURL, options) => {
+async function watchAndGenerate(options) {
+  const { createWatch } = await import("vite");
+  let watcher = null;
+  const generate = async () => {
     try {
-      const code = await codeGen({
-        docURL,
-        baseURL: options.baseURL,
-        output: options.output,
-        verbose: options.verbose,
-        adaptor: options.adaptor,
-        importClientSource: options.importClientSource
-      });
-      await Generator.write(code, options.output);
-    } catch (err) {
-      cli.error(err.message);
+      await codeGen(options);
+      console.log(`\x1B[32m\u2713\x1B[0m Regenerated: ${options.output}`);
+    } catch (error) {
+      console.error(formatError(error, true));
     }
+  };
+  const patterns = [options.docURL].filter(Boolean);
+  watcher = createWatch(patterns, {
+    ignoreInitial: false,
+    awaitWriteFinish: {
+      stabilityThreshold: 500,
+      pollInterval: 100
+    }
+  });
+  watcher.on("change", async (filePath) => {
+    console.log(`\x1B[33m\u2193\x1B[0m File changed: ${filePath}`);
+    await generate();
+  });
+  watcher.on("add", async (filePath) => {
+    console.log(`\x1B[32m+\x1B[0m File added: ${filePath}`);
+    await generate();
+  });
+  return watcher;
+}
+function resolveDocURL(docURL, baseURL) {
+  if (docURL.startsWith("http://") || docURL.startsWith("https://")) {
+    return docURL;
   }
-);
+  if (docURL.startsWith("/") || docURL.match(/^[A-Za-z]:/)) {
+    return `file://${docURL}`;
+  }
+  if (baseURL) {
+    return new URL(docURL, baseURL).href;
+  }
+  return path2.resolve(process.cwd(), docURL);
+}
+async function validateSpecPath(specPath) {
+  if (specPath.startsWith("http://") || specPath.startsWith("https://")) {
+    return;
+  }
+  const filePath = specPath.replace(/^file:\/\//, "");
+  const absolutePath = path2.isAbsolute(filePath) ? filePath : path2.resolve(process.cwd(), filePath);
+  const exists = await fs2.pathExists(absolutePath);
+  if (!exists) {
+    throw createErrors.specNotFound(absolutePath);
+  }
+}
+var cli = createCommand("apicodegen");
+cli.name("apicodegen").version(version).description("API code generation from OpenAPI specifications").argument("[spec]", "URL or path to OpenAPI documentation").option("-s, --spec <path>", "OpenAPI spec file path or URL").option("-o, --output <path>", "Output file path").option("-a, --adaptor <type>", "HTTP client adaptor (fetch|axios)", "fetch").option("-b, --baseURL <url>", "Base URL for API endpoints").option("-c, --config <path>", "Path to config file").option("-w, --watch", "Watch for file changes and regenerate").option("-v, --verbose", "Enable verbose logging").option("--importClientSource <path>", "Custom client import source path").action(async (specArg, options) => {
+  const cliOptions = {};
+  if (options.spec) cliOptions.spec = options.spec;
+  if (options.output) cliOptions.output = options.output;
+  if (options.adaptor) cliOptions.adaptor = options.adaptor;
+  if (options.baseURL) cliOptions.baseURL = options.baseURL;
+  if (options.verbose) cliOptions.verbose = options.verbose;
+  if (options.watch) cliOptions.watch = options.watch;
+  if (options.importClientSource) cliOptions.importClientSource = options.importClientSource;
+  if (options.config) cliOptions.configFile = options.config;
+  if (specArg) {
+    cliOptions.spec = specArg;
+  }
+  try {
+    const config = await loadConfig({
+      cwd: process.cwd(),
+      cliOptions
+    });
+    await validateSpecPath(config.spec);
+    const resolvedDocURL = resolveDocURL(config.spec, config.baseURL);
+    const codeGenOptions = {
+      ...toProviderOptions(config),
+      docURL: resolvedDocURL
+    };
+    if (config.watch) {
+      console.log("\x1B[33m\u{1F504}\x1B[0m Watching for changes...");
+      const watchPatterns = [];
+      if (!resolvedDocURL.startsWith("http")) {
+        const docPath = resolvedDocURL.replace(/^file:\/\//, "");
+        const dir = path2.dirname(docPath);
+        watchPatterns.push(`${dir}/**/*.json`, `${dir}/**/*.yaml`, `${dir}/**/*.yml`);
+      }
+      const watcher = await watchAndGenerate(codeGenOptions);
+      const shutdown = async () => {
+        console.log("\n\x1B[90m\u{1F44B} Shutting down...\x1B[0m");
+        if (watcher) {
+          await watcher.close();
+        }
+        process.exit(0);
+      };
+      process.on("SIGINT", shutdown);
+      process.on("SIGTERM", shutdown);
+    } else {
+      await codeGen(codeGenOptions);
+      console.log(`\x1B[32m\u2713\x1B[0m Generated: ${config.output}`);
+    }
+  } catch (error) {
+    if (isApicodegenError(error)) {
+      console.error(formatError(error, options.verbose));
+    } else {
+      const wrapped = wrapError(error, {
+        code: "E_GENERATION_FAILED",
+        message: "An unexpected error occurred"
+      });
+      console.error(formatError(wrapped, options.verbose));
+    }
+    process.exit(1);
+  }
+});
 cli.parse();

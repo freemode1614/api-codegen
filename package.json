@@ -11,9 +11,11 @@
     "build": "tsup",
     "test": "vitest --watch false",
     "prepublishOnly": "npm run build",
-    "lint": "biome check .",
-    "lint:fix": "biome check . --write",
-    "format": "biome format . --write"
+    "lint": "pnpm exec oxlint src",
+    "lint:fix": "pnpm exec oxlint src --fix",
+    "format": "pnpm exec oxfmt src --write",
+    "debug": "node --inspect-brk=9229 bin/cli.js",
+    "prepare": "husky"
   },
   "exports": {
     "./package.json": "./package.json",
@@ -46,7 +48,6 @@
     "undici": "^7.8.0"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.4.4",
     "@changesets/cli": "^2.29.7",
     "@moccona/preset-config": "^0.0.5",
     "@types/fs-extra": "^11.0.4",
@@ -55,6 +56,10 @@
     "axios": "^1.11.0",
     "cross-env": "^10.0.0",
     "esbuild": "^0.25.9",
+    "husky": "^9.1.7",
+    "lint-staged": "^17.0.5",
+    "oxfmt": "^0.52.0",
+    "oxlint": "^1.67.0",
     "prettier": "^3.6.2",
     "serve": "^14.2.4",
     "serve-handler": "^6.1.6",
@@ -75,6 +80,12 @@
     }
   },
   "prettier": "@moccona/preset-config/prettierrc",
+  "lint-staged": {
+    "src/**/*": [
+      "oxlint --fix",
+      "oxfmt --write"
+    ]
+  },
   "packageManager": "pnpm@10.9.0",
   "browserslist": [
     ">0.3%",

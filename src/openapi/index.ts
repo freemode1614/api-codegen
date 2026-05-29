@@ -64,13 +64,22 @@ function getAdaptor(type: keyof typeof Adaptors): Adapter {
   switch (type) {
     case ads.axios:
       return new AxiosAdapter();
-    case ads.fetch:
     default:
       return new FetchAdapter();
   }
 }
 
-export async function codeGen(initOptions: ProviderInitOptions) {
+export interface CodeGenResult {
+  code: string;
+  stats: {
+    endpoints: number;
+    schemas: number;
+    duration: number;
+  };
+}
+
+export async function codeGen(initOptions: ProviderInitOptions): Promise<CodeGenResult> {
+  const startTime = Date.now();
   const { verbose } = initOptions;
 
   if (verbose) {
@@ -104,7 +113,18 @@ export async function codeGen(initOptions: ProviderInitOptions) {
     await Generator.write(code, initOptions.output);
   }
 
-  return code;
+  const duration = Date.now() - startTime;
+  const endpoints = Object.keys(apis).length;
+  const schemasCount = Object.keys(schemas).length;
+
+  return {
+    code,
+    stats: {
+      endpoints,
+      schemas: schemasCount,
+      duration,
+    },
+  };
 }
 
 export type { ProviderInitOptions } from "@apicodegen/core";

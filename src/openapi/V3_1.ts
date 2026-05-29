@@ -23,7 +23,7 @@ export class V3_1 {
   /**
    * Resolves a path $ref to the actual path object.
    */
-  private resolvePathRef($ref: string): OpenAPIV3_1.PathObject | undefined {
+  private resolvePathRef($ref: string): OpenAPIV3_1.PathItemObject | undefined {
     const refName = Base.ref2name($ref, this.doc);
     return this.doc.paths?.[refName];
   }
@@ -61,7 +61,7 @@ export class V3_1 {
         };
       }
 
-      schema = this.doc.components.schemas![Base.ref2name(schema.$ref, this.doc)];
+      schema = this.doc.components.schemas?.[Base.ref2name(schema.$ref, this.doc)];
     }
 
     return this.toBaseSchema(schema, enums, "", upLevelSchemaKey + refName);
@@ -379,8 +379,8 @@ export class V3_1 {
                 summary: summary_ ?? summary,
                 description: description_ ?? description,
                 deprecated: deprecated,
-                parameters: uniqueParameterName.map(
-                  (name) => baseParameters.find((p) => p.name === name)!,
+                parameters: uniqueParameterName.map((name) =>
+                  baseParameters.find((p) => p.name === name),
                 ),
                 responses: responseSchema,
                 requestBody: baseRequestBody,

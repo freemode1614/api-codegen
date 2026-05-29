@@ -24,7 +24,7 @@ export class V2 {
   /**
    * Resolves a path $ref to the actual path object.
    */
-  private resolvePathRef($ref: string): OpenAPIV2.PathObject | undefined {
+  private resolvePathRef($ref: string): OpenAPIV2.PathItemObject | undefined {
     const refName = Base.ref2name($ref, this.doc);
     return this.doc.paths?.[refName];
   }
@@ -193,7 +193,7 @@ export class V2 {
     upLevelSchemaKey = "",
   ): ParameterObject {
     if (Base.isRef(parameter)) {
-      parameter = this.doc.parameters![Base.ref2name(parameter.$ref, this.doc)];
+      parameter = this.doc.parameters?.[Base.ref2name(parameter.$ref, this.doc)];
     }
 
     const { name, required, description, type, items, enum: enum_, properties, schema } = parameter;

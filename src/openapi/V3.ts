@@ -21,7 +21,7 @@ export class V3 {
   /**
    * Resolves a path $ref to the actual path object.
    */
-  private resolvePathRef($ref: string): OpenAPIV3.PathObject | undefined {
+  private resolvePathRef($ref: string): OpenAPIV3.PathItemObject | undefined {
     const refName = Base.ref2name($ref, this.doc);
     return this.doc.paths?.[refName];
   }
@@ -385,8 +385,8 @@ export class V3 {
                 summary: summary_ ?? summary,
                 description: description_ ?? description,
                 deprecated: deprecated,
-                parameters: uniqueParameterName.map(
-                  (name) => baseParameters.find((p) => p.name === name)!,
+                parameters: uniqueParameterName.map((name) =>
+                  baseParameters.find((p) => p.name === name),
                 ),
                 responses: responseSchema,
                 requestBody: baseRequestBody,
