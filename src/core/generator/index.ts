@@ -193,6 +193,75 @@ export class Generator {
 		);
 	}
 
+	static schemaToTypeString(schema: SchemaObject): string {
+		if (schema.type === 'array') {
+			const arraySchema = schema as ArrayTypeSchemaObject;
+			return arraySchema.items
+				? `${Generator.schemaToTypeString(arraySchema.items)}[]`
+				: 'unknown';
+		}
+		const singleSchema = schema as SingleTypeSchemaObject;
+		if (schema.type === 'string') return 'string';
+		if (schema.type === 'number' || schema.type === 'integer') return 'number';
+		if (schema.type === 'boolean') return 'boolean';
+		if (
+			schema.type === 'object' ||
+			(schema as SingleTypeSchemaObject).properties
+		)
+			return 'object';
+		if (singleSchema.format === 'binary' || singleSchema.type === 'file')
+			return 'Blob';
+		if (singleSchema.format === 'blob') return 'Blob';
+		if (singleSchema.ref) return singleSchema.ref;
+		return 'unknown';
+	}
+
+	static generateParamTags(
+		parameters: ParameterObject[],
+		requestBody?: MediaTypeObject
+	): CommentObject[] {
+		const tags: CommentObject[] = [];
+
+		for (const p of parameters) {
+			const paramName = Base.camelCase(Base.normalize(p.name));
+			let paramType = 'unknown';
+
+			if (p.schema) {
+				paramType = Generator.schemaToTypeString(p.schema);
+			}
+
+			const isOptional = p.required === false;
+			tags.push({
+				tag: 'param',
+				paramName: paramName,
+				type: `${paramType}${isOptional ? ' | undefined' : ''}`,
+				comment: p.description ?? '',
+			});
+		}
+
+		if (requestBody?.schema && 'properties' in requestBody.schema) {
+			const properties = requestBody.schema.properties as Record<
+				string,
+				SchemaObject
+			>;
+			const required = requestBody.schema.required;
+			const requiredArray = Array.isArray(required) ? required : [];
+			for (const [key, schema] of Object.entries(properties ?? {})) {
+				const paramName = `req.${key}`;
+				const paramType = Generator.schemaToTypeString(schema);
+				const isOptional = !requiredArray.includes(key);
+				tags.push({
+					tag: 'param',
+					paramName: paramName,
+					type: `${paramType}${isOptional ? ' | undefined' : ''}`,
+					comment: schema.description ?? '',
+				});
+			}
+		}
+
+		return tags;
+	}
+
 	static toRequestBodyTypeNode(schema: SchemaObject) {
 		return t.createParameterDeclaration(
 			undefined,
