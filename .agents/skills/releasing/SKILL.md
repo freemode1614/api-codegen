@@ -21,10 +21,11 @@ This project uses **changeset** with **GitHub Actions** for automated releases. 
 ```
 1. Ensure changes are committed
 2. Create changeset file (describes what changed + bump type)
-3. Commit changeset
-4. Push to main
-5. Create and push release tag
-6. GitHub Actions automatically: build → release → publish
+3. Run changeset version locally (updates version in package.json + CHANGELOG.md)
+4. Commit version changes
+5. Push to main
+6. Create and push release tag
+7. GitHub Actions automatically: build → release → publish
 ```
 
 ## Step-by-Step
@@ -50,23 +51,28 @@ When prompted:
   - `major` - Breaking changes
 - **Write description**: Brief summary of changes
 
-### 3. Commit Changeset
+### 3. Update Version Locally
 
 ```bash
-git add .changeset/
-git commit -m "chore: add changeset for release"
+pnpm changeset version
 ```
+
+This will:
+- Update `package.json` version
+- Update `CHANGELOG.md`
+- Create commit with new version
 
 ### 4. Push
 
 ```bash
 git push
+git push origin main
 ```
 
 ### 5. Create Release Tag
 
 ```bash
-git tag v0.0.4        # Replace with your version
+git tag v0.0.4        # Replace with your version (should match package.json)
 git push origin v0.0.4
 ```
 
@@ -100,21 +106,23 @@ The workflow checks for "skip release" in commit message.
 **Release didn't trigger?**
 - Verify tag format: `v*` (e.g., `v0.0.4`)
 - Check GitHub Actions logs
+- Ensure `package.json` version matches the tag
 
 **npm publish failed?**
 - Verify `NPM_TOKEN` secret exists in repo Settings → Secrets
 - Check token has correct permissions
 
-**Changeset not found?**
-- Ensure `.changeset/*.md` file exists and was committed
+**Version mismatch?**
+- Run `pnpm changeset version` locally before tagging
+- The `package.json` version must match the git tag version
 
 ## Quick Reference
 
 | Command | Purpose |
 |---------|---------|
 | `pnpm changeset add` | Create changeset |
-| `pnpm changeset version --dry` | Preview version bump |
-| `pnpm changeset publish` | Release (runs in CI) |
+| `pnpm changeset version` | Update version in package.json + CHANGELOG.md (run locally before tagging) |
+| `pnpm changeset publish` | Release (runs in CI after tag push) |
 
 ## Required Setup (One-time)
 
