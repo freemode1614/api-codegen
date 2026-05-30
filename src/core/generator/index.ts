@@ -156,7 +156,7 @@ export class Generator {
 			}
 			if (comment.tag === 'param') {
 				return comment.comment
-					? `* @param ${comment.paramName} ${comment.comment}`
+					? `* @param ${comment.paramName} - ${comment.comment}`
 					: `* @param ${comment.paramName}`;
 			}
 			if (comment.tag) {
