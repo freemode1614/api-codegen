@@ -126,8 +126,61 @@ export default defineConfig({
 | `output` | `string` | Output file path (required) |
 | `adaptor` | `'fetch' \| 'axios'` | HTTP client adaptor |
 | `baseURL` | `string` | API base URL |
+| `importClientSource` | `string` | Custom client import source (for advanced axios/fetch configuration) |
 | `verbose` | `boolean` | Enable verbose logging |
 | `typeCheck` | `boolean` | Run type check after generation (default: true) |
+
+### Using Custom Axios Instance
+
+If you need to use a custom-configured axios instance (e.g., with interceptors, custom base URL, or authentication), you can provide your own axios instance via `importClientSource`:
+
+```typescript
+// src/lib/api-client.ts
+import axios from 'axios';
+
+export const apiClient = axios.create({
+  baseURL: 'https://api.example.com',
+  timeout: 10000,
+});
+
+apiClient.interceptors.request.use((config) => {
+  config.headers.Authorization = `Bearer ${getToken()}`;
+  return config;
+});
+```
+
+```typescript
+// vite.config.ts
+import { defineConfig } from 'vite';
+import { apiCodeGenPlugin } from '@moccona/apicodegen/vite-plugin';
+import { apiClient } from './src/lib/api-client';
+
+export default defineConfig({
+  plugins: [
+    apiCodeGenPlugin([
+      {
+        name: 'my-api',
+        spec: './openapi.json',
+        output: './src/api/generated.ts',
+        adaptor: 'axios',
+        importClientSource: `import { apiClient as axios } from '@/lib/api-client';`,
+      },
+    ]),
+  ],
+});
+```
+
+The generated code will use your custom instance instead of the default `axios`:
+
+```typescript
+// Generated code
+import { apiClient as axios } from '@/lib/api-client';
+
+// Uses apiClient under the hood
+export async function getPetById({ petId }: { petId: number }) {
+  return apiClient(`/pets/${petId}`, { method: 'GET' });
+}
+```
 
 ## 📝 Generated Code Example
 
