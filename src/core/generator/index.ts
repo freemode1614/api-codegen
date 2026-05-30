@@ -15,7 +15,9 @@ import type {
 import {
 	addSyntheticLeadingComment,
 	createPrinter,
+	EmitHint,
 	NodeFlags,
+	ScriptTarget,
 	SyntaxKind,
 	factory as t,
 } from 'typescript';
@@ -234,11 +236,12 @@ export class Generator {
 			}
 
 			const isOptional = p.required === false;
+			const inPrefix = p.in ? `[${p.in}] ` : '';
 			tags.push({
 				tag: 'param',
 				paramName: paramName,
 				type: `${paramType}${isOptional ? ' | undefined' : ''}`,
-				comment: p.description ?? '',
+				comment: `${inPrefix}${p.description ?? ''}`,
 			});
 		}
 
@@ -295,7 +298,6 @@ export class Generator {
 			case NonArraySchemaType.object: {
 				const propsCount = Object.keys(schema.properties ?? {}).length;
 				if (!schema.properties || propsCount === 0) {
-					// Record<string, unknown>
 					return t.createTypeReferenceNode(t.createIdentifier('Record'), [
 						t.createToken(SyntaxKind.StringKeyword),
 						t.createToken(SyntaxKind.UnknownKeyword),
@@ -310,7 +312,6 @@ export class Generator {
 						return t.createPropertySignature(
 							undefined,
 							t.createStringLiteral(propKey),
-							// When field is required, a refrence or binary value, don't add question mark.
 							schema.required || schema.ref || Generator.isBinarySchema(schema)
 								? undefined
 								: t.createToken(SyntaxKind.QuestionToken),
@@ -329,7 +330,6 @@ export class Generator {
 					);
 				}
 				return t.createToken(SyntaxKind.NumberKeyword);
-			// case NonArraySchemaType.string:
 			case NonArraySchemaType.boolean:
 				return t.createToken(SyntaxKind.BooleanKeyword);
 			case NonArraySchemaType.file:
@@ -370,15 +370,17 @@ export class Generator {
 				}
 
 				if (oneOf) {
-					return t.createUnionTypeNode(
-						oneOf.map((schema) => Generator.toTypeNode(schema))
+					const uniqueTypes = Generator.deduplicateTypes(
+						oneOf.map((s) => Generator.toTypeNode(s))
 					);
+					return t.createUnionTypeNode(uniqueTypes);
 				}
 
 				if (anyOf) {
-					return t.createUnionTypeNode(
-						anyOf.map((schema) => Generator.toTypeNode(schema))
+					const uniqueTypes = Generator.deduplicateTypes(
+						anyOf.map((s) => Generator.toTypeNode(s))
 					);
+					return t.createUnionTypeNode(uniqueTypes);
 				}
 
 				if (allOf) {
@@ -398,6 +400,23 @@ export class Generator {
 		}
 
 		return t.createToken(SyntaxKind.UnknownKeyword);
+	}
+
+	static deduplicateTypes(types: TypeNode[]): TypeNode[] {
+		const seen = new Set<string>();
+		const unique: TypeNode[] = [];
+		for (const type of types) {
+			const key = Generator.getTypeNodeKey(type);
+			if (!seen.has(key)) {
+				seen.add(key);
+				unique.push(type);
+			}
+		}
+		return unique;
+	}
+
+	static getTypeNodeKey(type: TypeNode): string {
+		return JSON.stringify(type);
 	}
 
 	static toDeclarationNodes(
@@ -752,11 +771,10 @@ export class Generator {
 				t.createEnumDeclaration(
 					[t.createToken(SyntaxKind.ExportKeyword)],
 					t.createIdentifier(Base.upperCamelCase(enumObject.name)),
-					enumObject.enum.map((member) => {
+					enumObject.enum.map((member, index) => {
+						const key = typeof member === 'string' ? member : `Value${member}`;
 						return t.createEnumMember(
-							t.createStringLiteral(
-								typeof member === 'string' ? member : `${member}_`
-							),
+							t.createStringLiteral(key),
 							typeof member === 'string'
 								? t.createStringLiteral(member)
 								: t.createNumericLiteral(member)

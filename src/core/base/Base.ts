@@ -145,7 +145,7 @@ export abstract class Base {
 			.replaceAll('...', '')
 			.split('_')
 			.filter(Boolean)
-			.map(Base.capitalize)
+			.map((part) => (part.match(/^\d/) ? `N${part}` : Base.capitalize(part)))
 			.join('');
 	}
 
