@@ -1,12 +1,12 @@
 #!/bin/env node
 
 import path from 'node:path';
-import { loadConfig, toProviderOptions } from '@apicodegen/core/config';
-import { isApicodegenError, wrapError } from '@apicodegen/core/errors';
-import { codeGen } from '@apicodegen/openapi';
 import { createCommand } from 'commander';
 import fs from 'fs-extra';
 import type { Watchvest } from 'vite';
+import { loadConfig, toProviderOptions } from '@/core/config';
+import { isApicodegenError, wrapError } from '@/core/errors';
+import { codeGen } from '@/openapi';
 
 import { version } from '../package.json';
 import { logger } from './cli/logger';

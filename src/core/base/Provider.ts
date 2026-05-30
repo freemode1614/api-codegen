@@ -14,7 +14,7 @@ import type {
 	RequestBodyObject,
 	ResponsesObject,
 	SchemaObject,
-} from '@apicodegen/core/interface';
+} from '@/core/interface';
 
 /**
  * Abstract Provider Class.

@@ -2,24 +2,6 @@
 /* eslint-disable no-case-declarations */
 
 import { writeFile } from 'node:fs/promises';
-import type { Adapter } from '@apicodegen/core/base/Adaptor';
-import { Base } from '@apicodegen/core/base/Base';
-import type {
-	ArrayTypeSchemaObject,
-	MediaTypeObject,
-	ParameterObject,
-	ProviderInitOptions,
-	ProviderInitResult,
-	SchemaObject,
-	SingleTypeSchemaObject,
-} from '@apicodegen/core/interface';
-import {
-	ArraySchemaType,
-	MediaTypes,
-	NonArraySchemaType,
-	ParameterIn,
-	SchemaFormatType,
-} from '@apicodegen/core/interface';
 import { format } from 'prettier';
 import type {
 	BindingElement,
@@ -37,6 +19,24 @@ import {
 	SyntaxKind,
 	factory as t,
 } from 'typescript';
+import type { Adapter } from '@/core/base/Adaptor';
+import { Base } from '@/core/base/Base';
+import type {
+	ArrayTypeSchemaObject,
+	MediaTypeObject,
+	ParameterObject,
+	ProviderInitOptions,
+	ProviderInitResult,
+	SchemaObject,
+	SingleTypeSchemaObject,
+} from '@/core/interface';
+import {
+	ArraySchemaType,
+	MediaTypes,
+	NonArraySchemaType,
+	ParameterIn,
+	SchemaFormatType,
+} from '@/core/interface';
 
 /**
  * Represents a comment object with optional tag and message.

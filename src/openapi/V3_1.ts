@@ -1,5 +1,6 @@
 /* eslint-disable unicorn/filename-case */
 
+import type { OpenAPIV3_1 } from 'openapi-types';
 import type {
 	EnumSchemaObject,
 	MediaTypeObject,
@@ -9,9 +10,8 @@ import type {
 	ParameterObject,
 	SchemaFormatType,
 	SchemaObject,
-} from '@apicodegen/core';
-import { Base, HttpMethods, NonArraySchemaType } from '@apicodegen/core';
-import type { OpenAPIV3_1 } from 'openapi-types';
+} from '@/core';
+import { Base, HttpMethods, NonArraySchemaType } from '@/core';
 
 export class V3_1 {
 	doc!: OpenAPIV3_1.Document;

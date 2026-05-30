@@ -1,15 +1,15 @@
 import path from 'node:path';
-import { loadConfig, toProviderOptions } from '@apicodegen/core/config';
+import { createScopedLogger } from '@moccona/logger';
+import fs from 'fs-extra';
+import type { PluginOption } from 'vite';
+import { loadConfig, toProviderOptions } from '@/core/config';
 import {
 	createErrors,
 	formatError,
 	isApicodegenError,
 	wrapError,
-} from '@apicodegen/core/errors';
-import { codeGen } from '@apicodegen/openapi';
-import { createScopedLogger } from '@moccona/logger';
-import fs from 'fs-extra';
-import type { PluginOption } from 'vite';
+} from '@/core/errors';
+import { codeGen } from '@/openapi';
 
 const PLUGIN_NAME = 'api-code-gen';
 const logger = createScopedLogger('api-code-gen');

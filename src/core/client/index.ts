@@ -1,2 +1,2 @@
-export * from '@apicodegen/core/client/axios';
-export * from '@apicodegen/core/client/fetch';
+export * from '@/core/client/axios';
+export * from '@/core/client/fetch';

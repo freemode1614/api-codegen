@@ -1,3 +1,4 @@
+import type { OpenAPIV3 } from 'openapi-types';
 import type {
 	EnumSchemaObject,
 	MediaTypeObject,
@@ -7,9 +8,8 @@ import type {
 	ParameterObject,
 	SchemaFormatType,
 	SchemaObject,
-} from '@apicodegen/core';
-import { Base, HttpMethods, NonArraySchemaType } from '@apicodegen/core';
-import type { OpenAPIV3 } from 'openapi-types';
+} from '@/core';
+import { Base, HttpMethods, NonArraySchemaType } from '@/core';
 
 export class V3 {
 	doc!: OpenAPIV3.Document;

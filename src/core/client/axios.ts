@@ -4,15 +4,12 @@
  * This adapter is responsible for generating code that uses the Axios HTTP client library.
  */
 
-import { Adapter } from '@apicodegen/core/base/Adaptor';
-import { Base } from '@apicodegen/core/base/Base';
-import { Generator } from '@apicodegen/core/generator';
-import type {
-	MediaTypeObject,
-	ParameterObject,
-} from '@apicodegen/core/interface';
 import type { Statement, TypeReferenceNode } from 'typescript';
 import { factory as t } from 'typescript';
+import { Adapter } from '@/core/base/Adaptor';
+import { Base } from '@/core/base/Base';
+import { Generator } from '@/core/generator';
+import type { MediaTypeObject, ParameterObject } from '@/core/interface';
 
 /**
  * Adapter class implementing support for generating code that makes use of the Axios HTTP client library.

@@ -1,13 +1,11 @@
 /* eslint-disable unicorn/prefer-spread */
-import { Adapter } from '@apicodegen/core/base/Adaptor';
-import { Base } from '@apicodegen/core/base/Base';
-import { Generator } from '@apicodegen/core/generator';
-import type {
-	MediaTypeObject,
-	ParameterObject,
-} from '@apicodegen/core/interface';
+
 import type { Statement } from 'typescript';
 import { SyntaxKind, factory as t } from 'typescript';
+import { Adapter } from '@/core/base/Adaptor';
+import { Base } from '@/core/base/Base';
+import { Generator } from '@/core/generator';
+import type { MediaTypeObject, ParameterObject } from '@/core/interface';
 
 /**
  * FetchAdapter is an adapter class that generates client-side fetch requests.

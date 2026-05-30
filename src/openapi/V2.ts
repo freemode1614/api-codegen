@@ -1,3 +1,4 @@
+import type { OpenAPIV2 } from 'openapi-types';
 import {
 	type ArrayTypeSchemaObject,
 	Base,
@@ -11,8 +12,7 @@ import {
 	type ParameterObject,
 	type SchemaFormatType,
 	type SchemaObject,
-} from '@apicodegen/core';
-import type { OpenAPIV2 } from 'openapi-types';
+} from '@/core';
 
 export class V2 {
 	doc!: OpenAPIV2.Document;

@@ -1,8 +1,6 @@
-import type {
-	Adaptors,
-	ProviderInitOptions,
-	ProviderInitResult,
-} from '@apicodegen/core';
+import { createScopedLogger } from '@moccona/logger';
+import type { OpenAPI, OpenAPIV2, OpenAPIV3, OpenAPIV3_1 } from 'openapi-types';
+import type { Adaptors, ProviderInitOptions, ProviderInitResult } from '@/core';
 import {
 	type Adapter,
 	AxiosAdapter,
@@ -11,9 +9,7 @@ import {
 	FetchAdapter,
 	Generator,
 	Provider,
-} from '@apicodegen/core';
-import { createScopedLogger } from '@moccona/logger';
-import type { OpenAPI, OpenAPIV2, OpenAPIV3, OpenAPIV3_1 } from 'openapi-types';
+} from '@/core';
 
 import { V2 } from './V2';
 import { V3 } from './V3';
@@ -137,4 +133,4 @@ export async function codeGen(
 	};
 }
 
-export type { ProviderInitOptions } from '@apicodegen/core';
+export type { ProviderInitOptions } from '@/core';

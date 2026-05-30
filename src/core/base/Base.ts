@@ -4,16 +4,16 @@
  * @description Base utility class providing common methods for code generation and API handling
  */
 
-import { typescriptKeywords } from '@apicodegen/core/constants/keywords';
+import { Agent, request } from 'undici';
+import { typescriptKeywords } from '@/core/constants/keywords';
 import type {
 	EnumSchemaObject,
 	FetchDocRequestInit,
 	ReferenceObject,
 	SchemaObject,
 	SingleTypeSchemaObject,
-} from '@apicodegen/core/interface';
-import { MediaTypes } from '@apicodegen/core/interface';
-import { Agent, request } from 'undici';
+} from '@/core/interface';
+import { MediaTypes } from '@/core/interface';
 
 /**
  * Represents success HTTP status codes.
