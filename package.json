@@ -18,7 +18,8 @@
     "lint:fix": "pnpm exec biome check --write src",
     "format": "pnpm exec biome format --write src",
     "debug": "node --inspect-brk=9229 bin/cli.cjs",
-    "prepare": "husky"
+    "prepare": "husky",
+    "typecheck": "tsc --noEmit"
   },
   "exports": {
     "./package.json": "./package.json",

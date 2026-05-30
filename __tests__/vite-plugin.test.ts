@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
-import { apiCodeGenPlugin } from '../src/vite-plugin/index';
+import { apiCodeGenPlugin } from '../src/vite-plugin/index.js';
 
-vi.mock('@/openapi', () => ({
+vi.mock('../src/openapi/index.js', () => ({
 	codeGen: vi.fn(),
 }));
 
@@ -26,13 +26,14 @@ describe('apiCodeGenPlugin', () => {
 	describe('plugin structure', () => {
 		it('should create a plugin with correct name', () => {
 			const plugin = apiCodeGenPlugin([{ name: 'test-api' }]);
-			expect(plugin.name).toBe('api-code-gen');
+			expect(plugin).toBeTruthy();
+			expect((plugin as { name: string }).name).toBe('api-code-gen');
 		});
 
 		it('should have a config hook', () => {
 			const plugin = apiCodeGenPlugin([{ name: 'test-api' }]);
 			expect(plugin).toHaveProperty('config');
-			expect(typeof plugin.config).toBe('function');
+			expect(typeof (plugin as any).config).toBe('function');
 		});
 	});
 });

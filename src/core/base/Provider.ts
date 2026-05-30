@@ -14,7 +14,7 @@ import type {
 	RequestBodyObject,
 	ResponsesObject,
 	SchemaObject,
-} from '@/core/interface';
+} from '../interface.js';
 
 /**
  * Abstract Provider Class.

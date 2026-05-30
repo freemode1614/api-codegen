@@ -1,2 +1,2 @@
-export * from '@/core/client/axios';
-export * from '@/core/client/fetch';
+export * from './axios.js';
+export * from './fetch.js';

@@ -1,7 +1,7 @@
 import path from 'node:path';
 import fs from 'fs-extra';
 
-import type { Adaptors, FetchDocRequestInit } from './interface';
+import type { Adaptors, FetchDocRequestInit } from './interface.js';
 
 /**
  * Adaptor type for HTTP client

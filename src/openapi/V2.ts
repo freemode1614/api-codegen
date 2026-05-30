@@ -12,7 +12,7 @@ import {
 	type ParameterObject,
 	type SchemaFormatType,
 	type SchemaObject,
-} from '@/core';
+} from '../core/index.js';
 
 export class V2 {
 	doc!: OpenAPIV2.Document;
@@ -198,10 +198,15 @@ export class V2 {
 		upLevelSchemaKey = ''
 	): ParameterObject {
 		if (Base.isRef(parameter)) {
-			parameter =
-				this.doc.parameters?.[Base.ref2name(parameter.$ref, this.doc)];
+			const refName = Base.ref2name(parameter.$ref, this.doc);
+			const resolved = this.doc.parameters?.[refName];
+			if (!resolved) {
+				throw new Error(`Parameter reference not found: ${parameter.$ref}`);
+			}
+			parameter = resolved;
 		}
 
+		const p = parameter as OpenAPIV2.ParameterObject;
 		const {
 			name,
 			required,
@@ -211,7 +216,7 @@ export class V2 {
 			enum: enum_,
 			properties,
 			schema,
-		} = parameter;
+		} = p;
 
 		if (enum_) {
 			const type =
@@ -236,7 +241,7 @@ export class V2 {
 				name,
 				required,
 				description,
-				in: parameter.in as ParameterIn,
+				in: p.in as ParameterIn,
 				schema: {
 					type: sameEnum?.name ?? type,
 				},
@@ -248,7 +253,7 @@ export class V2 {
 				name,
 				required,
 				description,
-				in: parameter.in as ParameterIn,
+				in: p.in as ParameterIn,
 				schema: {
 					type: type as string,
 					items: items as OpenAPIV2.SchemaObject | undefined,
@@ -261,7 +266,7 @@ export class V2 {
 				name,
 				required,
 				description,
-				in: parameter.in as ParameterIn,
+				in: p.in as ParameterIn,
 				schema: {
 					type: Base.capitalize(Base.ref2name(schema.$ref)),
 				},
@@ -272,7 +277,7 @@ export class V2 {
 			name,
 			required,
 			description,
-			in: parameter.in as ParameterIn,
+			in: p.in as ParameterIn,
 			schema: {
 				type: type as string,
 				properties,

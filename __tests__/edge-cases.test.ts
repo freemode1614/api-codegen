@@ -5,7 +5,7 @@ import {
 	wrapError,
 	isApicodegenError,
 	formatError,
-} from '../src/core/errors';
+} from '../src/core/errors.js';
 
 describe('createErrors edge cases', () => {
 	describe('specNotFound', () => {

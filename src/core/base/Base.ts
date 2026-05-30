@@ -5,15 +5,15 @@
  */
 
 import { Agent, request } from 'undici';
-import { typescriptKeywords } from '@/core/constants/keywords';
+import { typescriptKeywords } from '../constants/keywords.js';
 import type {
 	EnumSchemaObject,
 	FetchDocRequestInit,
 	ReferenceObject,
 	SchemaObject,
 	SingleTypeSchemaObject,
-} from '@/core/interface';
-import { MediaTypes } from '@/core/interface';
+} from '../interface.js';
+import { MediaTypes } from '../interface.js';
 
 /**
  * Represents success HTTP status codes.

@@ -6,7 +6,7 @@ import {
 	formatError,
 	isApicodegenError,
 	wrapError,
-} from '../src/core/errors';
+} from '../src/core/errors.js';
 
 describe('ApicodegenError', () => {
 	describe('constructor', () => {

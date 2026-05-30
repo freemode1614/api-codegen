@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { logger } from '../src/cli/logger';
+import { logger } from '../src/cli/logger.js';
 
 describe('logger', () => {
 	describe('banner', () => {

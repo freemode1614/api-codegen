@@ -1,4 +1,5 @@
-export * from './core';
-export * from './core/interface';
-export * from './openapi';
-export * from './vite-plugin';
+export * from './core/index.js';
+export * from './core/interface.js';
+export * from './openapi/index.js';
+export { codeGen } from './openapi/index.js';
+export * from './vite-plugin/index.js';

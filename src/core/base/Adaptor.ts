@@ -5,7 +5,7 @@
  */
 
 import type { Statement } from 'typescript';
-import type { MediaTypeObject, ParameterObject } from '@/core/interface';
+import type { MediaTypeObject, ParameterObject } from '../interface.js';
 
 /**
  * Base adapter for tool

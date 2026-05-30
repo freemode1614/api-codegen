@@ -8,8 +8,8 @@ import type {
 	ParameterObject,
 	SchemaFormatType,
 	SchemaObject,
-} from '@/core';
-import { Base, HttpMethods, NonArraySchemaType } from '@/core';
+} from '../core/index.js';
+import { Base, HttpMethods, NonArraySchemaType } from '../core/index.js';
 
 export class V3 {
 	doc!: OpenAPIV3.Document;
@@ -421,9 +421,9 @@ export class V3 {
 								summary: summary_ ?? summary,
 								description: description_ ?? description,
 								deprecated: deprecated,
-								parameters: uniqueParameterName.map((name) =>
-									baseParameters.find((p) => p.name === name)
-								),
+								parameters: uniqueParameterName
+									.map((name) => baseParameters.find((p) => p.name === name))
+									.filter((p): p is ParameterObject => p !== undefined),
 								responses: responseSchema,
 								requestBody: baseRequestBody,
 							});

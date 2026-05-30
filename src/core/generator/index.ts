@@ -19,8 +19,8 @@ import {
 	SyntaxKind,
 	factory as t,
 } from 'typescript';
-import type { Adapter } from '@/core/base/Adaptor';
-import { Base } from '@/core/base/Base';
+import type { Adapter } from '../base/Adaptor.js';
+import { Base } from '../base/Base.js';
 import type {
 	ArrayTypeSchemaObject,
 	MediaTypeObject,
@@ -29,14 +29,14 @@ import type {
 	ProviderInitResult,
 	SchemaObject,
 	SingleTypeSchemaObject,
-} from '@/core/interface';
+} from '../interface.js';
 import {
 	ArraySchemaType,
 	MediaTypes,
 	NonArraySchemaType,
 	ParameterIn,
 	SchemaFormatType,
-} from '@/core/interface';
+} from '../interface.js';
 
 /**
  * Represents a comment object with optional tag and message.

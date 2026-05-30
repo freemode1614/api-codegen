@@ -3,30 +3,29 @@
 import path from 'node:path';
 import { createCommand } from 'commander';
 import fs from 'fs-extra';
-import type { Watchvest } from 'vite';
-import { loadConfig, toProviderOptions } from '@/core/config';
-import { isApicodegenError, wrapError } from '@/core/errors';
-import { codeGen } from '@/openapi';
+import * as packageJson from '../package.json' with { type: 'json' };
+import { loadConfig, toProviderOptions } from './core/config.js';
+import { createErrors, isApicodegenError, wrapError } from './core/errors.js';
+import { codeGen } from './openapi/index.js';
 
-import { version } from '../package.json';
-import { logger } from './cli/logger';
+const version = packageJson.default.version;
+
+import { logger } from './cli/logger.js';
 
 interface CLIOptions {
 	spec?: string;
 	output?: string;
-	adaptor?: string;
+	adaptor?: 'fetch' | 'axios';
 	baseURL?: string;
 	importClientSource?: string;
 	watch?: boolean;
 	verbose?: boolean;
+	config?: string;
 }
 
 async function watchAndGenerate(
 	options: Parameters<typeof codeGen>[0]
-): Promise<Watchvest> {
-	const { createWatch } = await import('vite');
-	let watcher: Awaited<ReturnType<typeof createWatch>> | null = null;
-
+): Promise<fs.FSWatcher> {
 	const generate = async () => {
 		try {
 			const result = await codeGen(options);
@@ -39,25 +38,21 @@ async function watchAndGenerate(
 		}
 	};
 
-	const patterns = [options.docURL].filter(Boolean) as string[];
+	const specPath = options.docURL;
+	const dir = path.dirname(
+		path.isAbsolute(specPath) ? specPath : path.resolve(process.cwd(), specPath)
+	);
 
-	watcher = createWatch(patterns, {
-		ignoreInitial: false,
-		awaitWriteFinish: {
-			stabilityThreshold: 500,
-			pollInterval: 100,
-		},
-	});
-
-	watcher.on('change', async (filePath) => {
-		logger.fileChange(filePath);
-		await generate();
-	});
-
-	watcher.on('add', async (filePath) => {
-		logger.fileAdd(filePath);
-		await generate();
-	});
+	const watcher: fs.FSWatcher = fs.watch(
+		dir,
+		{ persistent: true },
+		async (event, filename) => {
+			if (filename && (event === 'change' || event === 'rename')) {
+				logger.fileChange(filename);
+				await generate();
+			}
+		}
+	);
 
 	return watcher;
 }

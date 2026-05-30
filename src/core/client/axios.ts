@@ -6,10 +6,10 @@
 
 import type { Statement, TypeReferenceNode } from 'typescript';
 import { factory as t } from 'typescript';
-import { Adapter } from '@/core/base/Adaptor';
-import { Base } from '@/core/base/Base';
-import { Generator } from '@/core/generator';
-import type { MediaTypeObject, ParameterObject } from '@/core/interface';
+import { Adapter } from '../base/Adaptor.js';
+import { Base } from '../base/Base.js';
+import { Generator } from '../generator/index.js';
+import type { MediaTypeObject, ParameterObject } from '../interface.js';
 
 /**
  * Adapter class implementing support for generating code that makes use of the Axios HTTP client library.

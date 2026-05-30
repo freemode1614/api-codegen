@@ -1,6 +1,10 @@
 import { createScopedLogger } from '@moccona/logger';
 import type { OpenAPI, OpenAPIV2, OpenAPIV3, OpenAPIV3_1 } from 'openapi-types';
-import type { Adaptors, ProviderInitOptions, ProviderInitResult } from '@/core';
+import type {
+	Adaptors,
+	ProviderInitOptions,
+	ProviderInitResult,
+} from '../core/index.js';
 import {
 	type Adapter,
 	AxiosAdapter,
@@ -9,11 +13,11 @@ import {
 	FetchAdapter,
 	Generator,
 	Provider,
-} from '@/core';
+} from '../core/index.js';
 
-import { V2 } from './V2';
-import { V3 } from './V3';
-import { V3_1 } from './V3_1';
+import { V2 } from './V2.js';
+import { V3 } from './V3.js';
+import { V3_1 } from './V3_1.js';
 
 const logger = createScopedLogger('OpenAPI');
 
@@ -133,4 +137,4 @@ export async function codeGen(
 	};
 }
 
-export type { ProviderInitOptions } from '@/core';
+export type { ProviderInitOptions } from '../core/index.js';
