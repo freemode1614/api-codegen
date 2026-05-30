@@ -488,21 +488,38 @@ export class Generator {
 									undefined,
 									[
 										t.createStringLiteral(key),
-										schemaByKey.type === 'string'
+										schemaByKey.type === 'string' ||
+										Generator.isBinarySchema(schemaByKey as SchemaObject) ||
+										(schemaByKey as SingleTypeSchemaObject).isRef
 											? t.createElementAccessExpression(
 													t.createIdentifier('req'),
 													t.createStringLiteral(key)
 												)
-											: t.createCallExpression(
-													t.createIdentifier('String'),
-													undefined,
-													[
-														t.createElementAccessExpression(
-															t.createIdentifier('req'),
-															t.createStringLiteral(key)
+											: schemaByKey.type === 'array' ||
+													schemaByKey.type === 'object'
+												? t.createCallExpression(
+														t.createPropertyAccessExpression(
+															t.createIdentifier('JSON'),
+															t.createIdentifier('stringify')
 														),
-													]
-												),
+														undefined,
+														[
+															t.createElementAccessExpression(
+																t.createIdentifier('req'),
+																t.createStringLiteral(key)
+															),
+														]
+													)
+												: t.createCallExpression(
+														t.createIdentifier('String'),
+														undefined,
+														[
+															t.createElementAccessExpression(
+																t.createIdentifier('req'),
+																t.createStringLiteral(key)
+															),
+														]
+													),
 									]
 								)
 							)
@@ -524,21 +541,38 @@ export class Generator {
 										undefined,
 										[
 											t.createStringLiteral(key),
-											schemaByKey.type === 'string'
+											schemaByKey.type === 'string' ||
+											Generator.isBinarySchema(schemaByKey as SchemaObject) ||
+											(schemaByKey as SingleTypeSchemaObject).isRef
 												? t.createElementAccessExpression(
 														t.createIdentifier('req'),
 														t.createStringLiteral(key)
 													)
-												: t.createCallExpression(
-														t.createIdentifier('String'),
-														undefined,
-														[
-															t.createElementAccessExpression(
-																t.createIdentifier('req'),
-																t.createStringLiteral(key)
+												: schemaByKey.type === 'array' ||
+														schemaByKey.type === 'object'
+													? t.createCallExpression(
+															t.createPropertyAccessExpression(
+																t.createIdentifier('JSON'),
+																t.createIdentifier('stringify')
 															),
-														]
-													),
+															undefined,
+															[
+																t.createElementAccessExpression(
+																	t.createIdentifier('req'),
+																	t.createStringLiteral(key)
+																),
+															]
+														)
+													: t.createCallExpression(
+															t.createIdentifier('String'),
+															undefined,
+															[
+																t.createElementAccessExpression(
+																	t.createIdentifier('req'),
+																	t.createStringLiteral(key)
+																),
+															]
+														),
 										]
 									)
 								)
