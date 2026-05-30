@@ -42,8 +42,10 @@ import {
  * Represents a comment object with optional tag and message.
  */
 export type CommentObject = {
-	tag?: string;
+	tag?: 'deprecated' | 'param' | 'returns';
 	comment: string;
+	paramName?: string;
+	type?: string;
 };
 
 /**
@@ -149,6 +151,12 @@ export class Generator {
 			return;
 
 		const formatComment = (comment: CommentObject): string => {
+			if (comment.tag === 'returns') {
+				return ` @returns {${comment.type}} ${comment.comment ?? ''}`;
+			}
+			if (comment.tag === 'param') {
+				return ` @param ${comment.paramName} {${comment.type}} ${comment.comment ?? ''}`;
+			}
 			return comment.tag
 				? ` @${comment.tag} ${comment.comment ?? ''}`
 				: ` ${comment.comment}`;
