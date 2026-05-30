@@ -630,11 +630,11 @@ export class Generator {
 		);
 
 		const shouldPutParametersOrBodyInFormData =
-			isFormDataRequest ||
-			isRequestBodyBinary ||
-			hasBinaryInParameters ||
-			isRequestBodyContainsBinary ||
-			parametersShouldPutInFormData.length > 0;
+			!!isFormDataRequest &&
+			(isRequestBodyBinary ||
+				hasBinaryInParameters ||
+				isRequestBodyContainsBinary ||
+				parametersShouldPutInFormData.length > 0);
 
 		return t.createBlock([
 			...(shouldPutParametersOrBodyInFormData
