@@ -100,7 +100,7 @@ Automatically integrate code generation into your Vite project:
 ```typescript
 // vite.config.ts
 import { defineConfig } from 'vite';
-import { apiCodeGenPlugin } from '@moccona/apicodegen/vite-plugin';
+import { apiCodeGenPlugin } from '@moccona/apicodegen/vite';
 
 export default defineConfig({
   plugins: [
@@ -152,7 +152,7 @@ apiClient.interceptors.request.use((config) => {
 ```typescript
 // vite.config.ts
 import { defineConfig } from 'vite';
-import { apiCodeGenPlugin } from '@moccona/apicodegen/vite-plugin';
+import { apiCodeGenPlugin } from '@moccona/apicodegen/vite';
 import { apiClient } from './src/lib/api-client';
 
 export default defineConfig({
