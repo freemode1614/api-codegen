@@ -72,6 +72,7 @@ export interface SingleTypeSchemaObject {
 	readonly?: boolean;
 	required?: string[] | boolean;
 	ref?: string;
+	isRef?: boolean;
 }
 
 export interface ArrayTypeSchemaObject {
