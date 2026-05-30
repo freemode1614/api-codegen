@@ -27,11 +27,6 @@ jobs:
           node-version: 24
           cache: pnpm
 
-      - name: Set up npm authentication
-        uses: amannn/setup-node-publish@v1
-        with:
-          provenance: true
-
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
