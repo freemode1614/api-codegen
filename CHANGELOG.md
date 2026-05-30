@@ -1,5 +1,11 @@
 # @moccona/apicodegen
 
+## 0.0.9
+
+### Patch Changes
+
+- Update release workflow and CLI, clean up changesets
+
 ## 0.0.8
 
 ### Patch Changes
