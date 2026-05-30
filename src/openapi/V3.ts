@@ -314,6 +314,7 @@ export class V3 {
 									type: Base.capitalize(
 										Base.ref2name(propSchema.$ref, this.doc)
 									),
+									isRef: true,
 								}
 							: this.toBaseSchema(propSchema, enums, p, upLevelSchemaKey),
 					};
