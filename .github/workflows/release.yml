@@ -30,7 +30,7 @@ jobs:
       - name: Set up npm authentication
         uses: amannn/setup-node-publish@v1
         with:
-          token: ${{ secrets.NPM_TOKEN }}
+          provenance: true
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
