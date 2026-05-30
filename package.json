@@ -43,6 +43,10 @@
   "keywords": [
     "api-codegen"
   ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/freemode1614/api-codegen"
+  },
   "author": "freemode",
   "license": "MIT",
   "publishConfig": {
