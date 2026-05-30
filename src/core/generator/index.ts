@@ -835,14 +835,14 @@ export class Generator {
 						)
 					);
 
+					const mergedDescription = [description, summary]
+						.filter(Boolean)
+						.join('. ');
 					Generator.addComments(
 						statement,
 						[
-							description && {
-								comment: description,
-							},
-							summary && {
-								comment: summary,
+							mergedDescription && {
+								comment: mergedDescription,
 							},
 							deprecated && {
 								tag: 'deprecated',
