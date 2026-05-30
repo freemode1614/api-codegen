@@ -848,11 +848,6 @@ export class Generator {
 							deprecated && {
 								tag: 'deprecated',
 							},
-							responses[0]?.schema && {
-								tag: 'returns' as const,
-								type: `Promise<${Generator.schemaToTypeString(responses[0].schema as SchemaObject)}>`,
-								comment: '',
-							},
 							...Generator.generateParamTags(parameters, req),
 						].filter(Boolean) as CommentObject[]
 					);
