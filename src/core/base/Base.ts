@@ -126,9 +126,11 @@ export abstract class Base {
 	 */
 	static camelCase(text: string) {
 		text = text.trim();
-		return text
-			.split('_')
-			.filter(Boolean)
+		const parts = text.split('_').filter(Boolean);
+		while (parts[0]?.match(/^\d/)) {
+			parts.shift();
+		}
+		return parts
 			.map((t, index) => (index === 0 ? t : Base.capitalize(t)))
 			.join('');
 	}
