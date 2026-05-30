@@ -155,7 +155,9 @@ export class Generator {
 				return `* @returns {${comment.type}} ${comment.comment ?? ''}`;
 			}
 			if (comment.tag === 'param') {
-				return `* @param ${comment.paramName} {${comment.type}} ${comment.comment ?? ''}`;
+				return comment.comment
+					? `* @param ${comment.paramName} ${comment.comment}`
+					: `* @param ${comment.paramName}`;
 			}
 			if (comment.tag) {
 				return `* @${comment.tag} ${comment.comment ?? ''}`;
