@@ -4,6 +4,7 @@ A powerful OpenAPI code generator that automatically generates TypeScript API cl
 
 [![npm version](https://badge.fury.io/js/@moccona%2Fapicodegen.svg)](https://www.npmjs.com/package/@moccona/apicodegen)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Node.js](https://img.shields.io/badge/node-%3E%3D24-blue.svg)](https://nodejs.org)
 
 ## ✨ Features
 
@@ -27,6 +28,14 @@ npm install -D @moccona/apicodegen
 # Using pnpm
 pnpm add -D @moccona/apicodegen
 ```
+
+### Peer Dependencies
+
+This package includes optional peer dependencies:
+
+- `typescript` (v5) - Required for type checking generated code
+- `prettier` (v3) - Used for formatting output
+- `vite` (v7) - Required only if using the Vite plugin
 
 ## 🚀 Quick Start
 
@@ -203,6 +212,46 @@ export async function getPetById({ petId }: { petId: number }) {
 - ✅ `application/x-www-form-urlencoded` - Form data
 - ✅ `text/plain`, `image/*` - Binary data
 
+## 🔧 Troubleshooting
+
+### Common Issues
+
+**"Command not found" after installation**
+If using the CLI globally but getting command not found, try:
+```bash
+# Reinstall globally
+npm install -g @moccona/apicodegen
+
+# Or use npx
+npx @moccona/apicodegen <OpenAPI文档URL> -o ./src/api.ts
+```
+
+**Network errors when fetching OpenAPI documents**
+- Verify the URL is publicly accessible
+- Try downloading the document locally first
+- Check firewall/proxy settings
+- Use `-v` flag for verbose logging to debug
+
+**TypeScript errors in generated code**
+- Ensure `typescript` is installed: `npm install -D typescript`
+- Run `tsc --noEmit` to see specific errors
+- Check that your `tsconfig.json` is properly configured
+
+**Vite plugin not generating files**
+- Ensure Node.js 24+ is installed
+- Check that all required options (`name`, `output`) are provided
+- Set `verbose: true` in plugin options to see generation logs
+
+**Watch mode not triggering regeneration**
+- Watch mode monitors the spec file, not your output file
+- Ensure the spec file path is correct
+- Try restarting the watch process
+
+### Getting Help
+
+- Report issues at [GitHub Issues](https://github.com/freemode1614/api-codegen/issues)
+- Check [CHANGELOG](CHANGELOG.md) for recent updates
+
 ## 🔧 Development
 
 ```bash
@@ -217,6 +266,9 @@ pnpm build
 
 # Run tests
 pnpm test
+
+# Type check
+pnpm typecheck
 
 # Lint
 pnpm lint
