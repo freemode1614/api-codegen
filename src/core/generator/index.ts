@@ -152,18 +152,19 @@ export class Generator {
 
 		const formatComment = (comment: CommentObject): string => {
 			if (comment.tag === 'returns') {
-				return ` @returns {${comment.type}} ${comment.comment ?? ''}`;
+				return `* @returns {${comment.type}} ${comment.comment ?? ''}`;
 			}
 			if (comment.tag === 'param') {
-				return ` @param ${comment.paramName} {${comment.type}} ${comment.comment ?? ''}`;
+				return `* @param ${comment.paramName} {${comment.type}} ${comment.comment ?? ''}`;
 			}
-			return comment.tag
-				? ` @${comment.tag} ${comment.comment ?? ''}`
-				: ` ${comment.comment}`;
+			if (comment.tag) {
+				return `* @${comment.tag} ${comment.comment ?? ''}`;
+			}
+			return `* ${comment.comment}`;
 		};
 
 		const formattedComments =
-			'*\n' + comments.map(formatComment).join('\n').trim() + '\n';
+			comments.map(formatComment).join('\n').trim() + '\n';
 
 		addSyntheticLeadingComment(
 			node,
