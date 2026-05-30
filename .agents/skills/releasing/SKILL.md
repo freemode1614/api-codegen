@@ -60,23 +60,28 @@ pnpm changeset version
 This will:
 - Update `package.json` version
 - Update `CHANGELOG.md`
-- Create commit with new version
 
-### 4. Push
+### 4. Commit Version Changes
 
 ```bash
-git push
+git add .
+git commit -m "chore: bump version"
+```
+
+### 5. Push
+
+```bash
 git push origin main
 ```
 
-### 5. Create Release Tag
+### 6. Create Release Tag
 
 ```bash
 git tag v0.0.4        # Replace with your version (should match package.json)
 git push origin v0.0.4
 ```
 
-### 6. Verify Release
+### 7. Verify Release
 
 Check GitHub Actions tab for release workflow run. On success:
 - GitHub release created with CHANGELOG
@@ -115,6 +120,10 @@ The workflow checks for "skip release" in commit message.
 **Version mismatch?**
 - Run `pnpm changeset version` locally before tagging
 - The `package.json` version must match the git tag version
+- If tag already exists with wrong version:
+  ```bash
+  git tag -d v0.0.4 && git tag v0.0.4 && git push origin v0.0.4 --force
+  ```
 
 ## Quick Reference
 
