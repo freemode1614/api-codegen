@@ -36,7 +36,7 @@ jobs:
       - name: Build
         run: pnpm build
 
-      - name: Version and Create Release
+      - name: Create Release
         run: pnpm run publish
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

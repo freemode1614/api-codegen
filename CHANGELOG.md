@@ -1,5 +1,12 @@
 # @moccona/apicodegen
 
+## 0.0.8
+
+### Patch Changes
+
+- f210c6a: Fix shebang for cross-platform compatibility (#/bin/env -> /usr/bin/env)
+- d081335: Update release workflow and CLI
+
 ## 0.0.7
 
 ### Patch Changes
