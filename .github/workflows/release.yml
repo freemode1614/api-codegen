@@ -34,7 +34,7 @@ jobs:
         run: pnpm build
 
       - name: Create Release Pull Request or Publish
-        run: pnpm run changeset publish
+        run: pnpm run publish
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}

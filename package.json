@@ -20,7 +20,7 @@
     "debug": "node --inspect-brk=9229 bin/cli.cjs",
     "prepare": "husky",
     "typecheck": "tsc --noEmit",
-    "changeset": "changeset publish"
+    "publish": "changeset publish"
   },
   "exports": {
     "./package.json": "./package.json",
