@@ -80,13 +80,14 @@ export abstract class Base {
 	 * @param [operationId] - Unique identifier for the operation.
 	 * @returns - The generated function name.
 	 */
-	static pathToFnName(
-		path: string,
-		method?: string,
-		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-		_operationId: string = ''
-	) {
-		const name = Base.normalize(Base.camelCase(Base.normalize(path)));
+	static pathToFnName(path: string, method?: string, operationId?: string) {
+		let name = '';
+		if (operationId) {
+			name = Base.camelCase(Base.normalize(operationId));
+		}
+		if (!name) {
+			name = Base.camelCase(Base.normalize(path));
+		}
 		const suffix = method
 			? Base.capitalize(Base.upperCamelCase(`using_${method}`))
 			: '';
