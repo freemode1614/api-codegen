@@ -834,7 +834,7 @@ export class Generator {
 						undefined,
 						Base.pathToFnName(uri, method, operationId) +
 							(shouldAddExtraMethodNameSuffix
-								? Base.capitalize(req.type.split('/')[1])
+								? Base.upperCamelCase(Base.normalize(req.type.split('/')[1]))
 								: ''),
 						undefined,
 						[

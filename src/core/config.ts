@@ -181,7 +181,7 @@ async function findConfigFile(cwd: string): Promise<string | null> {
  * Merge multiple config sources with priority
  * Priority: defaults < env vars < config file < CLI args
  */
-function mergeConfigs(
+export function mergeConfigs(
 	base: ApicodegenConfig,
 	...sources: (Partial<ApicodegenConfig> | undefined)[]
 ): ApicodegenConfig {
@@ -204,7 +204,7 @@ function mergeConfigs(
 /**
  * Validate config has required fields
  */
-function validateConfig(
+export function validateConfig(
 	config: Partial<ApicodegenConfig>
 ): config is ApicodegenConfig {
 	if (!config.spec) {
