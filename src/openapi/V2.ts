@@ -1,207 +1,70 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import type { OpenAPIV2 } from 'openapi-types';
 import {
-	type ArrayTypeSchemaObject,
 	Base,
 	type EnumSchemaObject,
 	HttpMethods,
 	type MediaTypeObject,
 	MediaTypes,
-	NonArraySchemaType,
 	type OperationObject,
 	type ParameterIn,
 	type ParameterObject,
-	type SchemaFormatType,
 	type SchemaObject,
 } from '../core/index.js';
+import { OpenAPIVersion, VersionedProvider } from './VersionedProvider.js';
 
-export class V2 {
-	doc!: OpenAPIV2.Document;
+export class V2 extends VersionedProvider {
+	protected readonly doc: OpenAPIV2.Document;
+	readonly version = OpenAPIVersion.v2;
 
 	constructor(doc: OpenAPIV2.Document) {
+		super();
 		this.doc = doc;
 	}
 
-	/**
-	 * Resolves a path $ref to the actual path object.
-	 */
-	private resolvePathRef($ref: string): OpenAPIV2.PathItemObject | undefined {
-		const refName = Base.ref2name($ref, this.doc);
-		return this.doc.paths?.[refName];
+	protected override getSchemaContainer():
+		| Record<string, OpenAPIV2.SchemaObject>
+		| undefined {
+		return this.doc.definitions as any;
+	}
+
+	protected override getParameterContainer():
+		| Record<string, OpenAPIV2.ParameterObject>
+		| undefined {
+		return this.doc.parameters as any;
+	}
+
+	protected override getResponseContainer():
+		| Record<string, OpenAPIV2.ResponseObject>
+		| undefined {
+		return this.doc.responses as any;
+	}
+
+	protected override getRequestBodyContainer(): undefined {
+		return undefined;
 	}
 
 	/**
-	 * Is array schema.
+	 * V2 parameter shape differs from V3: top-level `items`/`properties`/`enum`
+	 * rather than nested under `schema`. Override accordingly.
 	 */
-	private isOpenAPIArraySchema(schema: OpenAPIV2.SchemaObject): boolean {
-		return typeof schema === 'object' && schema.type === 'array';
-	}
-
-	/**
-	 * OpenAPI schema to base schema.
-	 */
-	private getSchemaByRef(
-		schema: OpenAPIV2.SchemaObject | OpenAPIV2.ReferenceObject,
-		reserveRef = false,
-		enums: EnumSchemaObject[] = [],
-		upLevelSchemaKey = ''
-	): SchemaObject {
-		let refName = '';
-		if (Base.isRef(schema)) {
-			refName = Base.upperCamelCase(Base.ref2name(schema.$ref));
-			if (reserveRef) {
-				return {
-					type: upLevelSchemaKey + refName,
-				};
-			}
-
-			if (!this.doc.definitions) {
-				this.doc.definitions = {};
-			}
-
-			schema = this.doc.definitions[Base.ref2name(schema.$ref, this.doc)];
-		}
-
-		return this.toBaseSchema(schema, enums, '', upLevelSchemaKey + refName);
-	}
-
-	/**
-	 * Transform all OpenAPI schema to Base Schema
-	 */
-	private toBaseSchema(
-		schema: OpenAPIV2.SchemaObject | OpenAPIV2.ReferenceObject | undefined,
-		enums: EnumSchemaObject[] = [],
-		schemaKey = '',
-		upLevelSchemaKey = ''
-	): SchemaObject {
-		if (!schema) {
-			return {
-				type: 'unknown',
-			};
-		}
-
-		if (Base.isRef(schema)) {
-			return this.getSchemaByRef(schema, true);
-		}
-
-		if (this.isOpenAPIArraySchema(schema)) {
-			const { type, description, items, required } = schema;
-
-			return {
-				type: type as string,
-				required: !!required,
-				description,
-				items: this.toBaseSchema(items, enums, schemaKey, upLevelSchemaKey),
-			} as ArrayTypeSchemaObject;
-		} else {
-			const {
-				required = [],
-				allOf,
-				anyOf,
-				description,
-				enum: enum_,
-				format,
-				oneOf,
-				properties = {},
-			} = schema;
-			let { type } = schema;
-
-			if (enum_ && type !== 'boolean') {
-				const name =
-					Base.upperCamelCase(Base.normalize(upLevelSchemaKey)) +
-					Base.upperCamelCase(Base.normalize(schemaKey));
-
-				const enumObject = {
-					name,
-					enum: [...new Set(enum_ as (string | number)[])],
-				};
-
-				const sameObject = Base.findSameSchema(enumObject, enums);
-
-				if (
-					!sameObject &&
-					Base.isValidEnumType(schema as unknown as SchemaObject)
-				) {
-					enums.push(enumObject);
-				}
-
-				return {
-					type: sameObject
-						? sameObject.name
-						: Base.isBooleanEnum(schema as unknown as SchemaObject)
-							? 'boolean'
-							: enumObject.name,
-					required,
-					description,
-				};
-			}
-
-			if (type === undefined && Object.keys(properties).length > 0) {
-				type = NonArraySchemaType.object;
-			}
-
-			return {
-				type: type as unknown as NonArraySchemaType,
-				required,
-				description,
-				enum: enum_,
-				format: format as unknown as SchemaFormatType,
-				allOf: allOf?.map((s) =>
-					Base.isRef(s)
-						? {
-								...s,
-								ref: s.$ref,
-								type: Base.capitalize(Base.ref2name(s.$ref, this.doc)),
-							}
-						: this.toBaseSchema(s as OpenAPIV2.SchemaObject, enums)
-				),
-				anyOf: anyOf?.map((s) =>
-					Base.isRef(s)
-						? {
-								...s,
-								ref: s.$ref,
-								type: Base.capitalize(Base.ref2name(s.$ref, this.doc)),
-							}
-						: this.toBaseSchema(s as OpenAPIV2.SchemaObject, enums)
-				),
-				oneOf: oneOf?.map((s) =>
-					Base.isRef(s)
-						? {
-								...s,
-								ref: s.$ref,
-								type: Base.capitalize(Base.ref2name(s.$ref, this.doc)),
-							}
-						: this.toBaseSchema(s as OpenAPIV2.SchemaObject, enums)
-				),
-				properties: Object.keys(properties).reduce((acc, p) => {
-					const propSchema = properties[p];
-					return {
-						...acc,
-						[p]: Base.isRef(propSchema)
-							? {
-									type: Base.capitalize(
-										Base.ref2name(propSchema.$ref, this.doc)
-									),
-								}
-							: this.toBaseSchema(propSchema, enums, p, upLevelSchemaKey),
-					};
-				}, {}),
-			};
-		}
-	}
-
-	/**
-	 * OpenAPI parameter to base parameter.
-	 */
-	private getParameterByRef(
-		parameter: OpenAPIV2.ParameterObject | OpenAPIV2.ReferenceObject,
+	protected override getParameterByRef(
+		parameter: unknown,
 		enums: EnumSchemaObject[] = [],
 		upLevelSchemaKey = ''
 	): ParameterObject {
 		if (Base.isRef(parameter)) {
-			const refName = Base.ref2name(parameter.$ref, this.doc);
-			const resolved = this.doc.parameters?.[refName];
+			const refName = Base.ref2name(
+				(parameter as { $ref: string }).$ref,
+				this.doc
+			);
+			const resolved = (
+				this.doc as { parameters?: Record<string, OpenAPIV2.ParameterObject> }
+			).parameters?.[refName];
 			if (!resolved) {
-				throw new Error(`Parameter reference not found: ${parameter.$ref}`);
+				throw new Error(
+					`Parameter reference not found: ${(parameter as { $ref: string }).$ref}`
+				);
 			}
 			parameter = resolved;
 		}
@@ -219,12 +82,12 @@ export class V2 {
 		} = p;
 
 		if (enum_) {
-			const type =
+			const enumType =
 				Base.upperCamelCase(Base.normalize(upLevelSchemaKey)) +
 				Base.upperCamelCase(Base.normalize(name));
 
 			const enumSchema = {
-				name: type,
+				name: enumType,
 				enum: [...new Set(enum_ as (string | number)[])],
 			};
 
@@ -232,7 +95,7 @@ export class V2 {
 
 			if (
 				!sameEnum &&
-				Base.isValidEnumType({ type, enum: enum_ } as SchemaObject)
+				Base.isValidEnumType({ type: enumType, enum: enum_ } as SchemaObject)
 			) {
 				enums.push(enumSchema);
 			}
@@ -242,9 +105,7 @@ export class V2 {
 				required,
 				description,
 				in: p.in as ParameterIn,
-				schema: {
-					type: sameEnum?.name ?? type,
-				},
+				schema: { type: sameEnum?.name ?? enumType },
 			};
 		}
 
@@ -256,8 +117,8 @@ export class V2 {
 				in: p.in as ParameterIn,
 				schema: {
 					type: type as string,
-					items: items as OpenAPIV2.SchemaObject | undefined,
-				} as ArrayTypeSchemaObject,
+					items: items as unknown as SchemaObject,
+				} as unknown as SchemaObject,
 			};
 		}
 
@@ -268,7 +129,9 @@ export class V2 {
 				description,
 				in: p.in as ParameterIn,
 				schema: {
-					type: Base.capitalize(Base.ref2name(schema.$ref)),
+					type: Base.capitalize(
+						Base.ref2name((schema as { $ref: string }).$ref)
+					),
 				},
 			};
 		}
@@ -278,179 +141,201 @@ export class V2 {
 			required,
 			description,
 			in: p.in as ParameterIn,
-			schema: {
-				type: type as string,
-				properties,
-			} as SchemaObject,
+			schema: { type: type as string, properties } as SchemaObject,
 		};
 	}
 
 	/**
-	 * OpenAPI schema to base response
+	 * V2 response shape: a `schema` field directly, not `content`. V2 always
+	 * emits JSON.
 	 */
-	private getResponseByRef(
-		schema: OpenAPIV2.ResponseObject | OpenAPIV2.ReferenceObject
-	): MediaTypeObject[] {
+	protected override getResponseByRef(schema: unknown): MediaTypeObject[] {
 		if (Base.isRef(schema)) {
-			schema = this.doc.responses![Base.ref2name(schema.$ref, this.doc)]!;
+			schema = (
+				this.doc as { responses: Record<string, OpenAPIV2.ResponseObject> }
+			).responses[Base.ref2name((schema as { $ref: string }).$ref, this.doc)];
 		}
 
-		const { schema: responseSchema } = schema;
+		const { schema: responseSchema } = schema as { schema?: unknown };
 
 		return [
 			{
 				type: MediaTypes.JSON,
-				schema: responseSchema && this.getSchemaByRef(responseSchema, true),
+				schema: responseSchema
+					? this.getSchemaByRef(responseSchema, true)
+					: undefined,
 			},
 		];
 	}
 
-	public init() {
-		const { definitions = {}, responses = {}, paths = {} } = this.doc;
+	/**
+	 * V2 has no `requestBody` concept; parameters with `in: body` or
+	 * `in: formData` are split out and turned into a synthetic requestBody
+	 * here. A single body param named `body` is used directly; otherwise
+	 * the body / formData params are wrapped in a synthetic object.
+	 */
+	public override init() {
+		const { paths = {} } = this.doc as {
+			paths?: Record<string, Record<string, unknown>>;
+		};
 		const enums: EnumSchemaObject[] = [];
 
-		const definitions_ = Object.keys(definitions).reduce((acc, key) => {
-			const schema = definitions[key];
+		const schemaContainer = this.getSchemaContainer() ?? {};
+		const parameterContainer = this.getParameterContainer() ?? {};
+		const responseContainer = this.getResponseContainer() ?? {};
 
-			return {
-				...acc,
-				[key]: this.getSchemaByRef(schema, false, enums, key),
-			};
+		const schemas_ = Object.keys(schemaContainer).reduce((acc, key) => {
+			const schema = schemaContainer[key];
+			return { ...acc, [key]: this.getSchemaByRef(schema, false, enums, key) };
 		}, {});
 
-		const responses_ = Object.keys(responses).reduce((acc, key) => {
-			const response = responses[key];
-
-			return {
-				...acc,
-				[key]: this.getResponseByRef(response),
-			};
+		const parameters_ = Object.keys(parameterContainer).reduce((acc, key) => {
+			const parameter = parameterContainer[key];
+			return { ...acc, [key]: this.getParameterByRef(parameter, enums, key) };
 		}, {});
 
-		const apis = Object.keys(paths).reduce((acc, path) => {
+		const responses_ = Object.keys(responseContainer).reduce((acc, key) => {
+			const response = responseContainer[key];
+			return { ...acc, [key]: this.getResponseByRef(response) };
+		}, {});
+
+		const apis: Record<string, OperationObject[]> = {};
+		for (const path of Object.keys(paths)) {
 			let pathObject = paths[path] ?? {};
 
-			// Handle path-level $ref
-			if (pathObject.$ref) {
-				const resolved = this.resolvePathRef(pathObject.$ref);
-				if (resolved) {
-					pathObject = resolved;
-				}
+			if ((pathObject as { $ref?: string }).$ref) {
+				const resolved = this.resolvePathRef(
+					(pathObject as { $ref: string }).$ref
+				);
+				if (resolved) pathObject = resolved;
 			}
 
-			const { parameters = [] } = pathObject;
+			const { parameters = [] } = pathObject as { parameters?: unknown[] };
 			const methodApis: OperationObject[] = [];
 
 			Object.values(HttpMethods).forEach((method) => {
-				const methodObject = pathObject[method as OpenAPIV2.HttpMethods];
+				const methodObject = (pathObject as Record<string, unknown>)[method];
+				if (!methodObject) return;
 
-				if (methodObject) {
-					const {
-						deprecated,
-						operationId,
-						summary: summary_,
-						description: description_,
-						responses = {},
-					} = methodObject;
-					const { parameters: parameters_ = [] } = methodObject;
-					const baseParameters = [...parameters, ...parameters_].map(
-						(parameter) => this.getParameterByRef(parameter, enums)
-					);
-					const uniqueParameterName = [
-						...new Set(baseParameters.map((p) => p.name)),
-					];
+				const {
+					deprecated,
+					operationId,
+					summary: summary_,
+					description: description_,
+					responses,
+				} = methodObject as {
+					deprecated?: boolean;
+					operationId?: string;
+					summary?: string;
+					description?: string;
+					responses?: Record<string, unknown>;
+				};
+				const { parameters: parameters_ = [] } = methodObject as {
+					parameters?: unknown[];
+				};
 
-					if (Object.keys(responses).length === 0) {
-						Object.assign(responses, {
-							200: {
-								description: 'Successful response',
-							},
+				const baseParameters = [...parameters, ...parameters_].map((p) =>
+					this.getParameterByRef(p, enums)
+				);
+				const uniqueParameterName = [
+					...new Set(baseParameters.map((p) => p.name)),
+				];
+
+				// Clone to avoid mutating the input spec.
+				const responsesClone: Record<string, unknown> = responses
+					? { ...responses }
+					: {};
+
+				if (Object.keys(responsesClone).length === 0) {
+					responsesClone[200] = { description: 'Successful response' };
+				}
+
+				const inBody = baseParameters.filter(
+					(p) => p.in === 'body' || p.in === 'formData'
+				);
+				const notInBody = baseParameters.filter(
+					(p) => p.in !== 'body' && p.in !== 'formData'
+				);
+
+				const httpCodes = Object.keys(responsesClone);
+				for (const code of httpCodes) {
+					if (code in responsesClone) {
+						const response = responsesClone[code];
+						const responseSchema = this.getResponseByRef(response);
+
+						const inBodyOnlyHasBody =
+							inBody.length === 1 &&
+							inBody[0].in === 'body' &&
+							inBody[0].name === 'body';
+
+						methodApis.push({
+							method,
+							operationId,
+							summary: summary_,
+							deprecated: deprecated,
+							description: description_,
+							parameters: uniqueParameterName
+								.map((name) => notInBody.find((p) => p.name === name))
+								.filter((p): p is ParameterObject => p !== undefined),
+							responses: responseSchema,
+							requestBody:
+								inBody.length > 0
+									? inBodyOnlyHasBody
+										? [
+												{
+													type: MediaTypes.JSON,
+													schema: inBody[0].schema,
+												},
+											]
+										: [
+												{
+													type: MediaTypes.JSON,
+													schema: {
+														type: 'object' as const,
+														properties: inBody.reduce<
+															Record<string, SchemaObject>
+														>((a, p) => {
+															return {
+																...a,
+																[p.name]: {
+																	type: (p.schema?.type ??
+																		'unknown') as 'object',
+																	required: p.schema?.required,
+																	items: (
+																		p.schema as unknown as {
+																			items?: SchemaObject;
+																		}
+																	)?.items,
+																	description: p.schema?.description,
+																} as SchemaObject,
+															};
+														}, {}),
+													},
+												},
+											]
+									: undefined,
 						});
-					}
-
-					const inBody = baseParameters.filter(
-						(p) => p.in === 'body' || p.in === 'formData'
-					);
-
-					const notInBody = baseParameters.filter(
-						(p) => p.in !== 'body' && p.in !== 'formData'
-					);
-
-					const httpCodes = Object.keys(responses);
-					for (const code of httpCodes) {
-						if (code in responses) {
-							const response = responses[code]!;
-							const responseSchema = this.getResponseByRef(response);
-
-							const inBodyOnlyHasBody =
-								inBody &&
-								inBody.length === 1 &&
-								inBody[0].in === 'body' &&
-								inBody[0].name === 'body';
-
-							methodApis.push({
-								method,
-								operationId,
-								summary: summary_,
-								deprecated: deprecated,
-								description: description_,
-								parameters: uniqueParameterName
-									.map((name) => notInBody.find((p) => p.name === name)!)
-									.filter(Boolean),
-								responses: responseSchema,
-								requestBody:
-									inBody.length > 0
-										? inBodyOnlyHasBody
-											? [
-													{
-														type: MediaTypes.JSON,
-														schema: inBody[0].schema,
-													},
-												]
-											: [
-													{
-														type: MediaTypes.JSON,
-														schema: {
-															type: NonArraySchemaType.object,
-															properties: inBody.reduce<
-																Record<string, SchemaObject>
-															>((a, p) => {
-																return {
-																	...a,
-																	[p.name]: {
-																		type: p.schema?.type ?? 'unknown',
-																		required: p.schema?.required,
-																		// @ts-expect-error items can be undefined
-																		// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-																		items: p.schema?.items,
-																		description: p.schema?.description,
-																	} as SchemaObject,
-																};
-															}, {}),
-														},
-													},
-												]
-										: undefined,
-							});
-							break;
-						}
+						break;
 					}
 				}
 			});
 
-			return {
-				...acc,
-				[path]: methodApis,
-			};
-		}, {});
+			apis[path] = methodApis;
+		}
 
 		return {
 			enums: Base.uniqueEnums(enums),
-			schemas: definitions_,
-			responses: responses_,
-			parameters: {},
-			requestBodies: {},
-			apis,
+			schemas: schemas_ as Record<string, SchemaObject>,
+			responses: responses_ as unknown as Record<
+				string,
+				import('../core/index.js').ResponsesObject
+			>,
+			parameters: parameters_ as Record<string, ParameterObject>,
+			requestBodies: {} as unknown as Record<
+				string,
+				import('../core/index.js').RequestBodyObject
+			>,
+			apis: apis as Record<string, OperationObject[]>,
 		};
 	}
 }

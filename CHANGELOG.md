@@ -1,5 +1,17 @@
 # @moccona/apicodegen
 
+## Unreleased
+
+### Patch Changes
+
+- Refactor: extract `VersionedProvider` base class shared by V2/V3/V3.1, eliminating ~430 lines of duplicated code
+- Fix: `Generator.write` now creates output parent directory before writing (resolves 66 failing integration tests) and propagates errors as `ApicodegenError`
+- Fix: `VersionedProvider.init` no longer mutates the input OpenAPI spec
+- Chore: replace magic string `'E_GENERATION_FAILED'` with `ErrorCodes.GENERATION_FAILED` constant in `cli.ts` and `vite-plugin/index.ts`
+- Chore: move `src/cli/logger.ts` to `src/core/logger.ts`; vite-plugin now reuses the shared logger
+- Chore: delete unused `configToCLIOptions` dead code
+- Tests: add 50 unit tests for `Base` static methods and `Generator.toUrlTemplate`
+
 ## 0.0.9
 
 ### Patch Changes
