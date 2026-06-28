@@ -279,26 +279,6 @@ export async function loadConfig(
 }
 
 /**
- * Create CLI options from config for commander
- */
-export function configToCLIOptions(
-	config: ApicodegenConfig
-): Record<string, unknown> {
-	const options: Record<string, unknown> = {};
-
-	if (config.spec) options.spec = config.spec;
-	if (config.output) options.output = config.output;
-	if (config.adaptor) options.adaptor = config.adaptor;
-	if (config.baseURL) options.baseURL = config.baseURL;
-	if (config.verbose) options.verbose = config.verbose;
-	if (config.watch) options.watch = config.watch;
-	if (config.importClientSource)
-		options.importClientSource = config.importClientSource;
-
-	return options;
-}
-
-/**
  * Convert resolved config to provider options format
  */
 export function toProviderOptions(config: ResolvedConfig) {
