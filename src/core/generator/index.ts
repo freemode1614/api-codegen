@@ -21,6 +21,7 @@ import {
 } from 'typescript';
 import type { Adapter } from '../base/Adaptor.js';
 import { Base } from '../base/Base.js';
+import { ApicodegenError, ErrorCodes } from '../errors.js';
 import type {
 	ArrayTypeSchemaObject,
 	MediaTypeObject,
@@ -76,10 +77,22 @@ export class Generator {
 	}
 
 	static async write(code: string, filepath: string) {
+		const { mkdir } = await import('node:fs/promises');
+		const { dirname } = await import('node:path');
 		try {
+			await mkdir(dirname(filepath), { recursive: true });
 			await writeFile(filepath, code);
 		} catch (error) {
-			console.error(error);
+			throw new ApicodegenError({
+				code: ErrorCodes.OUTPUT_DIR_MISSING,
+				message: 'Failed to write generated code to output file',
+				location: filepath,
+				cause: error instanceof Error ? error : new Error(String(error)),
+				suggestions: [
+					'Verify the output directory path is writable',
+					'Check that the parent directory exists or can be created',
+				],
+			});
 		}
 	}
 

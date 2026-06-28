@@ -1,4 +1,6 @@
 import cp from 'node:child_process';
+import { existsSync } from 'node:fs';
+import { rm } from 'node:fs/promises';
 import { createServer, type Server } from 'node:http';
 import path from 'node:path';
 import glob from 'fast-glob';
@@ -56,6 +58,10 @@ const getDocsByVersion = (version: '3.0' | '3.1' | '2.0') => {
 };
 
 beforeAll(async () => {
+	const apisDir = path.resolve(process.cwd(), '__tests__/apis');
+	if (existsSync(apisDir)) {
+		await rm(apisDir, { recursive: true, force: true });
+	}
 	await initDocServer();
 });
 
