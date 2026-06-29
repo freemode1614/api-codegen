@@ -1,20 +1,21 @@
-name: Publish to npm
+name: Release
 
 on:
-  release:
-    types: [published]
+  push:
+    tags:
+      - "v*"
 
 concurrency:
-  group: publish-${{ github.event.release.tag_name }}
+  group: release-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  publish:
-    name: Publish to npm
+  release:
+    name: Release
     runs-on: ubuntu-latest
     permissions:
       id-token: write
-      contents: read
+      contents: write
     steps:
       - uses: actions/checkout@v6
         with:
@@ -28,7 +29,6 @@ jobs:
         with:
           node-version: 24
           cache: pnpm
-          registry-url: https://registry.npmjs.org/
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -36,7 +36,7 @@ jobs:
       - name: Build
         run: pnpm build
 
-      - name: Publish to npm
-        run: npm publish --provenance --access public
+      - name: Create Release
+        run: pnpm run publish
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
