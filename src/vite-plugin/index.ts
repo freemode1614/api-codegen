@@ -5,14 +5,15 @@ import type { PluginOption } from 'vite';
 import { loadConfig, toProviderOptions } from '../core/config.js';
 import {
 	createErrors,
-	formatError,
+	ErrorCodes,
 	isApicodegenError,
 	wrapError,
 } from '../core/errors.js';
+import { logger } from '../core/logger.js';
 import { codeGen } from '../openapi/index.js';
 
 const PLUGIN_NAME = 'api-code-gen';
-const logger = createScopedLogger('api-code-gen');
+const pluginLogger = createScopedLogger('api-code-gen');
 
 export type ApiCodeGenPluginOptions = {
 	/** Human-readable name for this API config (required) */
@@ -86,7 +87,7 @@ async function generateForOption(option: ApiCodeGenPluginOptions): Promise<{
 	const { name, typeCheck = true, verbose, ...restOptions } = option;
 
 	try {
-		console.log(`\x1b[36m├─\x1b[0m ${name}`);
+		logger.info(`Generating ${name}...`);
 
 		// Use config loader to handle env vars and config files
 		const config = await loadConfig({
@@ -126,10 +127,10 @@ async function generateForOption(option: ApiCodeGenPluginOptions): Promise<{
 		if (typeCheck && config.output) {
 			const typeErrors = await runTypeCheck(config.output);
 			if (typeErrors.length > 0) {
-				logger.warn(`Type check failed for ${config.output}`);
+				pluginLogger.warn(`Type check failed for ${config.output}`);
 				if (verbose) {
 					for (const error of typeErrors) {
-						logger.warn(`  ${error}`);
+						pluginLogger.warn(`  ${error}`);
 					}
 				}
 			}
@@ -176,7 +177,7 @@ export function apiCodeGenPlugin(
 	options: ApiCodeGenPluginOptions[]
 ): PluginOption {
 	if (!Array.isArray(options) || options.length === 0) {
-		logger.warn('No API configurations provided to apiCodeGenPlugin');
+		pluginLogger.warn('No API configurations provided to apiCodeGenPlugin');
 		return { name: PLUGIN_NAME };
 	}
 
@@ -184,44 +185,42 @@ export function apiCodeGenPlugin(
 		name: PLUGIN_NAME,
 
 		async config(_config, env) {
-			console.log(`\x1b[1m\x1b[36m${'─'.repeat(50)}\x1b[0m`);
-			console.log(`\x1b[1m\x1b[36mAPI Code Gen\x1b[0m`);
-			console.log(`\x1b[90mMode:\x1b[0m ${env?.command || 'unknown'}`);
-			console.log(`\x1b[1m\x1b[36m${'─'.repeat(50)}\x1b[0m`);
+			logger.heading('API Code Gen', env?.command);
 
 			const results = await Promise.all(options.map(generateForOption));
 			const successCount = results.filter((r) => r.success).length;
 			const failCount = options.length - successCount;
 
-			console.log(`\x1b[1m\x1b[36m${'─'.repeat(50)}\x1b[0m`);
+			logger.divider();
 
 			for (const result of results) {
 				if (result.success) {
 					const { name, output, stats } = result;
 					if (stats) {
-						console.log(
-							`\x1b[32m✓\x1b[0m ${name} → ${output} (${stats.endpoints} endpoints, ${stats.schemas} schemas) ${stats.duration}ms`
+						logger.item(
+							`${name} → ${output} (${stats.endpoints} endpoints, ${stats.schemas} schemas) ${stats.duration}ms`,
+							'green'
 						);
 					} else {
-						console.log(`\x1b[32m✓\x1b[0m ${name} → ${output || 'N/A'}`);
+						logger.item(`${name} → ${output || 'N/A'}`, 'green');
 					}
 				} else {
 					const { name, error } = result;
 					if (isApicodegenError(error)) {
-						console.log(`\x1b[31m✗\x1b[0m ${name}`);
-						console.log(`\x1b[90m${formatError(error, true)}\x1b[0m`);
+						logger.item(name, 'red');
+						logger.error(error, true);
 					} else {
 						const wrapped = wrapError(error!, {
-							code: 'E_GENERATION_FAILED',
+							code: ErrorCodes.GENERATION_FAILED,
 							message: `Failed to generate API "${name}"`,
 						});
-						console.log(`\x1b[31m✗\x1b[0m ${name}`);
-						console.log(`\x1b[90m${formatError(wrapped, true)}\x1b[0m`);
+						logger.item(name, 'red');
+						logger.error(wrapped, true);
 					}
 				}
 			}
 
-			console.log(`\x1b[1m\x1b[36m${'─'.repeat(50)}\x1b[0m`);
+			logger.divider();
 
 			const totalDuration = results.reduce(
 				(sum, r) => sum + (r.stats?.duration || 0),
@@ -236,16 +235,14 @@ export function apiCodeGenPlugin(
 				0
 			);
 
-			if (failCount === 0) {
-				console.log(
-					`\x1b[32m✓\x1b[0m API Code Gen - Complete (\x1b[90m${successCount}/${options.length} succeeded\x1b[0m, ${totalEndpoints} endpoints, ${totalSchemas} schemas, ${totalDuration}ms\x1b[0m)`
-				);
-			} else {
-				console.log(
-					`\x1b[33m⚠\x1b[0m API Code Gen - Complete (\x1b[90m${successCount} succeeded, ${failCount} failed\x1b[0m, ${totalEndpoints} endpoints, ${totalSchemas} schemas, ${totalDuration}ms\x1b[0m)`
-				);
-			}
-			console.log(`\x1b[1m\x1b[36m${'─'.repeat(50)}\x1b[0m`);
+			logger.summary({
+				succeeded: successCount,
+				failed: failCount,
+				endpoints: totalEndpoints,
+				schemas: totalSchemas,
+				duration: totalDuration,
+			});
+			logger.divider();
 
 			return {};
 		},

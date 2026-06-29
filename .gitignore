@@ -138,3 +138,5 @@ __tests__/apis/
 # Local docs (design specs, plans)
 docs/
 !.gitkeep
+# Personal tool config
+.opencode/
