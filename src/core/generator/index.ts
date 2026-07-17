@@ -119,7 +119,7 @@ export class Generator {
 			const queryString = queryParameters
 				.map(
 					(qp, index) =>
-						`${index === 0 ? '?' : '&'}${encodeURIComponent(qp.name)}={${Base.camelCase(Base.normalize(qp.name))}}`
+						`${index === 0 ? '?' : '&'}${encodeURIComponent(qp.name)}={${Base.normalize(qp.name)}}`
 				)
 				.join('');
 			path += queryString;
@@ -144,7 +144,7 @@ export class Generator {
 				}
 
 				return t.createTemplateSpan(
-					t.createIdentifier(match[1]),
+					t.createIdentifier(Base.normalize(match[1])),
 					!isLastSegment
 						? t.createTemplateMiddle(match[2])
 						: t.createTemplateTail(match[2] || '')
@@ -239,7 +239,7 @@ export class Generator {
 		const tags: CommentObject[] = [];
 
 		for (const p of parameters) {
-			const paramName = Base.camelCase(Base.normalize(p.name));
+			const paramName = Base.normalize(p.name);
 			let paramType = 'unknown';
 
 			if (p.schema) {
@@ -428,7 +428,7 @@ export class Generator {
 					t.createParameterDeclaration(
 						undefined,
 						undefined,
-						t.createIdentifier(Base.camelCase(Base.normalize(refName))),
+						t.createIdentifier(Base.normalize(refName)),
 						undefined,
 						t.createTypeReferenceNode(
 							t.createIdentifier(Base.upperCamelCase(Base.normalize(refName)))
@@ -442,14 +442,14 @@ export class Generator {
 					t.createBindingElement(
 						undefined,
 						undefined,
-						t.createIdentifier(Base.camelCase(Base.normalize(name)))
+						t.createIdentifier(Base.normalize(name))
 					)
 				);
 
 				typeObjectElements.push(
 					t.createPropertySignature(
 						[],
-						t.createIdentifier(Base.camelCase(Base.normalize(name))),
+						t.createIdentifier(Base.normalize(name)),
 						required ? undefined : t.createToken(SyntaxKind.QuestionToken),
 						!schema
 							? t.createToken(SyntaxKind.UnknownKeyword)
