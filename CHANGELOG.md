@@ -1,5 +1,13 @@
 # @moccona/apicodegen
 
+## 0.0.11
+
+### Patch Changes
+
+- fix: stop camelCasing parameter names in generated code
+
+  Parameter names like `user_id` were being converted to `userId` in function signatures, but referenced as `user_id` elsewhere, causing undefined variable errors. Remove camelCase from parameter name transformation, keeping only normalize.
+
 ## 0.0.10
 
 ### Patch Changes
