@@ -93,11 +93,7 @@ export class AxiosAdapter extends Adapter {
 														t.createCallExpression(
 															t.createIdentifier('String'),
 															undefined,
-															[
-																t.createIdentifier(
-																	Base.camelCase(Base.normalize(p.name))
-																),
-															]
+															[t.createIdentifier(Base.normalize(p.name))]
 														),
 													]
 												)
