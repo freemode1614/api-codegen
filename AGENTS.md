@@ -23,7 +23,7 @@ Rules for AI coding agents working in this repository. These are **hard requirem
 ### Release flow
 
 - `main` has a ruleset that requires `pull_request` (no direct push).
-- For a new version: open a PR with the version bump + refactor; the user merges on GitHub; then locally run `gh release create v<X.Y.Z>` (which also creates the tag). CI handles `npm publish` on the release event.
+- For a new version: create a release branch (`release/v<X.Y.Z>`), run `pnpm changeset add` and `pnpm changeset version` to bump the version and update CHANGELOG, then open a PR; the user merges on GitHub; then locally run `gh release create v<X.Y.Z>` (which also creates the tag). CI handles `npm publish` on the release event.
 - Do not run `git tag ... && git push origin v*` without going through the release flow first.
 
 ### Do not modify branch protection / rulesets unless explicitly asked
