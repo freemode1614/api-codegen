@@ -35,19 +35,81 @@ export type ApiCodeGenPluginOptions = {
 };
 
 /**
+ * Find the nearest tsconfig.json or jsconfig.json by searching upward.
+ * Bounded by process.cwd() — the Vite project root — to avoid picking up
+ * unrelated configs outside the project.
+ */
+async function findNearestTsConfig(filePath: string): Promise<string | null> {
+	let dir = path.dirname(path.resolve(filePath));
+	const rootDir = process.cwd();
+	const fsRoot = path.parse(dir).root;
+
+	while (true) {
+		for (const name of ['tsconfig.json', 'jsconfig.json']) {
+			const configPath = path.join(dir, name);
+			if (await fs.pathExists(configPath)) {
+				return configPath;
+			}
+		}
+
+		if (dir === rootDir || dir === fsRoot) break;
+
+		dir = path.dirname(dir);
+	}
+
+	return null;
+}
+
+/**
  * Run TypeScript type checking on generated file
  */
 async function runTypeCheck(filePath: string): Promise<string[]> {
 	const { execaCommand } = await import('execa');
 	const errors: string[] = [];
 
+	const resolvedPath = path.resolve(filePath);
+	const tsconfigPath = await findNearestTsConfig(resolvedPath);
+
+	if (!tsconfigPath) {
+		try {
+			await execaCommand(`npx tsc ${resolvedPath} --noEmit`, {
+				shell: true,
+			});
+		} catch (error) {
+			if (error instanceof Error) {
+				errors.push(error.message);
+			}
+		}
+		return errors;
+	}
+
+	const outputDir = path.dirname(resolvedPath);
+	const tempConfigName = `.${path.basename(resolvedPath).replace(/\.ts$/i, '')}.${Date.now()}.apicodegen.json`;
+	const tempConfigPath = path.join(outputDir, tempConfigName);
+	const extendsPath = path.relative(outputDir, tsconfigPath);
+
+	const tempConfig = {
+		extends: extendsPath,
+		compilerOptions: {
+			noEmit: true,
+		},
+		include: [path.basename(resolvedPath)],
+	};
+
 	try {
-		await execaCommand(`npx tsc ${filePath} --noEmit`, {
+		await fs.writeJson(tempConfigPath, tempConfig);
+		await execaCommand(`npx tsc --project "${tempConfigPath}" --noEmit`, {
 			shell: true,
 		});
 	} catch (error) {
 		if (error instanceof Error) {
 			errors.push(error.message);
+		}
+	} finally {
+		try {
+			await fs.remove(tempConfigPath);
+		} catch {
+			// ignore cleanup errors
 		}
 	}
 
