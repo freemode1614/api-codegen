@@ -7,7 +7,7 @@ description: Use when preparing to release a new version - releasing npm package
 
 ## Overview
 
-This project uses **changeset** with **GitHub Actions** for automated releases. Tag pushes trigger the release workflow which builds, creates GitHub release with CHANGELOG, and publishes to npm.
+This project uses **changeset** for versioning + CHANGELOG generation, and **GitHub Actions** for automated npm publishing. The release is triggered by creating a GitHub Release (which also creates the tag), not by pushing tags directly.
 
 ## When to Use
 
@@ -19,25 +19,33 @@ This project uses **changeset** with **GitHub Actions** for automated releases. 
 ## Release Flow
 
 ```
-1. Ensure changes are committed
-2. Create changeset file (describes what changed + bump type)
-3. Run changeset version locally (updates version in package.json + CHANGELOG.md)
-4. Commit version changes
-5. Push to main
-6. Create and push release tag
-7. GitHub Actions automatically: build → release → publish
+1. Ensure changes are committed on main
+2. Create feature branch: git checkout -b release/v<X.Y.Z>
+3. Create changeset: pnpm changeset add
+4. Run changeset version: pnpm changeset version
+5. Commit version changes
+6. Push branch and open PR
+7. User merges PR on GitHub
+8. Run: gh release create v<X.Y.Z>
+9. CI automatically: build → publish to npm
 ```
 
 ## Step-by-Step
 
-### 1. Check Status
+### 1. Start from main
 
 ```bash
-git status
-# All changes should be committed before release
+git checkout main
+git pull origin main
 ```
 
-### 2. Create Changeset
+### 2. Create Release Branch
+
+```bash
+git checkout -b release/v<X.Y.Z>
+```
+
+### 3. Create Changeset
 
 ```bash
 pnpm changeset add
@@ -51,7 +59,7 @@ When prompted:
   - `major` - Breaking changes
 - **Write description**: Brief summary of changes
 
-### 3. Update Version Locally
+### 4. Update Version Locally
 
 ```bash
 pnpm changeset version
@@ -61,68 +69,61 @@ This will:
 - Update `package.json` version
 - Update `CHANGELOG.md`
 
-### 4. Commit Version Changes
+### 5. Commit Version Changes
 
 ```bash
 git add .
-git commit -m "chore: bump version"
+git commit -m "chore: bump version to <X.Y.Z>"
 ```
 
-### 5. Push
+### 6. Push and Open PR
 
 ```bash
-git push origin main
+git push origin release/v<X.Y.Z>
+gh pr create --base main --head release/v<X.Y.Z> \
+  --title "chore: bump version to <X.Y.Z>" \
+  --body "版本 bump <previous> → <X.Y.Z>"
 ```
 
-### 6. Create Release Tag
+### 7. Merge PR
+
+User reviews and merges on GitHub.
+
+### 8. Create GitHub Release
+
+After PR is merged, locally on main:
 
 ```bash
-git tag v0.0.4        # Replace with your version (should match package.json)
-git push origin v0.0.4
+git checkout main && git pull origin main
+gh release create v<X.Y.Z> --generate-notes
 ```
 
-### 7. Verify Release
+This creates the git tag and triggers CI.
+
+### 9. Verify Release
 
 Check GitHub Actions tab for release workflow run. On success:
-- GitHub release created with CHANGELOG
 - Package published to npm
 
 ## Version Bump Guide
 
 | Type | When to Use | Example |
 |------|-------------|---------|
-| `patch` | Bug fixes | `v0.0.3` → `v0.0.4` |
-| `minor` | New features | `v0.0.4` → `v0.1.0` |
+| `patch` | Bug fixes | `v0.0.10` → `v0.0.11` |
+| `minor` | New features | `v0.0.11` → `v0.1.0` |
 | `major` | Breaking changes | `v0.1.0` → `v1.0.0` |
-
-## Skip Release
-
-To push to main without triggering release:
-
-```bash
-git commit -m "chore: skip release"
-git push
-```
-
-The workflow checks for "skip release" in commit message.
 
 ## Troubleshooting
 
-**Release didn't trigger?**
-- Verify tag format: `v*` (e.g., `v0.0.4`)
-- Check GitHub Actions logs
-- Ensure `package.json` version matches the tag
-
 **npm publish failed?**
-- Verify `NPM_TOKEN` secret exists in repo Settings → Secrets
+- Verify `NPM_TOKEN` secret exists in repo Settings → Secrets and variables → Actions
 - Check token has correct permissions
 
 **Version mismatch?**
-- Run `pnpm changeset version` locally before tagging
-- The `package.json` version must match the git tag version
-- If tag already exists with wrong version:
+- The `package.json` version must match the release tag
+- If tag is wrong, delete and retry:
   ```bash
-  git tag -d v0.0.4 && git tag v0.0.4 && git push origin v0.0.4 --force
+  git tag -d v<X.Y.Z> && gh release delete v<X.Y.Z}
   ```
 
 ## Quick Reference
@@ -130,8 +131,8 @@ The workflow checks for "skip release" in commit message.
 | Command | Purpose |
 |---------|---------|
 | `pnpm changeset add` | Create changeset |
-| `pnpm changeset version` | Update version in package.json + CHANGELOG.md (run locally before tagging) |
-| `pnpm changeset publish` | Release (runs in CI after tag push) |
+| `pnpm changeset version` | Update version + CHANGELOG |
+| `gh release create v<X.Y.Z> --generate-notes` | Create release + tag (triggers CI) |
 
 ## Required Setup (One-time)
 
