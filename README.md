@@ -259,6 +259,13 @@ export async function getPetById({ petId }: { petId: number }) {
 - ✅ Cookie parameters: Request cookies
 - ✅ Body parameters: JSON and FormData
 
+### Response Formats
+- ✅ `application/json` — parsed and typed
+- ✅ SSE `text/event-stream` — raw response returned for application-layer handling
+- ✅ Other text/binary types — returned unparsed
+
+> For SSE endpoints the generated function returns the raw `Response` (fetch) or `AxiosResponse` (axios) without consuming the stream. Use `EventSource`, `response.body.getReader()`, or another tool of your choice to parse events.
+
 ### Request Body Formats
 - ✅ `application/json` - JSON data
 - ✅ `multipart/form-data` - File uploads
