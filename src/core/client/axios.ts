@@ -4,7 +4,11 @@
  * This adapter is responsible for generating code that uses the Axios HTTP client library.
  */
 
-import type { Statement, TypeReferenceNode } from 'typescript';
+import type {
+	PropertyAssignment,
+	Statement,
+	TypeReferenceNode,
+} from 'typescript';
 import { factory as t } from 'typescript';
 import { Adapter } from '../base/Adaptor.js';
 import { Base } from '../base/Base.js';
@@ -76,7 +80,7 @@ export class AxiosAdapter extends Adapter {
 		 * including method, headers, and body.
 		 * @returns - The constructed fetch options object
 		 */
-		const toLiterlExpression = () => {
+		const toLiterlExpression = (extraProperties: PropertyAssignment[] = []) => {
 			return t.createObjectLiteralExpression(
 				[
 					// Set the HTTP method
@@ -124,18 +128,29 @@ export class AxiosAdapter extends Adapter {
 											: t.createIdentifier('req')
 								)
 							: []
-					),
+					)
+					.concat(extraProperties),
 				true
 			);
 		};
 
-		// SSE responses are returned unparsed so the caller can read the stream
+		// SSE responses need axios to use the fetch adapter and stream the
+		// response body so callers can iterate over the event stream.
 		if (isEventStream) {
 			statements.push(
 				t.createReturnStatement(
 					t.createCallExpression(t.createIdentifier(adapter.name), undefined, [
 						Generator.toUrlTemplate(uri, parameters),
-						toLiterlExpression(),
+						toLiterlExpression([
+							t.createPropertyAssignment(
+								t.createIdentifier('adapter'),
+								t.createStringLiteral('fetch')
+							),
+							t.createPropertyAssignment(
+								t.createIdentifier('responseType'),
+								t.createStringLiteral('stream')
+							),
+						]),
 					])
 				)
 			);
