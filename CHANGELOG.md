@@ -1,5 +1,13 @@
 # @moccona/apicodegen
 
+## 0.1.0
+
+### Minor Changes
+
+- Add support for SSE (`text/event-stream`) responses. When an OpenAPI endpoint declares a `text/event-stream` response, the generated function now returns the raw HTTP response (`Promise<Response>` for fetch, `Promise<AxiosResponse>` for axios) without parsing the body, allowing the application layer to consume the event stream directly. Non-SSE responses are unaffected.
+
+  Also fixes a path-alias resolution issue in the Vite plugin's typecheck step by writing a temporary tsconfig that extends the nearest project config.
+
 ## 0.0.11
 
 ### Patch Changes
