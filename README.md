@@ -264,7 +264,9 @@ export async function getPetById({ petId }: { petId: number }) {
 - ✅ SSE `text/event-stream` — raw response returned for application-layer handling
 - ✅ Other text/binary types — returned unparsed
 
-> For SSE endpoints the generated function returns the raw `Response` (fetch) or `AxiosResponse` (axios) without consuming the stream. Use `EventSource`, `response.body.getReader()`, or another tool of your choice to parse events.
+> For SSE endpoints:
+> - **fetch** adapter: returns `Promise<Response>`. Use `EventSource`, `response.body.getReader()`, or another tool of your choice to parse events.
+> - **axios** adapter: configures axios with `adapter: 'fetch'` + `responseType: 'stream'`, so `response.data` is a `ReadableStream` you can iterate directly.
 
 ### Request Body Formats
 - ✅ `application/json` - JSON data
