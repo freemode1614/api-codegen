@@ -1,5 +1,11 @@
 # @moccona/apicodegen
 
+## 0.1.1
+
+### Patch Changes
+
+- Fix axios SSE support to actually stream the response. Previously the generated `axios(url, init)` for `text/event-stream` endpoints relied on axios's default adapter, which would still try to parse the response body. The generated call now sets `adapter: 'fetch'` and `responseType: 'stream'` so `response.data` is a `ReadableStream` the caller can iterate directly.
+
 ## 0.1.0
 
 ### Minor Changes
