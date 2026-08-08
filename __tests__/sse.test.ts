@@ -92,7 +92,7 @@ describe('SSE codegen (fetch adapter)', () => {
 });
 
 describe('SSE codegen (axios adapter)', () => {
-	it('returns raw axios() without generic type parameter', async () => {
+	it('returns raw axios() with fetch adapter and stream responseType', async () => {
 		const code = await Generator.genCode(
 			makeSseFixture(),
 			{ docURL: 'memory://', output: 'memory.ts', adaptor: Adaptors.axios },
@@ -101,6 +101,8 @@ describe('SSE codegen (axios adapter)', () => {
 
 		expect(code).toMatch(/return axios\(/);
 		expect(code).not.toMatch(/return axios</);
+		expect(code).toContain('adapter: "fetch"');
+		expect(code).toContain('responseType: "stream"');
 	});
 
 	it('still emits method/headers/body for SSE endpoint', async () => {
@@ -142,6 +144,8 @@ describe('SSE codegen (axios adapter)', () => {
 		);
 
 		expect(code).toContain('data:');
+		expect(code).toContain('adapter: "fetch"');
+		expect(code).toContain('responseType: "stream"');
 	});
 });
 
