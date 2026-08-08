@@ -28,6 +28,7 @@ export class FetchAdapter extends Adapter {
 	 * @param adapter - The adapter instance
 	 * @param shouldUseFormData - Flag to use FormData for the request body
 	 * @param shouldUseJSONResponse - Flag to use JSON parsing for the response
+	 * @param isEventStream - Flag indicating a text/event-stream response; when true the raw Response is returned unparsed
 	 * @return - An array of generated TypeScript statements
 	 */
 	public client(
@@ -38,7 +39,8 @@ export class FetchAdapter extends Adapter {
 		response: MediaTypeObject | undefined,
 		adapter: Adapter,
 		shouldUseFormData: boolean,
-		shouldUseJSONResponse: boolean
+		shouldUseJSONResponse: boolean,
+		isEventStream: boolean
 	): Statement[] {
 		const statements: Statement[] = [];
 
@@ -122,6 +124,19 @@ export class FetchAdapter extends Adapter {
 				true
 			);
 		};
+
+		// SSE responses are returned unparsed so the caller can read the stream
+		if (isEventStream) {
+			statements.push(
+				t.createReturnStatement(
+					t.createCallExpression(t.createIdentifier(adapter.name), undefined, [
+						Generator.toUrlTemplate(uri, parameters),
+						toLiterlExpression(),
+					])
+				)
+			);
+			return statements;
+		}
 
 		// Construct the fetch call and return statement
 		statements.push(

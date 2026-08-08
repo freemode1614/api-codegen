@@ -694,6 +694,7 @@ export class Generator {
 			);
 
 		const shouldParseResponseToJSON = 'application/json' === response?.type;
+		const isEventStream = response?.type === 'text/event-stream';
 
 		// Ignore one and only blob parameter.
 		const isRequestBodyBinary =
@@ -744,7 +745,8 @@ export class Generator {
 				response,
 				adapter,
 				shouldPutParametersOrBodyInFormData,
-				shouldParseResponseToJSON
+				shouldParseResponseToJSON,
+				isEventStream
 			),
 		]);
 	}

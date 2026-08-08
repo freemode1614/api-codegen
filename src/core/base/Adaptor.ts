@@ -47,6 +47,7 @@ export abstract class Adapter {
 	 * @param {Adapter} adapter - An instance of the adapter being used
 	 * @param {boolean} useFormData - Flag indicating whether to use FormData for the request body
 	 * @param {boolean} useJSONResponse - Flag indicating whether the response should be parsed as JSON
+	 * @param {boolean} isEventStream - Flag indicating whether the response is a text/event-stream (SSE) stream; when true, the adapter must return the raw response without parsing
 	 * @returns {Statement[]} An array of TypeScript AST statements representing the generated code
 	 */
 	abstract client(
@@ -57,6 +58,7 @@ export abstract class Adapter {
 		response: MediaTypeObject | undefined,
 		adapter: Adapter,
 		useFormData: boolean,
-		useJSONResponse: boolean
+		useJSONResponse: boolean,
+		isEventStream: boolean
 	): Statement[];
 }
