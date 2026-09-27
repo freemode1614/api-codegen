@@ -1,7 +1,8 @@
 import path from 'node:path';
 import fs from 'fs-extra';
 
-import type { Adaptors, FetchDocRequestInit } from './interface.js';
+import type { FetchDocRequestInit } from './interface.js';
+import { Adaptors } from './interface.js';
 
 /**
  * Adaptor type for HTTP client
@@ -57,6 +58,11 @@ export interface ResolvedConfig extends ApicodegenConfig {
 }
 
 /**
+ * Strings considered truthy for boolean env vars (verbose/watch/typeCheck).
+ */
+const TRUTHY_STRINGS = new Set(['true', '1', 'yes', 'on', 'enable']);
+
+/**
  * Environment variable mappings
  */
 const ENV_MAPPINGS: Record<string, keyof ApicodegenConfig> = {
@@ -83,10 +89,13 @@ function loadFromEnv(): Partial<ApicodegenConfig> {
 				case 'verbose':
 				case 'watch':
 				case 'typeCheck':
-					config[configKey] = value === 'true' || value === '1';
+					config[configKey] = TRUTHY_STRINGS.has(value.toLowerCase());
 					break;
 				case 'adaptor':
-					config[configKey] = value as ConfigAdaptor;
+					if (Object.values(Adaptors).includes(value as never)) {
+						config[configKey] = value as ConfigAdaptor;
+					}
+					// else: silently ignore invalid adaptor value.
 					break;
 				default:
 					config[configKey] = value;
@@ -191,8 +200,10 @@ export function mergeConfigs(
 		if (!source) continue;
 
 		for (const [key, value] of Object.entries(source)) {
-			// Only override if value is defined (not undefined)
-			if (value !== undefined) {
+			// Only override if value is defined and not null.
+			// Explicit null is treated like undefined — callers usually want
+			// "unset" semantics, not "set to null".
+			if (value !== undefined && value !== null) {
 				(result as Record<string, unknown>)[key] = value;
 			}
 		}

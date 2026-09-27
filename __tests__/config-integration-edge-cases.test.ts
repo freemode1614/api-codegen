@@ -79,22 +79,20 @@ describe('loadConfig env-var edge cases', () => {
 		expect(cfg.verbose).toBe(true);
 	});
 
-	it('treats APICODEGEN_VERBOSE="yes" as boolean false (not in truthy set)', async () => {
-		// BUG (low): only 'true'/'1' count as truthy. 'yes' is silently false.
+	it('treats APICODEGEN_VERBOSE="yes" as boolean true (after fix: accepts common truthy values)', async () => {
+		// After fix: 'yes', 'on', 'enable' also count as truthy alongside 'true'/'1'.
 		process.env.APICODEGEN_SPEC = '/spec.json';
 		process.env.APICODEGEN_VERBOSE = 'yes';
 		const cfg = await loadConfig({ cliOptions: { output: '/o.ts' } });
-		expect(cfg.verbose).toBe(false);
+		expect(cfg.verbose).toBe(true);
 	});
 
-	it('passes APICODEGEN_ADAPTOR through without runtime validation', async () => {
-		// BUG (medium): env-driven adaptor value is cast to ConfigAdaptor
-		// without checking against the known set. Caller can pass garbage
-		// like "fetchh" and only blow up later in codeGen.
+	it('ignores invalid APICODEGEN_ADAPTOR (after fix: validates against known set)', async () => {
+		// After fix: an invalid adaptor value is dropped (treated as unset).
 		process.env.APICODEGEN_SPEC = '/spec.json';
 		process.env.APICODEGEN_ADAPTOR = 'fetchh';
 		const cfg = await loadConfig({ cliOptions: { output: '/o.ts' } });
-		expect(cfg.adaptor).toBe('fetchh');
+		expect(cfg.adaptor).toBeUndefined();
 	});
 });
 
@@ -248,13 +246,12 @@ describe('mergeConfigs additional edge cases', () => {
 		expect((merged.requestOptions as { credentials?: string }).credentials).toBeUndefined();
 	});
 
-	it('treats null value as a defined value (overrides with null)', () => {
-		// BUG: only `value !== undefined` is skipped. null passes the check
-		// and overwrites the base field with null.
+	it('treats null the same as undefined (does not override with null) — after fix', () => {
+		// After fix: explicit null is treated like undefined, no override.
 		const base = { spec: '/s', output: '/o', baseURL: '/api' };
 		const override = { baseURL: null as unknown as string };
 		const merged = mergeConfigs(base, override);
-		expect(merged.baseURL).toBeNull();
+		expect(merged.baseURL).toBe('/api');
 	});
 });
 

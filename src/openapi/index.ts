@@ -29,9 +29,14 @@ export enum OpenAPIVersion {
 }
 
 function getDocVersion(doc: OpenAPI.Document) {
-	const version = (
-		(doc as OpenAPIV3.Document).openapi || (doc as OpenAPIV2.Document).swagger
-	).slice(0, 3);
+	const raw =
+		(doc as OpenAPIV3.Document).openapi || (doc as OpenAPIV2.Document).swagger;
+
+	if (typeof raw !== 'string' || raw.length === 0) {
+		return OpenAPIVersion.unknown;
+	}
+
+	const version = raw.slice(0, 3);
 
 	switch (version) {
 		case '3.1':

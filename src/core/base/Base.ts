@@ -82,12 +82,23 @@ export abstract class Base {
 	 */
 	static pathToFnName(path: string, method?: string, operationId?: string) {
 		let name = '';
+		let keywordProtected = false;
 		if (operationId) {
+			// Detect TS-keyword protection: if the raw input (before normalize)
+			// was a TS keyword, normalize appends '_' (e.g. 'delete' → 'delete_').
+			keywordProtected = typescriptKeywords.has(operationId);
 			name = Base.camelCase(Base.normalize(operationId));
 		}
 		if (!name) {
+			keywordProtected = typescriptKeywords.has(path);
 			name = Base.camelCase(Base.normalize(path));
 		}
+		// camelCase drops the trailing '_' that normalize added for keyword
+		// protection. Re-append it so the generated identifier stays legal.
+		if (keywordProtected && !name.endsWith('_')) {
+			name = `${name}_`;
+		}
+
 		const suffix = method
 			? Base.capitalize(Base.upperCamelCase(`using_${method}`))
 			: '';
@@ -104,10 +115,14 @@ export abstract class Base {
 		if (typescriptKeywords.has(text)) {
 			text += '_';
 		}
-		return text
-			.replace(/[/\-_{}():\s`,*<>$#.]/gm, '_')
-			.replace(/^\d./gm, '')
-			.replaceAll('...', '');
+		return (
+			text
+				// Collapse `...` FIRST so the per-char replacement below doesn't
+				// turn each '.' into '_' and miss the `...` pattern.
+				.replaceAll('...', '')
+				.replace(/[/\-_{}():\s`,*<>$#.]/gm, '_')
+				.replace(/^\d/gm, '')
+		);
 	}
 
 	/**

@@ -158,9 +158,10 @@ export class Generator {
 				return `* @returns {${comment.type}} ${comment.comment ?? ''}`;
 			}
 			if (comment.tag === 'param') {
+				const typePart = comment.type ? `{${comment.type}} ` : '';
 				return comment.comment
-					? `* @param ${comment.paramName} - ${comment.comment}`
-					: `* @param ${comment.paramName}`;
+					? `* @param ${typePart}${comment.paramName} - ${comment.comment}`
+					: `* @param ${typePart}${comment.paramName}`;
 			}
 			if (comment.tag) {
 				return `* @${comment.tag} ${comment.comment ?? ''}`;

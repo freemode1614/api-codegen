@@ -23,12 +23,11 @@ const makeProvider = (): OpenAPIProvider =>
 
 describe('OpenAPIProvider.parse edge cases', () => {
 
-	it('throws TypeError when doc has no openapi/swagger field', () => {
-		// BUG: getDocVersion does (doc.openapi || doc.swagger).slice(0, 3)
-		// — if BOTH are undefined, this throws a TypeError, not a friendly error.
+	it('throws a friendly error when doc has no openapi/swagger field', () => {
+		// After fix: getDocVersion detects both fields missing and throws a friendly message.
 		const provider = makeProvider();
 		const bad = {} as Record<string, unknown>;
-		expect(() => provider.parse(bad as never)).toThrow();
+		expect(() => provider.parse(bad as never)).toThrow(/Not a valid OpenAPI version/);
 	});
 
 	it('throws a friendly error when openapi is unsupported (e.g. "1.0")', () => {
@@ -38,13 +37,11 @@ describe('OpenAPIProvider.parse edge cases', () => {
 		expect(() => provider.parse(doc as never)).toThrow(/Not a valid OpenAPI version/);
 	});
 
-	it('throws TypeError when openapi is empty string AND swagger is absent', () => {
-		// BUG: '' is falsy, so (doc.openapi || doc.swagger) falls through to doc.swagger
-		// which is undefined → .slice throws TypeError instead of a friendly error.
-		// (Same code path as the "no field" case above.)
+	it('throws a friendly error when openapi is empty string AND swagger is absent', () => {
+		// After fix: getDocVersion handles missing-or-empty openapi/swagger gracefully.
 		const provider = makeProvider();
 		const doc = { openapi: '', paths: {} };
-		expect(() => provider.parse(doc as never)).toThrow(TypeError);
+		expect(() => provider.parse(doc as never)).toThrow(/Not a valid OpenAPI version/);
 	});
 
 	it('accepts openapi="3.0.0" via the prefix match', () => {

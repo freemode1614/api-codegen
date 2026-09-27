@@ -65,7 +65,7 @@ describe('JSDoc param tags from path/query/header parameters', () => {
 				},
 			})
 		);
-		expect(code).toMatch(/@param\s+id\s+-\s+\[path\]/);
+		expect(code).toMatch(/@param\s+(\{[^}]+\}\s+)?id\s+-\s+\[path\]/);
 	});
 
 	it('emits @param for query parameters with [query] prefix', async () => {
@@ -84,7 +84,7 @@ describe('JSDoc param tags from path/query/header parameters', () => {
 				},
 			})
 		);
-		expect(code).toMatch(/@param\s+limit\s+-\s+\[query\]/);
+		expect(code).toMatch(/@param\s+(\{[^}]+\}\s+)?limit\s+-\s+\[query\]/);
 	});
 
 	it('emits @param for header parameters with [header] prefix', async () => {
@@ -103,7 +103,7 @@ describe('JSDoc param tags from path/query/header parameters', () => {
 				},
 			})
 		);
-		expect(code).toMatch(/@param\s+XRequestID/);
+		expect(code).toMatch(/@param\s+(\{[^}]+\}\s+)?XRequestID/);
 		expect(code).toMatch(/\[header\]/);
 	});
 
@@ -123,17 +123,14 @@ describe('JSDoc param tags from path/query/header parameters', () => {
 				},
 			})
 		);
-		// Extract @param line for q
-		const m = code.match(/@param\s+q\s+[^]*?(?=\n|$)/);
+		// Extract @param line for q (allowing optional {type} prefix).
+		const m = code.match(/@param\s+(\{[^}]+\}\s+)?q\s+[^]*?(?=\n|$)/);
 		expect(m).not.toBeNull();
 		expect(m![0]).not.toContain(' | undefined');
 	});
 
-	it('BUG: parameter @param tag omits type info regardless of required (addComments ignores CommentObject.type)', async () => {
-		// BUG: addComments() formats @param as `${paramName} - ${comment}`
-		// and ignores the `type` field on CommentObject entirely. So users
-		// never see "string" or "| undefined" in JSDoc even though
-		// generateParamTags correctly computes it.
+	it('@param tag includes type info from CommentObject.type (after fix)', async () => {
+		// After fix: addComments() formats @param as `{type} name - comment`.
 		const code = await generate(
 			makeSpec({
 				paths: {
@@ -149,9 +146,8 @@ describe('JSDoc param tags from path/query/header parameters', () => {
 				},
 			})
 		);
-		// Locks current (buggy) behavior: type info not surfaced.
-		expect(code).toMatch(/@param\s+q\s+-\s+\[query\]/);
-		expect(code).not.toContain(' | undefined'); // type absent
+		// After fix: optional fields include ' | undefined' suffix in type.
+		expect(code).toMatch(/@param\s+\{string\s*\|\s*undefined\}\s+q/);
 	});
 
 	it('falls back to type "unknown" when parameter has no schema', async () => {
@@ -170,7 +166,7 @@ describe('JSDoc param tags from path/query/header parameters', () => {
 				},
 			})
 		);
-		const m = code.match(/@param\s+q[^@]*?unknown/);
+		const m = code.match(/@param\s+(\{[^}]+\}\s+)?q[^@]*?unknown/);
 		expect(m).not.toBeNull();
 	});
 
@@ -190,8 +186,8 @@ describe('JSDoc param tags from path/query/header parameters', () => {
 				},
 			})
 		);
-		expect(code).toMatch(/@param\s+filterName/);
-		expect(code).not.toMatch(/@param\s+filter-name/);
+		expect(code).toMatch(/@param\s+(\{[^}]+\}\s+)?filterName/);
+		expect(code).not.toMatch(/@param\s+(\{[^}]+\}\s+)?filter-name/);
 	});
 
 	it('preserves non-ASCII description in @param comment', async () => {
@@ -247,8 +243,8 @@ describe('JSDoc body fields from requestBody schema', () => {
 				},
 			})
 		);
-		expect(code).toMatch(/@param\s+req\.name\s+-\s+pet name/);
-		expect(code).toMatch(/@param\s+req\.age\s+-\s+pet age/);
+		expect(code).toMatch(/@param\s+(\{[^}]+\}\s+)?req\.name\s+-\s+pet name/);
+		expect(code).toMatch(/@param\s+(\{[^}]+\}\s+)?req\.age\s+-\s+pet age/);
 	});
 
 	it('marks body field as optional (| undefined) when not in required list', async () => {
@@ -275,7 +271,7 @@ describe('JSDoc body fields from requestBody schema', () => {
 				},
 			})
 		);
-		const m = code.match(/@param\s+req\.name[^@]*/);
+		const m = code.match(/@param\s+(\{[^}]+\}\s+)?req\.name[^@]*/);
 		expect(m).not.toBeNull();
 		expect(m![0]).not.toContain(' | undefined');
 	});
@@ -328,7 +324,7 @@ describe('JSDoc body fields from requestBody schema', () => {
 				},
 			})
 		);
-		expect(code).toMatch(/@param\s+req\.name/);
+		expect(code).toMatch(/@param\s+(\{[^}]+\}\s+)?req\.name/);
 	});
 
 	it('handles requestBody with no schema gracefully', async () => {

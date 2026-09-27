@@ -27,18 +27,16 @@ describe('Base.normalize edge cases', () => {
 		expect(Base.normalize('class')).toBe('class_');
 	});
 
-	it('strips two leading chars when input starts with a digit AND has more chars (regex /^\d./)', () => {
-		// Regex is /^\d./ which requires "digit + at least one more char" to match.
-		// Single-char input "9" doesn't match → passes through unchanged.
-		expect(Base.normalize('1abc')).toBe('bc');
-		expect(Base.normalize('9')).toBe('9');
+	it('strips a single leading digit (single-char or longer input)', () => {
+		// After fix: '9' → '' (strip leading digit); '1abc' → 'abc' (strip leading '1').
+		expect(Base.normalize('9')).toBe('');
+		expect(Base.normalize('1abc')).toBe('abc');
 	});
 
-	it('does NOT collapse ... sequences (each dot becomes _ first)', () => {
-		// BUG: replace(/[...]/, '_') turns each '.' into '_' BEFORE replaceAll('...', '') runs.
-		// Current behavior: 'a...b' → 'a___b'.
-		expect(Base.normalize('a...b')).toBe('a___b');
-		expect(Base.normalize('...')).toBe('___');
+	it('collapses ... sequences (strip dots before token-level replacement)', () => {
+		// After fix: 'a...b' → 'ab'; '...' → ''.
+		expect(Base.normalize('a...b')).toBe('ab');
+		expect(Base.normalize('...')).toBe('');
 	});
 
 	it('preserves letters that are NOT in the charset (e.g. non-ASCII)', () => {
@@ -75,10 +73,10 @@ describe('Base.upperCamelCase edge cases', () => {
 	});
 
 	it('N-prefix only fires for non-leading numeric segments (leading digit stripped by normalize)', () => {
-		// upperCamelCase('1abc') → normalize strips '1a' → 'bc' → 'Bc' (no N).
-		// upperCamelCase('foo_1bar') → normalize keeps it (leading char not digit+more),
+		// upperCamelCase('1abc') → normalize strips leading '1' → 'abc' → 'Abc' (no N).
+		// upperCamelCase('foo_1bar') → normalize keeps it (leading 'f' not digit),
 		//   splits on '_' → ['foo', '1bar'] → 'Foo' + 'N1bar'.
-		expect(Base.upperCamelCase('1abc')).toBe('Bc');
+		expect(Base.upperCamelCase('1abc')).toBe('Abc');
 		expect(Base.upperCamelCase('foo_1bar')).toBe('FooN1bar');
 	});
 
@@ -89,7 +87,7 @@ describe('Base.upperCamelCase edge cases', () => {
 
 describe('Base.pathToFnName edge cases', () => {
 	it('returns just the method suffix when both path and operationId normalize to empty', () => {
-		// path = "///" → normalize → "___" → camelCase splits on _ → filtered out → ""
+		// path = "///" → normalize → "___" → camelCase splits/filter → ""
 		// operationId = "" → if (operationId) falsy → skip
 		// final name = "" + "UsingGet"
 		const name = Base.pathToFnName('///', 'get', '');
@@ -101,13 +99,10 @@ describe('Base.pathToFnName edge cases', () => {
 		expect(name).toMatch(/^[A-Za-z_$][A-Za-z0-9_$]*$/);
 	});
 
-	it('drops the keyword-protection underscore (camelCase re-splits on _)', () => {
-		// BUG: normalize("delete") → "delete_", but camelCase splits on _ and re-joins,
-		// so the keyword-protection suffix is consumed. Generated name compiles fine
-		// only because TS allows identifier "delete" at call sites — but inside a class
-		// or interface body it would collide with the `delete` operator.
+	it('preserves the keyword-protection underscore in the final name', () => {
+		// After fix: normalize("delete") → "delete_"; the _ must survive into the output.
 		const name = Base.pathToFnName('/pets', 'delete', 'delete');
-		expect(name).toBe('deleteUsingDelete');
+		expect(name).toBe('delete_UsingDelete');
 		expect(name).toMatch(/^[A-Za-z_$][A-Za-z0-9_$]*$/);
 	});
 
@@ -116,10 +111,10 @@ describe('Base.pathToFnName edge cases', () => {
 		expect(name).toBe('查询宠物UsingGet');
 	});
 
-	it('handles ... sequences in operationId — current behavior preserves foo+Bar', () => {
-		// normalize("foo...bar") → "foo___bar" (each . → _), then camelCase splits and joins.
+	it('handles ... sequences in operationId — collapses before tokenization', () => {
+		// normalize("foo...bar") → "foobar" (after collapse ...), then camelCase → "foobar".
 		const name = Base.pathToFnName('/pets', 'get', 'foo...bar');
-		expect(name).toBe('fooBarUsingGet');
+		expect(name).toBe('foobarUsingGet');
 	});
 });
 

@@ -203,19 +203,14 @@ describe('isApicodegenError', () => {
 });
 
 describe('createErrors.typeCheckFailed', () => {
-	it('BUG: ignores the _errors parameter (no way to surface them)', () => {
-		// The signature accepts _errors: string[] but the implementation never
-		// stores it on the error (not in suggestions, not in path). Callsite
-		// loses all type-error detail.
+	it('surfaces _errors in suggestions (after fix)', () => {
+		// After fix: typeCheckFailed includes the error lines in suggestions
+		// so callers can see what failed.
 		const err = createErrors.typeCheckFailed('/out.ts', ['error1', 'error2']);
 		expect(err.code).toBe(ErrorCodes.TYPE_CHECK_FAILED);
 		expect(err.location).toBe('/out.ts');
-		// Locks current behavior: _errors are discarded.
-		expect(err.suggestions).toEqual([
-			'Review type errors above',
-			'Check for schema inconsistencies',
-			'Update generated types or fix source schema',
-		]);
+		expect(err.suggestions).toContain('error1');
+		expect(err.suggestions).toContain('error2');
 	});
 });
 
