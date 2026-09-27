@@ -39,6 +39,7 @@ import {
 	ParameterIn,
 	SchemaFormatType,
 } from '../interface.js';
+import { createUniqueNameResolver } from './naming.js';
 
 /**
  * Represents a comment object with optional tag and message.
@@ -801,6 +802,10 @@ export class Generator {
 			}
 		}
 
+		// Per-generation unique-name resolver. Lives only for this pass so
+		// repeated runs / dry-runs don't leak state across generations.
+		const reserveUnique = createUniqueNameResolver();
+
 		for (const uri in apis) {
 			const operations = apis[uri];
 			for (const operation of operations) {
@@ -832,10 +837,12 @@ export class Generator {
 							t.createModifier(SyntaxKind.AsyncKeyword),
 						],
 						undefined,
-						Base.pathToFnName(uri, method, operationId) +
-							(shouldAddExtraMethodNameSuffix
-								? Base.camelCase(Base.normalize(req.type.split('/')[1]))
-								: ''),
+						reserveUnique(
+							Base.pathToFnName(uri, method, operationId) +
+								(shouldAddExtraMethodNameSuffix
+									? Base.camelCase(Base.normalize(req.type.split('/')[1]))
+									: '')
+						),
 						undefined,
 						[
 							...(parameters.length > 0
