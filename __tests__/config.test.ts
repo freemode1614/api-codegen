@@ -6,6 +6,7 @@ import {
 	mergeConfigs,
 	validateConfig,
 	toProviderOptions,
+	configToCLIOptions,
 } from '../src/core/config.js';
 import type { ApicodegenConfig, ResolvedConfig } from '../src/core/config.js';
 
@@ -367,6 +368,84 @@ describe('config', () => {
 			const result = await loadConfig({ cwd: TEST_DIR });
 
 			expect(result.spec).toBe('./pkg-spec.json');
+		});
+	});
+
+	describe('configToCLIOptions', () => {
+		it('returns an empty object when config has no recognized fields', () => {
+			const result = configToCLIOptions({} as ApicodegenConfig);
+			expect(result).toEqual({});
+		});
+
+		it('forwards spec, output, adaptor, baseURL, verbose', () => {
+			const result = configToCLIOptions({
+				spec: './spec.json',
+				output: './out.ts',
+				adaptor: 'fetch',
+				baseURL: 'https://api.example.com',
+				verbose: true,
+			} as ApicodegenConfig);
+			expect(result).toEqual({
+				spec: './spec.json',
+				output: './out.ts',
+				adaptor: 'fetch',
+				baseURL: 'https://api.example.com',
+				verbose: true,
+			});
+		});
+
+		it('forwards watch=true but not watch=false', () => {
+			const on = configToCLIOptions({ watch: true } as ApicodegenConfig);
+			const off = configToCLIOptions({ watch: false } as ApicodegenConfig);
+			expect(on.watch).toBe(true);
+			expect('watch' in off).toBe(false);
+		});
+
+		it('forwards importClientSource when present', () => {
+			const result = configToCLIOptions({
+				spec: './s.json',
+				output: './o.ts',
+				importClientSource: './custom-client.ts',
+			} as ApicodegenConfig);
+			expect(result.importClientSource).toBe('./custom-client.ts');
+		});
+
+		it('omits falsy fields (false, empty string, undefined)', () => {
+			const result = configToCLIOptions({
+				spec: '',
+				output: '',
+				adaptor: undefined,
+				baseURL: undefined,
+				verbose: false,
+				watch: undefined,
+			} as unknown as ApicodegenConfig);
+			expect(result).toEqual({});
+		});
+	});
+
+	describe('loadConfig edge cases', () => {
+		it('surfaces a descriptive error when config file cannot be parsed', async () => {
+			await fs.writeFile(
+				path.join(TEST_DIR, 'apicodegen.config.json'),
+				'{ this is not valid JSON'
+			);
+			await expect(
+				loadConfig({ name: 'bad', cwd: TEST_DIR })
+			).rejects.toThrow(/Failed to load config/);
+		});
+
+		it('ignores package.json apicodegen when it is an object (handled by inline-config path, not findConfigFile)', async () => {
+			// findConfigFile only treats string `apicodegen` as a config path;
+			// object form is handled by loadConfig's inline-config branch separately.
+			process.env.APICODEGEN_SPEC = './env-spec.json';
+
+			await fs.writeJson(path.join(TEST_DIR, 'package.json'), {
+				apicodegen: { spec: './pkg-spec-object.json' },
+			});
+
+			const result = await loadConfig({ cwd: TEST_DIR });
+			// Inline object config takes effect here (different branch from L170).
+			expect(result.spec).toBe('./pkg-spec-object.json');
 		});
 	});
 });
