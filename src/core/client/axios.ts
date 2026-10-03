@@ -4,11 +4,7 @@
  * This adapter is responsible for generating code that uses the Axios HTTP client library.
  */
 
-import type {
-	PropertyAssignment,
-	Statement,
-	TypeReferenceNode,
-} from 'typescript';
+import type { Statement, TypeReferenceNode } from 'typescript';
 import { factory as t } from 'typescript';
 import { Adapter } from '../base/Adaptor.js';
 import { Base } from '../base/Base.js';
@@ -46,17 +42,11 @@ export class AxiosAdapter extends Adapter {
 	readonly name = 'axios';
 
 	/**
-	 * Generates client code for making API requests using Axios.
-	 * @param uri - The API endpoint URI
-	 * @param method - The HTTP method (GET, POST, etc.)
-	 * @param parameters - Array of parameters to include in the request
-	 * @param requestBody - The request body media type definition
-	 * @param response - The response media type definition
-	 * @param adapter - The adapter instance
-	 * @param shouldUseFormData - Flag to use FormData for the request body
-	 * @param shouldUseJSONResponse - Unused by AxiosAdapter; present to align with the abstract signature so positional args bind correctly
-	 * @param isEventStream - Flag indicating a text/event-stream response; when true the raw AxiosResponse is returned without JSON parsing
-	 * @return - An array of generated TypeScript statements
+	 * Method that should generate and return the client-specific configuration statements.
+	 *
+	 * @returns {Statement[]} An array of TypeScript statements that define the client configuration.
+	 *
+	 * @throws {Error} Indicates that the method is not yet implemented and needs to be filled in.
 	 */
 	public client(
 		uri: string,
@@ -65,9 +55,7 @@ export class AxiosAdapter extends Adapter {
 		requestBody: MediaTypeObject | undefined,
 		response: MediaTypeObject | undefined,
 		adapter: Adapter,
-		shouldUseFormData: boolean,
-		_shouldUseJSONResponse: boolean,
-		isEventStream: boolean
+		shouldUseFormData: boolean
 	): Statement[] {
 		const statements: Statement[] = [];
 
@@ -80,7 +68,7 @@ export class AxiosAdapter extends Adapter {
 		 * including method, headers, and body.
 		 * @returns - The constructed fetch options object
 		 */
-		const toLiterlExpression = (extraProperties: PropertyAssignment[] = []) => {
+		const toLiterlExpression = () => {
 			return t.createObjectLiteralExpression(
 				[
 					// Set the HTTP method
@@ -105,7 +93,11 @@ export class AxiosAdapter extends Adapter {
 														t.createCallExpression(
 															t.createIdentifier('String'),
 															undefined,
-															[t.createIdentifier(Base.normalize(p.name))]
+															[
+																t.createIdentifier(
+																	Base.camelCase(Base.normalize(p.name))
+																),
+															]
 														),
 													]
 												)
@@ -128,34 +120,10 @@ export class AxiosAdapter extends Adapter {
 											: t.createIdentifier('req')
 								)
 							: []
-					)
-					.concat(extraProperties),
+					),
 				true
 			);
 		};
-
-		// SSE responses need axios to use the fetch adapter and stream the
-		// response body so callers can iterate over the event stream.
-		if (isEventStream) {
-			statements.push(
-				t.createReturnStatement(
-					t.createCallExpression(t.createIdentifier(adapter.name), undefined, [
-						Generator.toUrlTemplate(uri, parameters),
-						toLiterlExpression([
-							t.createPropertyAssignment(
-								t.createIdentifier('adapter'),
-								t.createStringLiteral('fetch')
-							),
-							t.createPropertyAssignment(
-								t.createIdentifier('responseType'),
-								t.createStringLiteral('stream')
-							),
-						]),
-					])
-				)
-			);
-			return statements;
-		}
 
 		// Construct the fetch call and return statement
 		statements.push(

@@ -1,12 +1,11 @@
 import { describe, expect, it, vi } from 'vitest';
-import { banner } from '../src/cli/banner.js';
-import { logger } from '../src/core/logger.js';
+import { logger } from '../src/cli/logger.js';
 
 describe('logger', () => {
 	describe('banner', () => {
 		it('should output banner with version', () => {
 			const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
-			banner.print('1.0.0');
+			logger.banner('1.0.0');
 
 			expect(logSpy).toHaveBeenCalledTimes(1);
 			expect(logSpy.mock.calls[0][0]).toContain('API Code Generator v1.0.0');

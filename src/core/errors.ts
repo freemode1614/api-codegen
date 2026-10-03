@@ -305,6 +305,7 @@ export const createErrors = {
 			message: 'TypeScript type check failed',
 			location: path,
 			suggestions: [
+				...(_errors.length > 0 ? _errors : []),
 				'Review type errors above',
 				'Check for schema inconsistencies',
 				'Update generated types or fix source schema',

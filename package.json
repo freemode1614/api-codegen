@@ -1,6 +1,6 @@
 {
   "name": "@moccona/apicodegen",
-  "version": "0.1.1",
+  "version": "0.0.9",
   "description": "",
   "type": "module",
   "engines": {
@@ -67,6 +67,7 @@
     "@changesets/cli": "^2.31.0",
     "@types/fs-extra": "^11.0.4",
     "@types/node": "^22.14.1",
+    "@vitest/coverage-v8": "^5.0.2",
     "axios": "^1.11.0",
     "fast-glob": "^3.3.3",
     "husky": "^9.1.7",
@@ -78,7 +79,7 @@
     "typescript": "^5.9.2",
     "vite": "^7.1.5",
     "vite-tsconfig-paths": "^6.1.1",
-    "vitest": "^3.2.4"
+    "vitest": "^5.0.2"
   },
   "peerDependencies": {
     "prettier": "^3",

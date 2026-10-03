@@ -4,18 +4,13 @@ import path from 'node:path';
 import { createCommand } from 'commander';
 import fs from 'fs-extra';
 import * as packageJson from '../package.json' with { type: 'json' };
-import { banner } from './cli/banner.js';
 import { loadConfig, toProviderOptions } from './core/config.js';
-import {
-	createErrors,
-	ErrorCodes,
-	isApicodegenError,
-	wrapError,
-} from './core/errors.js';
-import { logger } from './core/logger.js';
+import { createErrors, isApicodegenError, wrapError } from './core/errors.js';
 import { codeGen } from './openapi/index.js';
 
 const version = packageJson.default.version;
+
+import { logger } from './cli/logger.js';
 
 interface CLIOptions {
 	spec?: string;
@@ -114,7 +109,7 @@ cli
 	.option('-v, --verbose', 'Enable verbose logging')
 	.option('--importClientSource <path>', 'Custom client import source path')
 	.action(async (specArg: string | undefined, options: CLIOptions) => {
-		banner.print(version);
+		logger.banner(version);
 
 		if (!specArg && !options.spec) {
 			logger.info('Usage: apicodegen [options] [spec]');
@@ -193,7 +188,7 @@ cli
 				logger.error(error, options.verbose);
 			} else {
 				const wrapped = wrapError(error, {
-					code: ErrorCodes.GENERATION_FAILED,
+					code: 'E_GENERATION_FAILED',
 					message: 'An unexpected error occurred',
 				});
 				logger.error(wrapped, options.verbose);

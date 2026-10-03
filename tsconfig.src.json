@@ -1,0 +1,9 @@
+{
+	"extends": "./tsconfig.json",
+	"compilerOptions": {
+		"noEmit": true,
+		"outDir": "./npm/.src-typecheck"
+	},
+	"include": ["src"],
+	"exclude": ["node_modules", "npm", "bin", "__tests__", "__tests__/apis"]
+}

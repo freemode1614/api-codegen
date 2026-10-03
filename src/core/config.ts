@@ -1,7 +1,8 @@
 import path from 'node:path';
 import fs from 'fs-extra';
 
-import type { Adaptors, FetchDocRequestInit } from './interface.js';
+import type { FetchDocRequestInit } from './interface.js';
+import { Adaptors } from './interface.js';
 
 /**
  * Adaptor type for HTTP client
@@ -57,6 +58,11 @@ export interface ResolvedConfig extends ApicodegenConfig {
 }
 
 /**
+ * Strings considered truthy for boolean env vars (verbose/watch/typeCheck).
+ */
+const TRUTHY_STRINGS = new Set(['true', '1', 'yes', 'on', 'enable']);
+
+/**
  * Environment variable mappings
  */
 const ENV_MAPPINGS: Record<string, keyof ApicodegenConfig> = {
@@ -83,10 +89,13 @@ function loadFromEnv(): Partial<ApicodegenConfig> {
 				case 'verbose':
 				case 'watch':
 				case 'typeCheck':
-					config[configKey] = value === 'true' || value === '1';
+					config[configKey] = TRUTHY_STRINGS.has(value.toLowerCase());
 					break;
 				case 'adaptor':
-					config[configKey] = value as ConfigAdaptor;
+					if (Object.values(Adaptors).includes(value as never)) {
+						config[configKey] = value as ConfigAdaptor;
+					}
+					// else: silently ignore invalid adaptor value.
 					break;
 				default:
 					config[configKey] = value;
@@ -181,7 +190,7 @@ async function findConfigFile(cwd: string): Promise<string | null> {
  * Merge multiple config sources with priority
  * Priority: defaults < env vars < config file < CLI args
  */
-function mergeConfigs(
+export function mergeConfigs(
 	base: ApicodegenConfig,
 	...sources: (Partial<ApicodegenConfig> | undefined)[]
 ): ApicodegenConfig {
@@ -191,8 +200,10 @@ function mergeConfigs(
 		if (!source) continue;
 
 		for (const [key, value] of Object.entries(source)) {
-			// Only override if value is defined (not undefined)
-			if (value !== undefined) {
+			// Only override if value is defined and not null.
+			// Explicit null is treated like undefined — callers usually want
+			// "unset" semantics, not "set to null".
+			if (value !== undefined && value !== null) {
 				(result as Record<string, unknown>)[key] = value;
 			}
 		}
@@ -204,7 +215,7 @@ function mergeConfigs(
 /**
  * Validate config has required fields
  */
-function validateConfig(
+export function validateConfig(
 	config: Partial<ApicodegenConfig>
 ): config is ApicodegenConfig {
 	if (!config.spec) {
@@ -276,6 +287,26 @@ export async function loadConfig(
 		configFilePath,
 		name,
 	};
+}
+
+/**
+ * Create CLI options from config for commander
+ */
+export function configToCLIOptions(
+	config: ApicodegenConfig
+): Record<string, unknown> {
+	const options: Record<string, unknown> = {};
+
+	if (config.spec) options.spec = config.spec;
+	if (config.output) options.output = config.output;
+	if (config.adaptor) options.adaptor = config.adaptor;
+	if (config.baseURL) options.baseURL = config.baseURL;
+	if (config.verbose) options.verbose = config.verbose;
+	if (config.watch) options.watch = config.watch;
+	if (config.importClientSource)
+		options.importClientSource = config.importClientSource;
+
+	return options;
 }
 
 /**
