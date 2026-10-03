@@ -82,7 +82,7 @@ pnpm add -D @moccona/apicodegen
 |---------|---------|--------------|
 | `typescript` | v5 | Type checking generated code |
 | `prettier` | v3 | Formatting output |
-| `vite` | v7 | Vite plugin only |
+| `vite` | v7 / v8 | Vite plugin only (optional) |
 
 ---
 

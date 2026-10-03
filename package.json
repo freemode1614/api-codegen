@@ -84,7 +84,7 @@
   "peerDependencies": {
     "prettier": "^3",
     "typescript": "^5",
-    "vite": "^7"
+    "vite": "^7 || ^8"
   },
   "peerDependenciesMeta": {
     "vite": {
