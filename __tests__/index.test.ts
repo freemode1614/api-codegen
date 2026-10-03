@@ -1,4 +1,5 @@
 import cp from 'node:child_process';
+import fs from 'node:fs/promises';
 import { createServer, type Server } from 'node:http';
 import path from 'node:path';
 import glob from 'fast-glob';
@@ -83,6 +84,7 @@ describe('OpenAPI 2.0 codegen', () => {
 		const output = `__tests__/apis/${doc.replace('.json', '').replace('json/', '')}.ts`;
 
 		it(`${docUrl}`, async () => {
+			await fs.mkdir(path.dirname(output), { recursive: true });
 			await codeGen({
 				docURL: docUrl,
 				output: output,
@@ -100,6 +102,7 @@ describe('OpenAPI 3.0 codegen', () => {
 		const output = `__tests__/apis/${doc.replace('.json', '').replace('json/', '')}.ts`;
 
 		it(`3.0 docs: ${docUrl}`, async () => {
+			await fs.mkdir(path.dirname(output), { recursive: true });
 			await codeGen({
 				docURL: docUrl,
 				output: output,
@@ -117,6 +120,7 @@ describe('OenAPI 3.1 codegen', () => {
 		const output = `__tests__/apis/${doc.replace('.json', '').replace('json/', '')}.ts`;
 
 		it(`${docUrl}`, async () => {
+			await fs.mkdir(path.dirname(output), { recursive: true });
 			await codeGen({
 				docURL: docUrl,
 				output: output,
