@@ -1,8 +1,8 @@
 /* eslint-disable unicorn/prefer-spread */
 
-import type { Statement } from 'typescript';
+import type { PropertyAssignment, Statement } from 'typescript';
 import { SyntaxKind, factory as t } from 'typescript';
-import { Adapter } from '../base/Adaptor.js';
+import { Adapter, type BodyKind } from '../base/Adaptor.js';
 import { Base } from '../base/Base.js';
 import { Generator } from '../generator/index.js';
 import type { MediaTypeObject, ParameterObject } from '../interface.js';
@@ -26,7 +26,8 @@ export class FetchAdapter extends Adapter {
 	 * @param requestBody - The request body media type definition
 	 * @param response - The response media type definition
 	 * @param adapter - The adapter instance
-	 * @param shouldUseFormData - Flag to use FormData for the request body
+	 * @param bodyKind - How the body should be encoded (json / form-data / urlencoded / binary / none)
+	 * @param bodyContentType - Content-Type header to inject (undefined means "let runtime decide", e.g. multipart boundary)
 	 * @param shouldUseJSONResponse - Flag to use JSON parsing for the response
 	 * @return - An array of generated TypeScript statements
 	 */
@@ -37,7 +38,8 @@ export class FetchAdapter extends Adapter {
 		requestBody: MediaTypeObject | undefined,
 		response: MediaTypeObject | undefined,
 		adapter: Adapter,
-		shouldUseFormData: boolean,
+		bodyKind: BodyKind,
+		bodyContentType: string | undefined,
 		shouldUseJSONResponse: boolean
 	): Statement[] {
 		const statements: Statement[] = [];
@@ -52,79 +54,96 @@ export class FetchAdapter extends Adapter {
 		 * @returns - The constructed fetch options object
 		 */
 		const toLiterlExpression = () => {
-			return t.createObjectLiteralExpression(
-				[
-					// Set the HTTP method
+			const headerEntries: PropertyAssignment[] = [];
+			for (const p of inHeader) {
+				headerEntries.push(
 					t.createPropertyAssignment(
-						t.createIdentifier(adapter.methodFieldName),
-						t.createStringLiteral(method.toUpperCase())
-					),
-				]
-					.concat(
-						// Add headers if there are any
-						inHeader.length > 0
-							? t.createPropertyAssignment(
-									t.createIdentifier(adapter.headersFieldName),
-									t.createObjectLiteralExpression(
-										inHeader.map((p) =>
-											t.createPropertyAssignment(
-												t.createStringLiteral(p.name),
-												t.createCallExpression(
-													t.createIdentifier('encodeURIComponent'),
-													undefined,
-													[
-														t.createCallExpression(
-															t.createIdentifier('String'),
-															undefined,
-															[
-																t.createIdentifier(
-																	Base.camelCase(Base.normalize(p.name))
-																),
-															]
-														),
-													]
-												)
-											)
-										)
-									)
-								)
-							: []
+						t.createStringLiteral(p.name),
+						t.createCallExpression(
+							t.createIdentifier('encodeURIComponent'),
+							undefined,
+							[
+								t.createCallExpression(
+									t.createIdentifier('String'),
+									undefined,
+									[t.createIdentifier(Base.camelCase(Base.normalize(p.name)))]
+								),
+							]
+						)
 					)
-					.concat(
-						shouldUseFormData || inBody.length > 0 || requestBody?.schema
-							? t.createPropertyAssignment(
-									t.createIdentifier(adapter.bodyFieldName),
-									shouldUseFormData
-										? t.createIdentifier('fd')
-										: inBody.length > 0 ||
-												(requestBody?.schema &&
-													!Generator.isBinarySchema(requestBody.schema))
-											? t.createCallExpression(
-													t.createPropertyAccessExpression(
-														t.createIdentifier('JSON'),
-														t.createIdentifier('stringify')
-													),
-													[],
-													[
-														requestBody
-															? t.createIdentifier('req')
-															: t.createObjectLiteralExpression(
-																	inBody.map((b) =>
-																		t.createShorthandPropertyAssignment(
-																			t.createIdentifier(b.name)
-																		)
-																	),
-																	true
-																),
-													]
-												)
-											: // One File parameter
-												t.createIdentifier('req')
-								)
-							: []
-					),
-				true
-			);
+				);
+			}
+			if (bodyContentType !== undefined) {
+				headerEntries.push(
+					t.createPropertyAssignment(
+						t.createStringLiteral('Content-Type'),
+						t.createStringLiteral(bodyContentType)
+					)
+				);
+			}
+
+			const properties: PropertyAssignment[] = [
+				t.createPropertyAssignment(
+					t.createIdentifier(adapter.methodFieldName),
+					t.createStringLiteral(method.toUpperCase())
+				),
+			];
+
+			if (headerEntries.length > 0) {
+				properties.push(
+					t.createPropertyAssignment(
+						t.createIdentifier(adapter.headersFieldName),
+						t.createObjectLiteralExpression(headerEntries)
+					)
+				);
+			}
+
+			let bodyExpr: import('typescript').Expression | undefined;
+			switch (bodyKind) {
+				case 'form-data':
+					bodyExpr = t.createIdentifier('fd');
+					break;
+				case 'urlencoded':
+					bodyExpr = t.createIdentifier('sp');
+					break;
+				case 'json': {
+					const arg = requestBody
+						? t.createIdentifier('req')
+						: t.createObjectLiteralExpression(
+								inBody.map((b) =>
+									t.createShorthandPropertyAssignment(
+										t.createIdentifier(b.name)
+									)
+								),
+								true
+							);
+					bodyExpr = t.createCallExpression(
+						t.createPropertyAccessExpression(
+							t.createIdentifier('JSON'),
+							t.createIdentifier('stringify')
+						),
+						[],
+						[arg]
+					);
+					break;
+				}
+				case 'binary':
+					bodyExpr = t.createIdentifier('req');
+					break;
+				case 'none':
+					break;
+			}
+
+			if (bodyExpr) {
+				properties.push(
+					t.createPropertyAssignment(
+						t.createIdentifier(adapter.bodyFieldName),
+						bodyExpr
+					)
+				);
+			}
+
+			return t.createObjectLiteralExpression(properties, true);
 		};
 
 		// Construct the fetch call and return statement
@@ -172,9 +191,7 @@ export class FetchAdapter extends Adapter {
 														)
 													)
 												),
-												response?.schema
-													? Generator.toTypeNode(response.schema)
-													: t.createToken(SyntaxKind.UnknownKeyword)
+												Generator.toTypeNode(response.schema)
 											)
 										: t.createParenthesizedExpression(
 												t.createAwaitExpression(

@@ -20,7 +20,8 @@ describe('AxiosAdapter', () => {
 			undefined,
 			undefined,
 			adapter,
-			false,
+			'none',
+			undefined,
 			false
 		);
 		expect(Array.isArray(stmts)).toBe(true);
@@ -35,7 +36,8 @@ describe('AxiosAdapter', () => {
 			undefined,
 			undefined,
 			adapter,
-			false,
+			'none',
+			undefined,
 			false
 		);
 		// Just verify we get one statement and it includes header info
@@ -50,13 +52,29 @@ describe('AxiosAdapter', () => {
 			{ type: 'application/json', schema: { type: 'object' } },
 			undefined,
 			adapter,
-			false,
+			'json',
+			'application/json',
 			false
 		);
 		expect(stmts).toHaveLength(1);
 	});
 
-	it('generates a body when shouldUseFormData is true (uses fd identifier)', () => {
+	it('emits the FormData identifier when bodyKind is form-data', () => {
+		const stmts = adapter.client(
+			'/pets',
+			'post',
+			[],
+			{ type: 'multipart/form-data' },
+			undefined,
+			adapter,
+			'form-data',
+			undefined,
+			false
+		);
+		expect(stmts).toHaveLength(1);
+	});
+
+	it('emits the URLSearchParams identifier when bodyKind is urlencoded', () => {
 		const stmts = adapter.client(
 			'/pets',
 			'post',
@@ -64,7 +82,8 @@ describe('AxiosAdapter', () => {
 			{ type: 'application/x-www-form-urlencoded' },
 			undefined,
 			adapter,
-			true,
+			'urlencoded',
+			'application/x-www-form-urlencoded',
 			false
 		);
 		expect(stmts).toHaveLength(1);
@@ -78,13 +97,14 @@ describe('AxiosAdapter', () => {
 			undefined,
 			{ type: 'application/json', schema: { type: 'object' } },
 			adapter,
-			false,
+			'none',
+			undefined,
 			false
 		);
 		expect(stmts).toHaveLength(1);
 	});
 
-	it('falls back to plain req identifier when requestBody has a binary schema', () => {
+	it('falls back to plain req identifier when bodyKind is binary', () => {
 		const stmts = adapter.client(
 			'/upload',
 			'post',
@@ -92,7 +112,8 @@ describe('AxiosAdapter', () => {
 			{ type: 'application/octet-stream', schema: { type: 'string', format: 'binary' } },
 			undefined,
 			adapter,
-			false,
+			'binary',
+			'application/octet-stream',
 			false
 		);
 		expect(stmts).toHaveLength(1);
@@ -106,7 +127,8 @@ describe('AxiosAdapter', () => {
 			undefined,
 			undefined,
 			adapter,
-			false,
+			'json',
+			'application/json',
 			false
 		);
 		expect(stmts).toHaveLength(1);
@@ -120,7 +142,8 @@ describe('AxiosAdapter', () => {
 			undefined,
 			undefined,
 			adapter,
-			false,
+			'none',
+			undefined,
 			false
 		);
 		// Print the AST to string and verify the method is uppercase

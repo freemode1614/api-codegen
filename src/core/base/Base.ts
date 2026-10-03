@@ -128,6 +128,39 @@ export abstract class Base {
 	}
 
 	/**
+	 * Map a request body media type to a stable function-name suffix.
+	 *
+	 * Used to disambiguate sibling operations sharing the same path+method
+	 * but different request body media types. The result is appended (in
+	 * upperCamelCase) to the operation's base function name.
+	 *
+	 * Known types are mapped to short, human-readable names. Unknown types
+	 * fall back to `camelCase(normalize(<sub-type>))`.
+	 *
+	 * @param mediaType - The OpenAPI media type (e.g. `application/json`).
+	 * @returns - The suffix without leading underscore, or empty string.
+	 */
+	static mediaTypeToSuffix(mediaType: string): string {
+		const known: Record<string, string> = {
+			'application/json': 'Json',
+			'multipart/form-data': 'FormData',
+			'application/x-www-form-urlencoded': 'FormUrlencoded',
+			'application/octet-stream': 'OctetStream',
+			'text/plain': 'Text',
+			'text/html': 'Html',
+			'application/xml': 'Xml',
+			'text/xml': 'Xml',
+		};
+		const normalized = mediaType.toLowerCase().split(';')[0]?.trim() ?? '';
+		if (known[normalized]) return known[normalized];
+		const sub = normalized.split('/')[1];
+		if (!sub || sub === '*' || normalized === '*/*' || normalized === '') {
+			return '';
+		}
+		return Base.upperCamelCase(Base.normalize(sub));
+	}
+
+	/**
 	 * Capitalizes the first character of a string.
 	 * @param text - Input string.
 	 * @returns - Capitalized string.
