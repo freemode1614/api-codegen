@@ -151,7 +151,13 @@ export class AxiosAdapter extends Adapter {
 									response.schema
 								) as unknown as TypeReferenceNode,
 							]
-						: undefined,
+						: // No schema declared — type the response as `unknown`
+							// so the function signature stays explicit.
+							[
+								t.createTypeReferenceNode(
+									t.createIdentifier('unknown')
+								) as unknown as TypeReferenceNode,
+							],
 					[Generator.toUrlTemplate(uri, parameters), toLiterlExpression()]
 				)
 			)

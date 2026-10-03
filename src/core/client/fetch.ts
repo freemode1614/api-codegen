@@ -193,17 +193,24 @@ export class FetchAdapter extends Adapter {
 												),
 												Generator.toTypeNode(response.schema)
 											)
-										: t.createParenthesizedExpression(
-												t.createAwaitExpression(
-													t.createCallExpression(
-														t.createPropertyAccessExpression(
-															t.createIdentifier('response'),
-															t.createIdentifier('json')
-														),
-														undefined,
-														[]
+										: // No declared response schema — cast to `unknown`
+											// so callers still get a typed value (avoids
+											// implicit any on `response.json()`) and the
+											// function's return type stays explicit.
+											t.createAsExpression(
+												t.createParenthesizedExpression(
+													t.createAwaitExpression(
+														t.createCallExpression(
+															t.createPropertyAccessExpression(
+																t.createIdentifier('response'),
+																t.createIdentifier('json')
+															),
+															undefined,
+															[]
+														)
 													)
-												)
+												),
+												t.createToken(SyntaxKind.UnknownKeyword)
 											)
 								),
 							]

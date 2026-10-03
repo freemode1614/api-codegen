@@ -1,6 +1,14 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { request } from 'undici';
 import { Base } from '../src/core/base/Base.js';
 import { createUniqueNameResolver } from '../src/core/generator/naming.js';
+import { codeGen } from '../src/openapi/index.js';
+
+vi.mock('undici', async () => {
+	const actual = await vi.importActual<typeof import('undici')>('undici');
+	return { ...actual, request: vi.fn() };
+});
+const mockedRequest = vi.mocked(request);
 
 describe('Base.pathToFnName', () => {
 	it('prefers operationId over path', () => {
@@ -22,6 +30,76 @@ describe('Base.pathToFnName', () => {
 		const name = Base.pathToFnName('/pets/{id}', 'put', 'update-pet');
 		expect(name).toBe('updatePetUsingPut');
 		expect(name).toMatch(/^[A-Za-z_$][A-Za-z0-9_$]*$/);
+	});
+});
+
+describe('codeGen honours operationId (end-to-end)', () => {
+	beforeEach(() => mockedRequest.mockReset());
+
+	it('emits operationId-derived function names when operationId is present', async () => {
+		const spec = {
+			openapi: '3.0.0',
+			info: { title: 't', version: '1' },
+			paths: {
+				'/pets/{id}': {
+					put: {
+						operationId: 'updatePet',
+						parameters: [
+							{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } },
+						],
+						requestBody: {
+							content: {
+								'application/json': {
+									schema: { type: 'object', properties: { name: { type: 'string' } } },
+								},
+							},
+						},
+						responses: { '200': { description: 'ok' } },
+					},
+				},
+			},
+		};
+		mockedRequest.mockResolvedValue({
+			statusCode: 200,
+			body: { json: vi.fn().mockResolvedValue(spec) },
+		} as never);
+
+		const result = await codeGen({
+			docURL: 'https://example.com/spec.json',
+			output: '',
+		});
+
+		expect(result.code).toContain('export async function updatePetUsingPut');
+		// Confirm we did NOT fall back to path-derived naming.
+		expect(result.code).not.toContain('petsIdUsingPut');
+	});
+
+	it('falls back to path-derived naming when operationId is absent', async () => {
+		const spec = {
+			openapi: '3.0.0',
+			info: { title: 't', version: '1' },
+			paths: {
+				'/pets/{id}': {
+					get: {
+						parameters: [
+							{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } },
+						],
+						responses: { '200': { description: 'ok' } },
+					},
+				},
+			},
+		};
+		mockedRequest.mockResolvedValue({
+			statusCode: 200,
+			body: { json: vi.fn().mockResolvedValue(spec) },
+		} as never);
+
+		const result = await codeGen({
+			docURL: 'https://example.com/spec.json',
+			output: '',
+		});
+
+		expect(result.code).toContain('petsIdUsingGet');
 	});
 });
 
