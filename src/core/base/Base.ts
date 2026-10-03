@@ -4,8 +4,10 @@
  * @description Base utility class providing common methods for code generation and API handling
  */
 
+import { readFile } from 'node:fs/promises';
 import { Agent, request } from 'undici';
 import { typescriptKeywords } from '../constants/keywords.js';
+import { createErrors } from '../errors.js';
 import type {
 	EnumSchemaObject,
 	FetchDocRequestInit,
@@ -166,15 +168,84 @@ export abstract class Base {
 	}
 
 	/**
+	 * Detect whether the given value refers to a local filesystem path
+	 * (either a `file://...` URL or a plain absolute path).
+	 *
+	 * Returns the resolved filesystem path, or `null` if the value
+	 * should be fetched over HTTP(S).
+	 */
+	private static resolveLocalPath(url: string): string | null {
+		if (url.startsWith('file://')) {
+			// Strip the `file://` scheme. For a POSIX absolute path the URL
+			// is `file:///abs/path` — after stripping `file://` we are left
+			// with the correct absolute path `/abs/path`. For Windows the
+			// URL is `file:///C:/spec.json`, which after stripping is the
+			// drive-letter path `C:/spec.json`.
+			return url.replace(/^file:\/\//, '');
+		}
+
+		// POSIX absolute path
+		if (url.startsWith('/')) return url;
+		// Windows absolute path (e.g. `C:\spec.json` or `C:/spec.json`)
+		if (/^[A-Za-z]:[\\/]/.test(url)) return url;
+
+		return null;
+	}
+
+	/**
+	 * Read and parse a local OpenAPI document from the filesystem.
+	 *
+	 * @param filePath - Absolute filesystem path to the spec.
+	 * @returns - A promise resolving to the parsed document.
+	 */
+	private static async readLocalDoc<T = unknown>(filePath: string): Promise<T> {
+		let raw: string;
+		try {
+			raw = await readFile(filePath, 'utf8');
+		} catch (error) {
+			if ((error as NodeJS.ErrnoException)?.code === 'ENOENT') {
+				throw createErrors.specNotFound(filePath, error as Error);
+			}
+			throw new Error(
+				`Failed to read OpenAPI spec from ${filePath}: ${
+					error instanceof Error ? error.message : String(error)
+				}`
+			);
+		}
+
+		try {
+			return JSON.parse(raw) as T;
+		} catch (error) {
+			throw createErrors.specParseFailed(
+				filePath,
+				undefined,
+				undefined,
+				error as Error
+			);
+		}
+	}
+
+	/**
 	 * Fetches documentation from a given URL.
-	 * @param url - The URL to fetch the documentation from.
-	 * @param requestInit - Additional request parameters.
+	 *
+	 * Supports three transport modes:
+	 * - `file://...` URLs  → read from filesystem (parsed as JSON)
+	 * - absolute filesystem paths → read from filesystem (parsed as JSON)
+	 * - `http(s)://...` URLs → fetched via undici (existing behavior)
+	 *
+	 * @param url - The URL or filesystem path to fetch the documentation from.
+	 * @param requestInit - Additional request parameters (only used for http(s)).
 	 * @returns - A promise resolving to the fetched documentation data.
 	 */
 	static async fetchDoc<T = unknown>(
 		url: string,
 		requestInit: FetchDocRequestInit = {}
 	): Promise<T> {
+		const localPath = Base.resolveLocalPath(url);
+		if (localPath !== null) {
+			return Base.readLocalDoc<T>(localPath);
+		}
+
 		const agent = new Agent({
 			connect: { rejectUnauthorized: false },
 		});
