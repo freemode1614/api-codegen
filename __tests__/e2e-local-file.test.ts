@@ -164,4 +164,47 @@ describe('end-to-end local-file generation', () => {
 		expect(result.code).toContain('// No api declaration found.');
 		expect(mockedRequest).toHaveBeenCalledTimes(1);
 	});
+
+	it('CLI-style relative path resolution: anchor to cwd, then read locally', async () => {
+		// Mirrors the CLI's resolveDocURL() behaviour: relative paths are
+		// resolved against cwd before being passed to codeGen. The generator
+		// must never reach undici for these.
+		const specPath = path.join(tmpRoot, 'rel-petstore.json');
+		await fs.writeFile(
+			specPath,
+			JSON.stringify({
+				openapi: '3.0.0',
+				info: { title: 'Rel', version: '1' },
+				paths: {
+					'/rel': {
+						get: {
+							operationId: 'relOp',
+							responses: {
+								'200': {
+									content: { 'application/json': { schema: { type: 'string' } } },
+								},
+							},
+						},
+					},
+				},
+			})
+		);
+
+		const originalCwd = process.cwd();
+		process.chdir(tmpRoot);
+		try {
+			const cliResolved = path.resolve(process.cwd(), './rel-petstore.json');
+			expect(cliResolved).toBe(specPath);
+
+			const result = await codeGen({
+				docURL: cliResolved,
+				output: '',
+			});
+
+			expect(result.code).toContain('export async function relOp');
+			expect(mockedRequest).not.toHaveBeenCalled();
+		} finally {
+			process.chdir(originalCwd);
+		}
+	});
 });

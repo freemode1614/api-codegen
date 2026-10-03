@@ -103,14 +103,19 @@ async function generateForOption(option: ApiCodeGenPluginOptions): Promise<{
 			await fs.ensureDir(outputDir);
 		}
 
-		// Convert to provider options and resolve docURL
+		// Convert to provider options and resolve docURL.
+		// Pass absolute paths / file:// URLs through unchanged so the
+		// generator's `Base.resolveSpecURL` can pick the file transport.
+		// Only relative paths need to be anchored to cwd.
 		let docURL = config.spec;
-		if (!docURL.startsWith('http://') && !docURL.startsWith('https://')) {
-			if (docURL.startsWith('/') || docURL.match(/^[A-Za-z]:/)) {
-				docURL = `file://${docURL}`;
-			} else {
-				docURL = path.resolve(process.cwd(), docURL);
-			}
+		if (
+			!docURL.startsWith('http://') &&
+			!docURL.startsWith('https://') &&
+			!docURL.startsWith('file://') &&
+			!docURL.startsWith('/') &&
+			!/^[A-Za-z]:[\\/]/.test(docURL)
+		) {
+			docURL = path.resolve(process.cwd(), docURL);
 		}
 
 		const result = await codeGen({

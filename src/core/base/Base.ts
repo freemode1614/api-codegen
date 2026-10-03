@@ -168,28 +168,42 @@ export abstract class Base {
 	}
 
 	/**
-	 * Detect whether the given value refers to a local filesystem path
-	 * (either a `file://...` URL or a plain absolute path).
+	 * Classify a spec location string into a transport + source pair.
 	 *
-	 * Returns the resolved filesystem path, or `null` if the value
-	 * should be fetched over HTTP(S).
+	 * Returns:
+	 * - `{ transport: 'file', source }` when `input` looks like a local
+	 *   filesystem path (`file://...`, POSIX absolute, Windows absolute).
+	 * - `{ transport: 'http', source }` for `http(s)://...` URLs.
+	 *
+	 * Relative paths are treated as `http` so that callers (CLI / Vite
+	 * plugin) must resolve them against cwd first. This makes intent
+	 * explicit and avoids accidentally reading from process.cwd().
 	 */
-	private static resolveLocalPath(url: string): string | null {
-		if (url.startsWith('file://')) {
+	static resolveSpecURL(input: string): {
+		transport: 'file' | 'http';
+		source: string;
+	} {
+		if (input.startsWith('file://')) {
 			// Strip the `file://` scheme. For a POSIX absolute path the URL
 			// is `file:///abs/path` — after stripping `file://` we are left
 			// with the correct absolute path `/abs/path`. For Windows the
-			// URL is `file:///C:/spec.json`, which after stripping is the
-			// drive-letter path `C:/spec.json`.
-			return url.replace(/^file:\/\//, '');
+			// URL is `file:///C:/spec.json`, which after stripping is
+			// `/C:/spec.json`; drop the leading slash so the drive-letter
+			// path is the canonical form.
+			const stripped = input.replace(/^file:\/\//, '');
+			return {
+				transport: 'file',
+				source: /^\/[A-Za-z]:/.test(stripped) ? stripped.slice(1) : stripped,
+			};
 		}
 
 		// POSIX absolute path
-		if (url.startsWith('/')) return url;
+		if (input.startsWith('/')) return { transport: 'file', source: input };
 		// Windows absolute path (e.g. `C:\spec.json` or `C:/spec.json`)
-		if (/^[A-Za-z]:[\\/]/.test(url)) return url;
+		if (/^[A-Za-z]:[\\/]/.test(input))
+			return { transport: 'file', source: input };
 
-		return null;
+		return { transport: 'http', source: input };
 	}
 
 	/**
@@ -231,7 +245,12 @@ export abstract class Base {
 	 * Supports three transport modes:
 	 * - `file://...` URLs  → read from filesystem (parsed as JSON)
 	 * - absolute filesystem paths → read from filesystem (parsed as JSON)
-	 * - `http(s)://...` URLs → fetched via undici (existing behavior)
+	 * - `http(s)://...` URLs (and unrecognised inputs like relative paths)
+	 *   → fetched via undici (existing behavior)
+	 *
+	 * Callers should pass an already-resolved absolute path or URL. Relative
+	 * paths fall through to undici by design — CLI / Vite plugin should
+	 * resolve them against cwd first.
 	 *
 	 * @param url - The URL or filesystem path to fetch the documentation from.
 	 * @param requestInit - Additional request parameters (only used for http(s)).
@@ -241,16 +260,16 @@ export abstract class Base {
 		url: string,
 		requestInit: FetchDocRequestInit = {}
 	): Promise<T> {
-		const localPath = Base.resolveLocalPath(url);
-		if (localPath !== null) {
-			return Base.readLocalDoc<T>(localPath);
+		const { transport, source } = Base.resolveSpecURL(url);
+		if (transport === 'file') {
+			return Base.readLocalDoc<T>(source);
 		}
 
 		const agent = new Agent({
 			connect: { rejectUnauthorized: false },
 		});
 
-		const { body, statusCode } = await request(url, {
+		const { body, statusCode } = await request(source, {
 			method: 'GET',
 			dispatcher: agent,
 			...requestInit,
@@ -258,7 +277,7 @@ export abstract class Base {
 
 		if (statusCode >= 400) {
 			throw new Error(
-				`Failed to fetch OpenAPI documentation from ${url}: HTTP ${statusCode}`
+				`Failed to fetch OpenAPI documentation from ${source}: HTTP ${statusCode}`
 			);
 		}
 
@@ -266,7 +285,7 @@ export abstract class Base {
 			return body.json() as T;
 		} catch (error) {
 			throw new Error(
-				`Failed to parse JSON response from ${url}: ${error instanceof Error ? error.message : String(error)}`
+				`Failed to parse JSON response from ${source}: ${error instanceof Error ? error.message : String(error)}`
 			);
 		}
 	}
