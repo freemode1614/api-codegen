@@ -97,7 +97,6 @@ export type ParameterObject = {
 
 export enum MediaTypes {
 	JSON = 'application/json',
-	EVENT_STREAM = 'text/event-stream',
 	TEXT = 'text',
 	IMAGE = 'image',
 	AUDIO = 'audio',

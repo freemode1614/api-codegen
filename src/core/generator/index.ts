@@ -15,13 +15,14 @@ import type {
 import {
 	addSyntheticLeadingComment,
 	createPrinter,
+	EmitHint,
 	NodeFlags,
+	ScriptTarget,
 	SyntaxKind,
 	factory as t,
 } from 'typescript';
 import type { Adapter } from '../base/Adaptor.js';
 import { Base } from '../base/Base.js';
-import { ApicodegenError, ErrorCodes } from '../errors.js';
 import type {
 	ArrayTypeSchemaObject,
 	MediaTypeObject,
@@ -38,6 +39,7 @@ import {
 	ParameterIn,
 	SchemaFormatType,
 } from '../interface.js';
+import { createUniqueNameResolver } from './naming.js';
 
 /**
  * Represents a comment object with optional tag and message.
@@ -77,22 +79,10 @@ export class Generator {
 	}
 
 	static async write(code: string, filepath: string) {
-		const { mkdir } = await import('node:fs/promises');
-		const { dirname } = await import('node:path');
 		try {
-			await mkdir(dirname(filepath), { recursive: true });
 			await writeFile(filepath, code);
 		} catch (error) {
-			throw new ApicodegenError({
-				code: ErrorCodes.OUTPUT_DIR_MISSING,
-				message: 'Failed to write generated code to output file',
-				location: filepath,
-				cause: error instanceof Error ? error : new Error(String(error)),
-				suggestions: [
-					'Verify the output directory path is writable',
-					'Check that the parent directory exists or can be created',
-				],
-			});
+			console.error(error);
 		}
 	}
 
@@ -119,7 +109,7 @@ export class Generator {
 			const queryString = queryParameters
 				.map(
 					(qp, index) =>
-						`${index === 0 ? '?' : '&'}${encodeURIComponent(qp.name)}={${Base.normalize(qp.name)}}`
+						`${index === 0 ? '?' : '&'}${encodeURIComponent(qp.name)}={${Base.camelCase(Base.normalize(qp.name))}}`
 				)
 				.join('');
 			path += queryString;
@@ -144,7 +134,7 @@ export class Generator {
 				}
 
 				return t.createTemplateSpan(
-					t.createIdentifier(Base.normalize(match[1])),
+					t.createIdentifier(match[1]),
 					!isLastSegment
 						? t.createTemplateMiddle(match[2])
 						: t.createTemplateTail(match[2] || '')
@@ -168,9 +158,10 @@ export class Generator {
 				return `* @returns {${comment.type}} ${comment.comment ?? ''}`;
 			}
 			if (comment.tag === 'param') {
+				const typePart = comment.type ? `{${comment.type}} ` : '';
 				return comment.comment
-					? `* @param ${comment.paramName} - ${comment.comment}`
-					: `* @param ${comment.paramName}`;
+					? `* @param ${typePart}${comment.paramName} - ${comment.comment}`
+					: `* @param ${typePart}${comment.paramName}`;
 			}
 			if (comment.tag) {
 				return `* @${comment.tag} ${comment.comment ?? ''}`;
@@ -239,7 +230,7 @@ export class Generator {
 		const tags: CommentObject[] = [];
 
 		for (const p of parameters) {
-			const paramName = Base.normalize(p.name);
+			const paramName = Base.camelCase(Base.normalize(p.name));
 			let paramType = 'unknown';
 
 			if (p.schema) {
@@ -247,11 +238,12 @@ export class Generator {
 			}
 
 			const isOptional = p.required === false;
+			const inPrefix = p.in ? `[${p.in}] ` : '';
 			tags.push({
 				tag: 'param',
 				paramName: paramName,
 				type: `${paramType}${isOptional ? ' | undefined' : ''}`,
-				comment: p.description ?? '',
+				comment: `${inPrefix}${p.description ?? ''}`,
 			});
 		}
 
@@ -308,7 +300,6 @@ export class Generator {
 			case NonArraySchemaType.object: {
 				const propsCount = Object.keys(schema.properties ?? {}).length;
 				if (!schema.properties || propsCount === 0) {
-					// Record<string, unknown>
 					return t.createTypeReferenceNode(t.createIdentifier('Record'), [
 						t.createToken(SyntaxKind.StringKeyword),
 						t.createToken(SyntaxKind.UnknownKeyword),
@@ -323,7 +314,6 @@ export class Generator {
 						return t.createPropertySignature(
 							undefined,
 							t.createStringLiteral(propKey),
-							// When field is required, a refrence or binary value, don't add question mark.
 							schema.required || schema.ref || Generator.isBinarySchema(schema)
 								? undefined
 								: t.createToken(SyntaxKind.QuestionToken),
@@ -342,7 +332,6 @@ export class Generator {
 					);
 				}
 				return t.createToken(SyntaxKind.NumberKeyword);
-			// case NonArraySchemaType.string:
 			case NonArraySchemaType.boolean:
 				return t.createToken(SyntaxKind.BooleanKeyword);
 			case NonArraySchemaType.file:
@@ -383,15 +372,17 @@ export class Generator {
 				}
 
 				if (oneOf) {
-					return t.createUnionTypeNode(
-						oneOf.map((schema) => Generator.toTypeNode(schema))
+					const uniqueTypes = Generator.deduplicateTypes(
+						oneOf.map((s) => Generator.toTypeNode(s))
 					);
+					return t.createUnionTypeNode(uniqueTypes);
 				}
 
 				if (anyOf) {
-					return t.createUnionTypeNode(
-						anyOf.map((schema) => Generator.toTypeNode(schema))
+					const uniqueTypes = Generator.deduplicateTypes(
+						anyOf.map((s) => Generator.toTypeNode(s))
 					);
+					return t.createUnionTypeNode(uniqueTypes);
 				}
 
 				if (allOf) {
@@ -413,6 +404,23 @@ export class Generator {
 		return t.createToken(SyntaxKind.UnknownKeyword);
 	}
 
+	static deduplicateTypes(types: TypeNode[]): TypeNode[] {
+		const seen = new Set<string>();
+		const unique: TypeNode[] = [];
+		for (const type of types) {
+			const key = Generator.getTypeNodeKey(type);
+			if (!seen.has(key)) {
+				seen.add(key);
+				unique.push(type);
+			}
+		}
+		return unique;
+	}
+
+	static getTypeNodeKey(type: TypeNode): string {
+		return JSON.stringify(type);
+	}
+
 	static toDeclarationNodes(
 		parameters: ParameterObject[]
 	): ParameterDeclaration[] {
@@ -428,7 +436,7 @@ export class Generator {
 					t.createParameterDeclaration(
 						undefined,
 						undefined,
-						t.createIdentifier(Base.normalize(refName)),
+						t.createIdentifier(Base.camelCase(Base.normalize(refName))),
 						undefined,
 						t.createTypeReferenceNode(
 							t.createIdentifier(Base.upperCamelCase(Base.normalize(refName)))
@@ -442,14 +450,14 @@ export class Generator {
 					t.createBindingElement(
 						undefined,
 						undefined,
-						t.createIdentifier(Base.normalize(name))
+						t.createIdentifier(Base.camelCase(Base.normalize(name)))
 					)
 				);
 
 				typeObjectElements.push(
 					t.createPropertySignature(
 						[],
-						t.createIdentifier(Base.normalize(name)),
+						t.createIdentifier(Base.camelCase(Base.normalize(name))),
 						required ? undefined : t.createToken(SyntaxKind.QuestionToken),
 						!schema
 							? t.createToken(SyntaxKind.UnknownKeyword)
@@ -694,7 +702,6 @@ export class Generator {
 			);
 
 		const shouldParseResponseToJSON = 'application/json' === response?.type;
-		const isEventStream = response?.type === 'text/event-stream';
 
 		// Ignore one and only blob parameter.
 		const isRequestBodyBinary =
@@ -745,8 +752,7 @@ export class Generator {
 				response,
 				adapter,
 				shouldPutParametersOrBodyInFormData,
-				shouldParseResponseToJSON,
-				isEventStream
+				shouldParseResponseToJSON
 			),
 		]);
 	}
@@ -767,11 +773,10 @@ export class Generator {
 				t.createEnumDeclaration(
 					[t.createToken(SyntaxKind.ExportKeyword)],
 					t.createIdentifier(Base.upperCamelCase(enumObject.name)),
-					enumObject.enum.map((member) => {
+					enumObject.enum.map((member, index) => {
+						const key = typeof member === 'string' ? member : `Value${member}`;
 						return t.createEnumMember(
-							t.createStringLiteral(
-								typeof member === 'string' ? member : `${member}_`
-							),
+							t.createStringLiteral(key),
 							typeof member === 'string'
 								? t.createStringLiteral(member)
 								: t.createNumericLiteral(member)
@@ -797,6 +802,10 @@ export class Generator {
 				);
 			}
 		}
+
+		// Per-generation unique-name resolver. Lives only for this pass so
+		// repeated runs / dry-runs don't leak state across generations.
+		const reserveUnique = createUniqueNameResolver();
 
 		for (const uri in apis) {
 			const operations = apis[uri];
@@ -829,10 +838,12 @@ export class Generator {
 							t.createModifier(SyntaxKind.AsyncKeyword),
 						],
 						undefined,
-						Base.pathToFnName(uri, method, operationId) +
-							(shouldAddExtraMethodNameSuffix
-								? Base.capitalize(req.type.split('/')[1])
-								: ''),
+						reserveUnique(
+							Base.pathToFnName(uri, method, operationId) +
+								(shouldAddExtraMethodNameSuffix
+									? Base.camelCase(Base.normalize(req.type.split('/')[1]))
+									: '')
+						),
 						undefined,
 						[
 							...(parameters.length > 0

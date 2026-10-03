@@ -5,15 +5,14 @@ import type { PluginOption } from 'vite';
 import { loadConfig, toProviderOptions } from '../core/config.js';
 import {
 	createErrors,
-	ErrorCodes,
+	formatError,
 	isApicodegenError,
 	wrapError,
 } from '../core/errors.js';
-import { logger } from '../core/logger.js';
 import { codeGen } from '../openapi/index.js';
 
 const PLUGIN_NAME = 'api-code-gen';
-const pluginLogger = createScopedLogger('api-code-gen');
+const logger = createScopedLogger('api-code-gen');
 
 export type ApiCodeGenPluginOptions = {
 	/** Human-readable name for this API config (required) */
@@ -35,81 +34,19 @@ export type ApiCodeGenPluginOptions = {
 };
 
 /**
- * Find the nearest tsconfig.json or jsconfig.json by searching upward.
- * Bounded by process.cwd() — the Vite project root — to avoid picking up
- * unrelated configs outside the project.
- */
-async function findNearestTsConfig(filePath: string): Promise<string | null> {
-	let dir = path.dirname(path.resolve(filePath));
-	const rootDir = process.cwd();
-	const fsRoot = path.parse(dir).root;
-
-	while (true) {
-		for (const name of ['tsconfig.json', 'jsconfig.json']) {
-			const configPath = path.join(dir, name);
-			if (await fs.pathExists(configPath)) {
-				return configPath;
-			}
-		}
-
-		if (dir === rootDir || dir === fsRoot) break;
-
-		dir = path.dirname(dir);
-	}
-
-	return null;
-}
-
-/**
  * Run TypeScript type checking on generated file
  */
 async function runTypeCheck(filePath: string): Promise<string[]> {
 	const { execaCommand } = await import('execa');
 	const errors: string[] = [];
 
-	const resolvedPath = path.resolve(filePath);
-	const tsconfigPath = await findNearestTsConfig(resolvedPath);
-
-	if (!tsconfigPath) {
-		try {
-			await execaCommand(`npx tsc ${resolvedPath} --noEmit`, {
-				shell: true,
-			});
-		} catch (error) {
-			if (error instanceof Error) {
-				errors.push(error.message);
-			}
-		}
-		return errors;
-	}
-
-	const outputDir = path.dirname(resolvedPath);
-	const tempConfigName = `.${path.basename(resolvedPath).replace(/\.ts$/i, '')}.${Date.now()}.apicodegen.json`;
-	const tempConfigPath = path.join(outputDir, tempConfigName);
-	const extendsPath = path.relative(outputDir, tsconfigPath);
-
-	const tempConfig = {
-		extends: extendsPath,
-		compilerOptions: {
-			noEmit: true,
-		},
-		include: [path.basename(resolvedPath)],
-	};
-
 	try {
-		await fs.writeJson(tempConfigPath, tempConfig);
-		await execaCommand(`npx tsc --project "${tempConfigPath}" --noEmit`, {
+		await execaCommand(`npx tsc ${filePath} --noEmit`, {
 			shell: true,
 		});
 	} catch (error) {
 		if (error instanceof Error) {
 			errors.push(error.message);
-		}
-	} finally {
-		try {
-			await fs.remove(tempConfigPath);
-		} catch {
-			// ignore cleanup errors
 		}
 	}
 
@@ -149,7 +86,7 @@ async function generateForOption(option: ApiCodeGenPluginOptions): Promise<{
 	const { name, typeCheck = true, verbose, ...restOptions } = option;
 
 	try {
-		logger.info(`Generating ${name}...`);
+		console.log(`\x1b[36m├─\x1b[0m ${name}`);
 
 		// Use config loader to handle env vars and config files
 		const config = await loadConfig({
@@ -189,10 +126,10 @@ async function generateForOption(option: ApiCodeGenPluginOptions): Promise<{
 		if (typeCheck && config.output) {
 			const typeErrors = await runTypeCheck(config.output);
 			if (typeErrors.length > 0) {
-				pluginLogger.warn(`Type check failed for ${config.output}`);
+				logger.warn(`Type check failed for ${config.output}`);
 				if (verbose) {
 					for (const error of typeErrors) {
-						pluginLogger.warn(`  ${error}`);
+						logger.warn(`  ${error}`);
 					}
 				}
 			}
@@ -239,7 +176,7 @@ export function apiCodeGenPlugin(
 	options: ApiCodeGenPluginOptions[]
 ): PluginOption {
 	if (!Array.isArray(options) || options.length === 0) {
-		pluginLogger.warn('No API configurations provided to apiCodeGenPlugin');
+		logger.warn('No API configurations provided to apiCodeGenPlugin');
 		return { name: PLUGIN_NAME };
 	}
 
@@ -247,42 +184,44 @@ export function apiCodeGenPlugin(
 		name: PLUGIN_NAME,
 
 		async config(_config, env) {
-			logger.heading('API Code Gen', env?.command);
+			console.log(`\x1b[1m\x1b[36m${'─'.repeat(50)}\x1b[0m`);
+			console.log(`\x1b[1m\x1b[36mAPI Code Gen\x1b[0m`);
+			console.log(`\x1b[90mMode:\x1b[0m ${env?.command || 'unknown'}`);
+			console.log(`\x1b[1m\x1b[36m${'─'.repeat(50)}\x1b[0m`);
 
 			const results = await Promise.all(options.map(generateForOption));
 			const successCount = results.filter((r) => r.success).length;
 			const failCount = options.length - successCount;
 
-			logger.divider();
+			console.log(`\x1b[1m\x1b[36m${'─'.repeat(50)}\x1b[0m`);
 
 			for (const result of results) {
 				if (result.success) {
 					const { name, output, stats } = result;
 					if (stats) {
-						logger.item(
-							`${name} → ${output} (${stats.endpoints} endpoints, ${stats.schemas} schemas) ${stats.duration}ms`,
-							'green'
+						console.log(
+							`\x1b[32m✓\x1b[0m ${name} → ${output} (${stats.endpoints} endpoints, ${stats.schemas} schemas) ${stats.duration}ms`
 						);
 					} else {
-						logger.item(`${name} → ${output || 'N/A'}`, 'green');
+						console.log(`\x1b[32m✓\x1b[0m ${name} → ${output || 'N/A'}`);
 					}
 				} else {
 					const { name, error } = result;
 					if (isApicodegenError(error)) {
-						logger.item(name, 'red');
-						logger.error(error, true);
+						console.log(`\x1b[31m✗\x1b[0m ${name}`);
+						console.log(`\x1b[90m${formatError(error, true)}\x1b[0m`);
 					} else {
 						const wrapped = wrapError(error!, {
-							code: ErrorCodes.GENERATION_FAILED,
+							code: 'E_GENERATION_FAILED',
 							message: `Failed to generate API "${name}"`,
 						});
-						logger.item(name, 'red');
-						logger.error(wrapped, true);
+						console.log(`\x1b[31m✗\x1b[0m ${name}`);
+						console.log(`\x1b[90m${formatError(wrapped, true)}\x1b[0m`);
 					}
 				}
 			}
 
-			logger.divider();
+			console.log(`\x1b[1m\x1b[36m${'─'.repeat(50)}\x1b[0m`);
 
 			const totalDuration = results.reduce(
 				(sum, r) => sum + (r.stats?.duration || 0),
@@ -297,14 +236,16 @@ export function apiCodeGenPlugin(
 				0
 			);
 
-			logger.summary({
-				succeeded: successCount,
-				failed: failCount,
-				endpoints: totalEndpoints,
-				schemas: totalSchemas,
-				duration: totalDuration,
-			});
-			logger.divider();
+			if (failCount === 0) {
+				console.log(
+					`\x1b[32m✓\x1b[0m API Code Gen - Complete (\x1b[90m${successCount}/${options.length} succeeded\x1b[0m, ${totalEndpoints} endpoints, ${totalSchemas} schemas, ${totalDuration}ms\x1b[0m)`
+				);
+			} else {
+				console.log(
+					`\x1b[33m⚠\x1b[0m API Code Gen - Complete (\x1b[90m${successCount} succeeded, ${failCount} failed\x1b[0m, ${totalEndpoints} endpoints, ${totalSchemas} schemas, ${totalDuration}ms\x1b[0m)`
+				);
+			}
+			console.log(`\x1b[1m\x1b[36m${'─'.repeat(50)}\x1b[0m`);
 
 			return {};
 		},
