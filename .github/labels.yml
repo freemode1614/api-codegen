@@ -1,0 +1,105 @@
+# Repository label definitions — authoritative source of truth.
+# Synced to GitHub by `.github/workflows/labels.yml`.
+#
+# Conventions:
+#   - Group prefixes: `type:`, `area:`, `priority:`, `status:`
+#   - Colors follow the GitHub Label Browser palette:
+#     red `d73a4a` (bug), green `0e8a16` (feat), yellow `fbca04` (WIP),
+#     blue `1d76db` (area), purple `5319e7` (priority), light grey `cccccc` (meta).
+#   - Description is shown in the label picker; keep it under ~80 chars.
+
+# ─── Type ──────────────────────────────────────────────────────────────────
+- name: bug
+  color: d73a4a
+  description: Something is broken or behaving incorrectly.
+- name: enhancement
+  color: a2eeef
+  description: New feature or non-breaking improvement.
+- name: documentation
+  color: 0075ca
+  description: Improvements or corrections to docs, JSDoc, or examples.
+- name: question
+  color: d876e3
+  description: User asks how to do something; prefer Discussions.
+- name: security
+  color: b60205
+  description: Vulnerability disclosure — see SECURITY.md.
+- name: breaking-change
+  color: b60205
+  description: User-visible API or output change; needs `major` changeset.
+
+# ─── Triage status ────────────────────────────────────────────────────────
+- name: needs-triage
+  color: fbca04
+  description: Awaiting maintainer review and categorization.
+- name: needs-repro
+  color: fbca04
+  description: Bug report missing minimal reproduction.
+- name: needs-design
+  color: fbca04
+  description: Requires an ADR before implementation.
+- name: wontfix
+  color: ffffff
+  description: Will not be addressed; closed with explanation.
+- name: duplicate
+  color: cfd1d4
+  description: Already reported elsewhere.
+- name: good first issue
+  color: 7057ff
+  description: Suitable for first-time contributors.
+- name: help wanted
+  color: 008672
+  description: Extra attention is welcome from experienced contributors.
+
+# ─── Area (where in the codebase) ─────────────────────────────────────────
+- name: "area: cli"
+  color: 1d76db
+  description: CLI entry, flags, logger.
+- name: "area: vite-plugin"
+  color: 1d76db
+  description: "@moccona/apicodegen/vite integration."
+- name: "area: openapi"
+  color: 1d76db
+  description: OpenAPI 2 / 3 / 3.1 parsers.
+- name: "area: generator"
+  color: 1d76db
+  description: TypeScript code generation.
+- name: "area: build"
+  color: 1d76db
+  description: tsdown / packaging / build output.
+- name: "area: ci"
+  color: 1d76db
+  description: GitHub Actions, release pipeline.
+
+# ─── Priority ──────────────────────────────────────────────────────────────
+- name: "priority: high"
+  color: b60205
+  description: Address in the current release window.
+- name: "priority: medium"
+  color: fbca04
+  description: Address in the next release window.
+- name: "priority: low"
+  color: 0e8a16
+  description: Nice-to-have; no SLA.
+
+# ─── Pull-request lifecycle ────────────────────────────────────────────────
+- name: changesets-requested
+  color: fbca04
+  description: PR is user-visible but lacks a Changeset entry.
+- name: ready-for-review
+  color: 0e8a16
+  description: Author marks this PR as ready to merge.
+- name: blocked
+  color: b60205
+  description: Cannot progress until another PR/issue is resolved.
+
+# ─── Automated ────────────────────────────────────────────────────────────
+- name: dependencies
+  color: 0366d6
+  description: Dependabot / dependency-update PRs.
+- name: ci
+  color: 0e8a16
+  description: CI / GitHub Actions related.
+- name: automated
+  color: cfd1d4
+  description: Created automatically (Dependabot, label-sync, etc.).

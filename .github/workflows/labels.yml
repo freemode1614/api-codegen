@@ -1,0 +1,167 @@
+name: Sync labels
+
+# Idempotently create / update repository labels.
+#
+# Why this exists:
+#   - The Issue Forms and PR template reference labels like `bug`,
+#     `needs-triage`, `dependencies`, etc. Labels that don't exist are
+#     silently dropped by GitHub when an issue is filed, which makes the
+#     form useless as a triage aid.
+#   - Manual label creation drifts over time; this workflow keeps the
+#     authoritative list in version control.
+#
+# Triggers:
+#   - On push to `main` when label config changes.
+#   - On a weekly schedule as a safety net.
+#   - Manual dispatch for the initial seed.
+#
+# Reference:
+#   https://github.com/actions/github-script
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/labels.yml"
+      - ".github/workflows/labels.yml"
+  workflow_dispatch:
+  schedule:
+    # Mondays at 09:30 — slightly after Dependabot, so we never race it.
+    - cron: "30 9 * * 1"
+
+permissions:
+  # Minimal scope: only issue labels.
+  issues: write
+
+concurrency:
+  group: labels-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    name: Sync labels
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Apply labels
+        uses: actions/github-script@v7
+        with:
+          script: |
+            // Load the desired label set from the repo.
+            const config = require('fs').readFileSync('.github/labels.yml', 'utf8');
+
+            // Minimal YAML parser for the "list of flat mappings" subset we use.
+            // Each item:
+            //   - name: <string>          (may be quoted if it contains `:`)
+            //     color: <hex>
+            //     description: <string>
+            function parseLabels(yamlText) {
+              const stripQuotes = (s) => {
+                if ((s.startsWith('"') && s.endsWith('"')) ||
+                    (s.startsWith("'") && s.endsWith("'"))) {
+                  return s.slice(1, -1);
+                }
+                return s;
+              };
+              const items = [];
+              const lines = yamlText.split('\n');
+              let current = null;
+              const flush = () => {
+                if (current && current.name) {
+                  items.push(current);
+                  current = null;
+                }
+              };
+              for (const raw of lines) {
+                // Strip trailing comments and trim end-whitespace.
+                let line = raw.replace(/\s+#.*$/, '').trimEnd();
+                if (!line.trim() || line.trim().startsWith('#')) continue;
+                // Start of a new item: `- name: value` or `- "name: with colon"`
+                // (may be indented in a parent list; we currently use a flat list
+                //  but trimStart() keeps it robust if structure changes)
+                const itemStart = line.trimStart().match(/^-\s+(.+)$/);
+                if (itemStart) {
+                  flush();
+                  current = {};
+                  const rest = itemStart[1].trim();
+                  const kv = rest.match(/^([A-Za-z_][A-Za-z0-9_]*):\s*(.*)$/);
+                  if (kv) {
+                    current[kv[1].trim()] = stripQuotes(kv[2].trim());
+                  } else {
+                    current.name = stripQuotes(rest);
+                  }
+                  continue;
+                }
+                // Continuation key: `  key: value` (may be indented)
+                if (current) {
+                  const trimmed = line.trimStart();
+                  const kv = trimmed.match(/^([A-Za-z_][A-Za-z0-9_]*):\s*(.*)$/);
+                  if (kv) {
+                    const key = kv[1].trim();
+                    const val = stripQuotes(kv[2].trim());
+                    if (key === 'color') {
+                      current.color = val.replace(/^#/, '');
+                    } else {
+                      current[key] = val;
+                    }
+                  }
+                }
+              }
+              flush();
+              return items;
+            }
+
+            const desired = parseLabels(config);
+            if (desired.length === 0) {
+              core.warning('No labels parsed from .github/labels.yml');
+              return;
+            }
+            core.info(`Parsed ${desired.length} labels from .github/labels.yml`);
+
+            const existing = await github.paginate(github.rest.issues.listLabelsForRepo, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              per_page: 100,
+            });
+            const byName = new Map(existing.map((l) => [l.name, l]));
+
+            let created = 0, updated = 0, skipped = 0;
+            for (const label of desired) {
+              const name = label.name;
+              if (!name) continue;
+              const cur = byName.get(name);
+              const wantColor = (label.color || 'cccccc').toLowerCase();
+              const wantDesc = label.description || '';
+              if (!cur) {
+                await github.rest.issues.createLabel({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  name,
+                  color: wantColor,
+                  description: wantDesc || undefined,
+                });
+                created++;
+                core.info(`Created: ${name}`);
+              } else if (
+                (cur.color || '').toLowerCase() !== wantColor ||
+                (cur.description || '') !== wantDesc
+              ) {
+                await github.rest.issues.updateLabel({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  name,
+                  color: wantColor,
+                  description: wantDesc,
+                });
+                updated++;
+                core.info(`Updated: ${name}`);
+              } else {
+                skipped++;
+              }
+            }
+            core.setOutput('created', String(created));
+            core.setOutput('updated', String(updated));
+            core.setOutput('skipped', String(skipped));
+            core.notice(`Labels synced — created: ${created}, updated: ${updated}, unchanged: ${skipped}`);

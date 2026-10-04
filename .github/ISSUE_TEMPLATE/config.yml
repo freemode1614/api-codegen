@@ -1,0 +1,9 @@
+blank_issues_enabled: true
+contact_links:
+  - name: 💬 GitHub Discussions
+    url: https://github.com/freemode1614/api-codegen/discussions
+    about: For usage questions, ideas, and general discussion.
+  - name: 🔒 Security Policy
+    url: https://github.com/freemode1614/api-codegen/security/policy
+    about: |
+      **Do not file security vulnerabilities as public issues.** Follow SECURITY.md for private disclosure.

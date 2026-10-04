@@ -49,6 +49,8 @@
   },
   "author": "freemode",
   "license": "MIT",
+  "codeOfConduct": "CODE_OF_CONDUCT.md",
+  "security": "SECURITY.md",
   "publishConfig": {
     "access": "public"
   },
