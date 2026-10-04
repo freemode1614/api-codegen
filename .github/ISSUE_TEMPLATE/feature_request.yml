@@ -1,111 +1,104 @@
 name: ✨ Feature Request
-description: Propose a new feature, improvement, or API change for 
-  `@moccona/apicodegen`.
+description: Propose a new feature, improvement, or API change for `@moccona/apicodegen`.
 title: "[Feat]: "
 labels: ["enhancement", "needs-triage"]
 body:
-- type: markdown
-  attributes:
-    value: |
-      Thanks for taking the time to suggest an improvement.
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to suggest an improvement.
 
-      Please make sure you've read our [Contributing Guide](../../CONTRIBUTING.md#issue-guidelines)
-      and [Roadmap](../../docs/roadmap.md) before opening this — your idea may already be planned.
+        Please make sure you've read our [Contributing Guide](../../CONTRIBUTING.md#issue-guidelines)
+        and [Roadmap](../../docs/roadmap.md) before opening this — your idea may already be planned.
 
-- type: checkboxes
-  id: preliminaries
-  attributes:
-    label: Pre-flight checklist
-    options:
-    - label: I have searched the [existing 
-        issues](https://github.com/freemode1614/api-codegen/issues?q=is%3Aissue)
-        and this is not a duplicate.
-      required: true
-    - label: I have read the [Roadmap](../../docs/roadmap.md) and this is not 
-        already planned.
-      required: true
+  - type: checkboxes
+    id: preliminaries
+    attributes:
+      label: Pre-flight checklist
+      options:
+        - label: I have searched the [existing issues](https://github.com/freemode1614/api-codegen/issues?q=is%3Aissue) and this is not a duplicate.
+          required: true
+        - label: I have read the [Roadmap](../../docs/roadmap.md) and this is not already planned.
+          required: true
 
-- type: dropdown
-  id: area
-  attributes:
-    label: Area
-    description: Which surface does the proposal touch?
-    options:
-    - "CLI flags / UX"
-    - "Vite plugin configuration"
-    - "Public TypeScript API (`@moccona/apicodegen`)"
-    - "Generated code shape / templates"
-    - "OpenAPI parser support"
-    - "Tooling / build (`tsdown`, CI, Biome)"
-    - "Documentation"
-    - "Other (describe below)"
-  validations:
-    required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      description: Which surface does the proposal touch?
+      options:
+        - "CLI flags / UX"
+        - "Vite plugin configuration"
+        - "Public TypeScript API (`@moccona/apicodegen`)"
+        - "Generated code shape / templates"
+        - "OpenAPI parser support"
+        - "Tooling / build (`tsdown`, CI, Biome)"
+        - "Documentation"
+        - "Other (describe below)"
+      validations:
+        required: true
 
-- type: dropdown
-  id: impact
-  attributes:
-    label: Type of change
-    description: Help us gauge the scope.
-    options:
-    - "Non-breaking addition (new option / file)"
-    - "Non-breaking improvement (better output, faster)"
-    - "Breaking change (public API or output change)"
-  validations:
-    required: true
+  - type: dropdown
+    id: impact
+    attributes:
+      label: Type of change
+      description: Help us gauge the scope.
+      options:
+        - "Non-breaking addition (new option / file)"
+        - "Non-breaking improvement (better output, faster)"
+        - "Breaking change (public API or output change)"
+      validations:
+        required: true
 
-- type: textarea
-  id: problem
-  attributes:
-    label: Problem
-    description: What is the **problem** you are trying to solve? Focus on the 
-      why, not the how.
-    placeholder: |
-      I'm always frustrated when X happens. It forces me to Y, which adds Z to my workflow.
-  validations:
-    required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What is the **problem** you are trying to solve? Focus on the why, not the how.
+      placeholder: |
+        I'm always frustrated when X happens. It forces me to Y, which adds Z to my workflow.
+      validations:
+        required: true
 
-- type: textarea
-  id: solution
-  attributes:
-    label: Proposed solution
-    description: How would you solve it? Sketch the API surface, CLI flag, or 
-      config shape.
-    placeholder: |
-      Add a new option `--client-name-template` that accepts a pattern string.
-  validations:
-    required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution
+      description: How would you solve it? Sketch the API surface, CLI flag, or config shape.
+      placeholder: |
+        Add a new option `--client-name-template` that accepts a pattern string.
+      validations:
+        required: true
 
-- type: textarea
-  id: alternatives
-  attributes:
-    label: Alternatives considered
-    description: What else did you try? Why doesn't it work today?
-  validations:
-    required: false
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: What else did you try? Why doesn't it work today?
+      validations:
+        required: false
 
-- type: textarea
-  id: example
-  attributes:
-    label: Usage example
-    description: Show the proposed user-facing API in TypeScript or CLI form.
-    render: typescript
-  validations:
-    required: false
+  - type: textarea
+    id: example
+    attributes:
+      label: Usage example
+      description: Show the proposed user-facing API in TypeScript or CLI form.
+      render: typescript
+      validations:
+        required: false
 
-- type: textarea
-  id: context
-  attributes:
-    label: Additional context
-    description: Links to similar projects, related discussions, prior art.
-  validations:
-    required: false
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Links to similar projects, related discussions, prior art.
+      validations:
+        required: false
 
-- type: checkboxes
-  id: contribution
-  attributes:
-    label: Willingness to contribute
-    options:
-    - label: I am willing to submit a PR implementing this feature.
-    - label: I would like to draft an 
-        [ADR](../../CONTRIBUTING.md#architecture-decisions) for this change.
+  - type: checkboxes
+    id: contribution
+    attributes:
+      label: Willingness to contribute
+      options:
+        - label: I am willing to submit a PR implementing this feature.
+        - label: I would like to draft an [ADR](../../CONTRIBUTING.md#architecture-decisions) for this change.

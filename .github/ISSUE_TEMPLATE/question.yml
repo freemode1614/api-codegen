@@ -1,66 +1,63 @@
 name: ❓ Question / Help
-description: Ask a usage question. For bugs and feature ideas, please use the 
-  other templates.
+description: Ask a usage question. For bugs and feature ideas, please use the other templates.
 title: "[Question]: "
 labels: ["question"]
 body:
-- type: markdown
-  attributes:
-    value: |
-      Before opening a question, please:
+  - type: markdown
+    attributes:
+      value: |
+        Before opening a question, please:
 
-      1. Read the [README](../../README.md) and [docs/](../../docs).
-      2. Search [existing issues](https://github.com/freemode1614/api-codegen/issues?q=is%3Aissue) and
-         [Discussions](https://github.com/freemode1614/api-codegen/discussions).
-      3. If your question is about **how to use** the library, prefer
-         [GitHub Discussions](https://github.com/freemode1614/api-codegen/discussions) — it has better
-         visibility and is searchable for future readers.
+        1. Read the [README](../../README.md) and [docs/](../../docs).
+        2. Search [existing issues](https://github.com/freemode1614/api-codegen/issues?q=is%3Aissue) and
+           [Discussions](https://github.com/freemode1614/api-codegen/discussions).
+        3. If your question is about **how to use** the library, prefer
+           [GitHub Discussions](https://github.com/freemode1614/api-codegen/discussions) — it has better
+           visibility and is searchable for future readers.
 
-      Use this form only if Discussions don't fit your case (e.g. you need a maintainer response
-      tied to a specific code change).
+        Use this form only if Discussions don't fit your case (e.g. you need a maintainer response
+        tied to a specific code change).
 
-- type: dropdown
-  id: topic
-  attributes:
-    label: Topic
-    options:
-    - "How to configure / use the CLI"
-    - "How to configure / use the Vite plugin"
-    - "Generated code usage / customization"
-    - "OpenAPI spec interpretation"
-    - "TypeScript / TS-config setup"
-    - "Other (describe below)"
-  validations:
-    required: true
+  - type: dropdown
+    id: topic
+    attributes:
+      label: Topic
+      options:
+        - "How to configure / use the CLI"
+        - "How to configure / use the Vite plugin"
+        - "Generated code usage / customization"
+        - "OpenAPI spec interpretation"
+        - "TypeScript / TS-config setup"
+        - "Other (describe below)"
+      validations:
+        required: true
 
-- type: textarea
-  id: question
-  attributes:
-    label: Your question
-    description: Be specific. Include code snippets, config files, or command 
-      output as needed.
-  validations:
-    required: true
+  - type: textarea
+    id: question
+    attributes:
+      label: Your question
+      description: Be specific. Include code snippets, config files, or command output as needed.
+      validations:
+        required: true
 
-- type: textarea
-  id: attempted
-  attributes:
-    label: What have you tried?
-    description: List the workarounds or work-in-progress approaches you've 
-      attempted.
-  validations:
-    required: false
+  - type: textarea
+    id: attempted
+    attributes:
+      label: What have you tried?
+      description: List the workarounds or work-in-progress approaches you've attempted.
+      validations:
+        required: false
 
-- type: textarea
-  id: environment
-  attributes:
-    label: Environment
-    description: |
-      Versions and platform.
-    render: markdown
-    placeholder: |
-      - `@moccona/apicodegen` version:
-      - Node.js (`node -v`):
-      - OS:
-  validations:
-    required: false
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: |
+        Versions and platform.
+      value: |
+        - `@moccona/apicodegen` version:
+        - Node.js (`node -v`):
+        - OS:
+      render: markdown
+      validations:
+        required: false
