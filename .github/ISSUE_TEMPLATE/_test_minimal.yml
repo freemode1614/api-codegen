@@ -1,0 +1,15 @@
+name: 🧪 Minimal Test
+description: Smallest valid form for testing whether GitHub picks up Issue Forms.
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Just a markdown block.
+
+  - type: textarea
+    id: feedback
+    attributes:
+      label: Feedback
+      description: Anything you'd like to say.
+    validations:
+      required: false
