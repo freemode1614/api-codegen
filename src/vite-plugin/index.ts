@@ -9,7 +9,8 @@ import {
 	isApicodegenError,
 	wrapError,
 } from '../core/errors.js';
-import { codeGen } from '../openapi/index.js';
+import { type CodeGenResult, codeGen } from '../openapi/index.js';
+import { CodegenCache } from './cache.js';
 
 const PLUGIN_NAME = 'api-code-gen';
 const logger = createScopedLogger('api-code-gen');
@@ -31,6 +32,17 @@ export type ApiCodeGenPluginOptions = {
 	verbose?: boolean;
 	/** Run type check after generation (default: true) */
 	typeCheck?: boolean;
+	/**
+	 * Enable on-disk caching of generated code (default: true).
+	 * Subsequent vite invocations skip codegen when neither the spec file
+	 * nor the options have changed. Disable to force a fresh generation.
+	 */
+	cache?: boolean;
+	/**
+	 * Directory to store cache entries (default: `node_modules/.cache/apicodegen`).
+	 * Ignored when `cache === false`.
+	 */
+	cacheDir?: string;
 };
 
 /**
@@ -82,8 +94,16 @@ async function generateForOption(option: ApiCodeGenPluginOptions): Promise<{
 	output?: string;
 	stats?: { endpoints: number; schemas: number; duration: number };
 	error?: unknown;
+	cached?: boolean;
 }> {
-	const { name, typeCheck = true, verbose, ...restOptions } = option;
+	const {
+		name,
+		typeCheck = true,
+		verbose,
+		cache = true,
+		cacheDir,
+		...restOptions
+	} = option;
 
 	try {
 		console.log(`\x1b[36m├─\x1b[0m ${name}`);
@@ -103,20 +123,94 @@ async function generateForOption(option: ApiCodeGenPluginOptions): Promise<{
 			await fs.ensureDir(outputDir);
 		}
 
-		// Convert to provider options and resolve docURL
+		// Convert to provider options and resolve docURL.
+		// Pass absolute paths / file:// URLs through unchanged so the
+		// generator's `Base.resolveSpecURL` can pick the file transport.
+		// Only relative paths need to be anchored to cwd.
 		let docURL = config.spec;
-		if (!docURL.startsWith('http://') && !docURL.startsWith('https://')) {
-			if (docURL.startsWith('/') || docURL.match(/^[A-Za-z]:/)) {
-				docURL = `file://${docURL}`;
-			} else {
-				docURL = path.resolve(process.cwd(), docURL);
+		if (
+			!docURL.startsWith('http://') &&
+			!docURL.startsWith('https://') &&
+			!docURL.startsWith('file://') &&
+			!docURL.startsWith('/') &&
+			!/^[A-Za-z]:[\\/]/.test(docURL)
+		) {
+			docURL = path.resolve(process.cwd(), docURL);
+		}
+
+		// Resolve cache directory (default node_modules/.cache/apicodegen).
+		const resolvedCacheDir =
+			cacheDir ??
+			path.join(process.cwd(), 'node_modules', '.cache', 'apicodegen');
+		const codegenCache = cache ? new CodegenCache(resolvedCacheDir) : null;
+
+		const optionsHash = CodegenCache.hashOptions({
+			name,
+			spec: docURL,
+			output: config.output,
+			adaptor: config.adaptor,
+			baseURL: config.baseURL,
+			importClientSource: config.importClientSource,
+		});
+
+		let result: CodeGenResult | null = null;
+		let cached = false;
+
+		if (codegenCache) {
+			const cachedEntry = await codegenCache.lookup(optionsHash, docURL);
+			if (cachedEntry) {
+				result = {
+					code: cachedEntry.code,
+					stats: cachedEntry.stats,
+				};
+				cached = true;
+				if (verbose) {
+					logger.debug(`Cache hit for ${name} (${optionsHash})`);
+				}
 			}
 		}
 
-		const result = await codeGen({
-			...toProviderOptions(config),
-			docURL,
-		});
+		if (!result) {
+			result = await codeGen({
+				...toProviderOptions(config),
+				docURL,
+			});
+
+			// Persist to cache for subsequent runs.
+			if (codegenCache) {
+				try {
+					const fsPromises = await import('node:fs/promises');
+					let specMtimeMs: number | undefined;
+					let specContentHash: string | undefined;
+					const isRemote =
+						docURL.startsWith('http://') || docURL.startsWith('https://');
+					if (!isRemote) {
+						try {
+							const st = await fsPromises.stat(docURL);
+							specMtimeMs = st.mtimeMs;
+							const content = await fsPromises.readFile(docURL, 'utf8');
+							specContentHash = CodegenCache.hashContent(content);
+						} catch {
+							// Spec unreadable; skip caching.
+						}
+					}
+					await codegenCache.store({
+						optionsHash,
+						specMtimeMs,
+						specContentHash,
+						code: result.code,
+						stats: result.stats,
+					});
+				} catch (cacheError) {
+					// Cache write failures must not break generation.
+					if (verbose) {
+						logger.warn(
+							`Cache write failed for ${name}: ${(cacheError as Error).message}`
+						);
+					}
+				}
+			}
+		}
 
 		if (config.output) {
 			await fs.writeFile(config.output, result.code);
@@ -140,6 +234,7 @@ async function generateForOption(option: ApiCodeGenPluginOptions): Promise<{
 			name,
 			output: config.output,
 			stats: result.stats,
+			cached,
 		};
 	} catch (error) {
 		return {
@@ -197,10 +292,11 @@ export function apiCodeGenPlugin(
 
 			for (const result of results) {
 				if (result.success) {
-					const { name, output, stats } = result;
+					const { name, output, stats, cached } = result;
 					if (stats) {
+						const cachedTag = cached ? ' \x1b[90m[cached]\x1b[0m' : '';
 						console.log(
-							`\x1b[32m✓\x1b[0m ${name} → ${output} (${stats.endpoints} endpoints, ${stats.schemas} schemas) ${stats.duration}ms`
+							`\x1b[32m✓\x1b[0m ${name} → ${output} (${stats.endpoints} endpoints, ${stats.schemas} schemas) ${stats.duration}ms${cachedTag}`
 						);
 					} else {
 						console.log(`\x1b[32m✓\x1b[0m ${name} → ${output || 'N/A'}`);

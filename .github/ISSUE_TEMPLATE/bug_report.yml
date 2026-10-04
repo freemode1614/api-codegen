@@ -1,0 +1,161 @@
+name: 🐞 Bug Report
+description: Report incorrect behavior, crashes, or unexpected output from `@moccona/apicodegen`.
+title: "[Bug]: "
+labels: ["bug", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug.
+
+        Please make sure you've read our [Contributing Guide](../../CONTRIBUTING.md#issue-guidelines)
+        and [Code of Conduct](../../CODE_OF_CONDUCT.md) before proceeding.
+
+  - type: checkboxes
+    id: preliminaries
+    attributes:
+      label: Pre-flight checklist
+      description: Please confirm each item before continuing.
+      options:
+        - label: I have searched the [existing issues](https://github.com/freemode1614/api-codegen/issues?q=is%3Aissue) and confirmed this is not a duplicate.
+          required: true
+        - label: I have read the [README](../../README.md), [docs/](../../docs), and [troubleshooting section](../../README.md#-troubleshooting).
+          required: true
+        - label: I am running the **latest published version** of `@moccona/apicodegen`.
+          required: true
+        - label: This is **not** a security vulnerability. (For security issues, see [SECURITY.md](../../SECURITY.md).)
+          required: true
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: Affected component
+      description: Which part of the project is the bug in?
+      options:
+        - "CLI (`apicodegen` command)"
+        - "Vite plugin (`@moccona/apicodegen/vite`)"
+        - "OpenAPI 2.0 (Swagger) parser"
+        - "OpenAPI 3.0 parser"
+        - "OpenAPI 3.1 parser"
+        - "TypeScript code generator"
+        - "Fetch / Axios adaptor"
+        - "Configuration loader"
+        - "Logger / CLI output"
+        - "Build / packaging (`tsdown`)"
+        - "Other (describe below)"
+      validations:
+        required: true
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity
+      description: How broken is it?
+      options:
+        - "S1 — Generator crashes or produces invalid TypeScript"
+        - "S2 — Wrong output (compiles but behavior incorrect)"
+        - "S3 — Minor visual / cosmetic issue"
+      validations:
+        required: true
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: Bug summary
+      description: One or two sentences describing the bug.
+      placeholder: |
+        When I generate from a 3.1 spec with `oneOf`, the output is missing the discriminator field.
+      validations:
+        required: true
+
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      description: Minimal, copy-pasteable reproduction.
+      placeholder: |
+        1. Create spec with `…`
+        2. Run `apicodegen ./spec.json -o ./api.ts`
+        3. Observe …
+      validations:
+        required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: What did you expect to happen?
+      validations:
+        required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      description: What actually happened? Paste the relevant CLI output or error message here.
+      render: shell
+      validations:
+        required: true
+
+  - type: input
+    id: spec-attachment
+    attributes:
+      label: OpenAPI spec — public URL or repo path
+      description: Paste a URL or in-repo path. For **private** specs, see the next field.
+      placeholder: https://example.com/openapi.json
+      validations:
+        required: false
+
+  - type: textarea
+    id: attachments
+    attributes:
+      label: Attachments (for private specs)
+      description: |
+        GitHub Issue Forms do not support file uploads. For private specs or
+        generated output, paste the contents inline (preferred), or upload
+        them to a Gist / Paste and put the link here.
+      placeholder: |
+        Spec: https://gist.github.com/...
+        Generated output:
+        ```ts
+        // …
+        ```
+        CLI error:
+        ```
+        // …
+        ```
+      render: markdown
+      validations:
+        required: false
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Versions and platform.
+      value: |
+        - `@moccona/apicodegen` version:
+        - Node.js (`node -v`):
+        - pnpm (`pnpm -v`):
+        - OS:
+        - Vite version (if using the plugin):
+      render: markdown
+      validations:
+        required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Anything else that might help — links, related PRs, prior workarounds, etc.
+      validations:
+        required: false
+
+  - type: checkboxes
+    id: contribution
+    attributes:
+      label: Willingness to contribute
+      description: Help us triage and prioritize.
+      options:
+        - label: I am willing to submit a PR to fix this bug.
+        - label: I can reproduce this on the latest `main` branch.

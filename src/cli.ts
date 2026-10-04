@@ -62,14 +62,17 @@ function resolveDocURL(docURL: string, baseURL?: string): string {
 		return docURL;
 	}
 
-	if (docURL.startsWith('/') || docURL.match(/^[A-Za-z]:/)) {
-		return `file://${docURL}`;
+	// Absolute local paths (POSIX or Windows) pass through unchanged — the
+	// generator will pick the file transport via `Base.resolveSpecURL`.
+	if (docURL.startsWith('/') || /^[A-Za-z]:[\\/]/.test(docURL)) {
+		return docURL;
 	}
 
+	// Relative path → resolve against cwd so the generator can read it as a
+	// local file rather than calling undici.
 	if (baseURL) {
 		return new URL(docURL, baseURL).href;
 	}
-
 	return path.resolve(process.cwd(), docURL);
 }
 

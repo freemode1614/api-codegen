@@ -21,7 +21,7 @@ import {
 	SyntaxKind,
 	factory as t,
 } from 'typescript';
-import type { Adapter } from '../base/Adaptor.js';
+import type { Adapter, BodyKind } from '../base/Adaptor.js';
 import { Base } from '../base/Base.js';
 import type {
 	ArrayTypeSchemaObject,
@@ -687,6 +687,153 @@ export class Generator {
 		return statements;
 	}
 
+	/**
+	 * Build statements that construct a `URLSearchParams` from request body
+	 * fields for an `application/x-www-form-urlencoded` request.
+	 *
+	 * Skips `undefined` / `null` values so optional fields don't end up as
+	 * the literal string `"undefined"` in the URL (fixes #8).
+	 *
+	 * The resulting `sp` variable is referenced by the adapter as the
+	 * `body` payload.
+	 */
+	static toURLSearchParamsStatement(
+		parameters: ParameterObject[],
+		requestBody?: SchemaObject
+	): Statement[] {
+		const statements: Statement[] = [];
+		const spDeclaration = t.createVariableStatement(
+			undefined,
+			t.createVariableDeclarationList(
+				[
+					t.createVariableDeclaration(
+						t.createIdentifier('sp'),
+						undefined,
+						undefined,
+						t.createNewExpression(
+							t.createIdentifier('URLSearchParams'),
+							undefined,
+							[]
+						)
+					),
+				],
+				NodeFlags.Const
+			)
+		);
+		statements.push(spDeclaration);
+
+		const appendValue = (
+			key: string,
+			valueExpr: import('typescript').Expression
+		): Statement =>
+			t.createExpressionStatement(
+				t.createCallExpression(
+					t.createPropertyAccessExpression(
+						t.createIdentifier('sp'),
+						t.createIdentifier('append')
+					),
+					undefined,
+					[t.createStringLiteral(key), valueExpr]
+				)
+			);
+
+		// Body-level fields.
+		if (
+			requestBody &&
+			requestBody.type === 'object' &&
+			requestBody.properties &&
+			Object.keys(requestBody.properties).length !== 0
+		) {
+			for (const key of Object.keys(requestBody.properties)) {
+				const fieldSchema = requestBody.properties[key];
+				const required = !!fieldSchema.required;
+				const accessor = t.createElementAccessExpression(
+					t.createIdentifier('req'),
+					t.createStringLiteral(key)
+				);
+				const stringValue = Generator.toFormDataCompatibleString(
+					accessor,
+					fieldSchema
+				);
+				const append = appendValue(key, stringValue);
+				if (required) {
+					statements.push(append);
+				} else {
+					// Skip nullish values.
+					statements.push(
+						t.createIfStatement(
+							t.createBinaryExpression(
+								accessor,
+								t.createToken(SyntaxKind.ExclamationEqualsToken),
+								t.createToken(SyntaxKind.NullKeyword)
+							),
+							t.createBlock([append], true)
+						)
+					);
+				}
+			}
+		}
+
+		// Standalone query-style parameters (rare for form bodies, but kept
+		// for symmetry with `toFormDataStatement`).
+		for (const parameter of parameters) {
+			if (
+				parameter.in === ParameterIn.header ||
+				parameter.in === ParameterIn.cookie ||
+				parameter.in === ParameterIn.path
+			) {
+				continue;
+			}
+			const accessor = t.createIdentifier(
+				Base.camelCase(Base.normalize(parameter.name))
+			);
+			statements.push(
+				t.createIfStatement(
+					t.createBinaryExpression(
+						accessor,
+						t.createToken(SyntaxKind.ExclamationEqualsToken),
+						t.createToken(SyntaxKind.NullKeyword)
+					),
+					t.createBlock(
+						[
+							appendValue(
+								parameter.name,
+								Generator.toFormDataCompatibleString(accessor)
+							),
+						],
+						true
+					)
+				)
+			);
+		}
+
+		return statements;
+	}
+
+	/**
+	 * Render `expr` as a string suitable for `FormData.append` /
+	 * `URLSearchParams.append`. Object/array schemas are JSON-stringified,
+	 * everything else is coerced via `String(...)`.
+	 */
+	private static toFormDataCompatibleString(
+		expr: import('typescript').Expression,
+		schema?: SchemaObject
+	): import('typescript').Expression {
+		if (schema && (schema.type === 'object' || schema.type === 'array')) {
+			return t.createCallExpression(
+				t.createPropertyAccessExpression(
+					t.createIdentifier('JSON'),
+					t.createIdentifier('stringify')
+				),
+				undefined,
+				[expr]
+			);
+		}
+		return t.createCallExpression(t.createIdentifier('String'), undefined, [
+			expr,
+		]);
+	}
+
 	static bodyBlock(
 		uri: string,
 		method: string,
@@ -695,20 +842,10 @@ export class Generator {
 		response: MediaTypeObject | undefined,
 		adapter: Adapter
 	): Block {
-		const isFormDataRequest =
-			requestBody &&
-			['multipart/form-data', 'application/x-www-form-urlencoded'].includes(
-				requestBody.type
-			);
-
 		const shouldParseResponseToJSON = 'application/json' === response?.type;
 
-		// Ignore one and only blob parameter.
-		const isRequestBodyBinary =
-			requestBody?.schema &&
-			requestBody.schema.type === ArraySchemaType.array &&
-			Generator.isBinarySchema(requestBody.schema);
-
+		// Parameters that look like form fields (Swagger 2.0 style) or are
+		// binary (3.x style, often co-located with multipart/form-data).
 		const parametersShouldPutInFormData = parameters.filter(
 			(p) =>
 				p.in === ParameterIn.formData ||
@@ -717,6 +854,12 @@ export class Generator {
 
 		const parametersShouldNotPutInFormData = parameters.filter(
 			(p) => !parametersShouldPutInFormData.includes(p)
+		);
+
+		// Parameters that look like Swagger 2.0 body params (rare in 3.x, but
+		// kept for backwards compatibility with V2 specs).
+		const inBody = parametersShouldNotPutInFormData.filter(
+			(p) => !p.in || p.in === 'body'
 		);
 
 		const isRequestBodyContainsBinary =
@@ -730,20 +873,76 @@ export class Generator {
 			(p) => p?.schema && Generator.isBinarySchema(p.schema)
 		);
 
-		const shouldPutParametersOrBodyInFormData =
-			!!isFormDataRequest &&
-			(isRequestBodyBinary ||
+		// --- Decide body kind -------------------------------------------------
+		const mediaType = (requestBody?.type ?? '')
+			.toLowerCase()
+			.split(';')[0]
+			?.trim();
+
+		const requestSchemaIsBinary =
+			requestBody?.schema && Generator.isBinarySchema(requestBody.schema);
+
+		let bodyKind: BodyKind = 'none';
+		let bodyContentType: string | undefined;
+
+		if (mediaType === 'multipart/form-data') {
+			// Multipart: any binary/file content in either parameters or
+			// requestBody.schema (3.x style) triggers FormData construction.
+			if (
 				hasBinaryInParameters ||
 				isRequestBodyContainsBinary ||
-				parametersShouldPutInFormData.length > 0);
+				parametersShouldPutInFormData.length > 0
+			) {
+				bodyKind = 'form-data';
+				// Don't set Content-Type — runtime needs to add the boundary.
+			}
+		} else if (mediaType === 'application/x-www-form-urlencoded') {
+			// URLSearchParams for any form-urlencoded request.
+			bodyKind = 'urlencoded';
+			bodyContentType = 'application/x-www-form-urlencoded';
+		} else if (mediaType === 'application/json') {
+			// Only emit a JSON body if the spec actually describes one
+			// (schema or inBody parameters). The default `application/json`
+			// placeholder injected by `schemaToStatemets` for body-less
+			// operations has no schema and no params — leave those alone.
+			if (requestBody?.schema || inBody.length > 0) {
+				bodyKind = 'json';
+				bodyContentType = 'application/json';
+			}
+		} else if (requestSchemaIsBinary) {
+			// Single binary request body (Blob/File) — pass it through directly.
+			bodyKind = 'binary';
+			bodyContentType = requestBody?.type;
+		} else if (requestBody?.schema) {
+			// Unknown textual type with a schema (e.g. application/xml,
+			// text/plain). We don't have a built-in serializer for these —
+			// fall back to JSON.stringify. The Content-Type header is set
+			// from the spec so the server still routes the request correctly.
+			bodyKind = 'json';
+			bodyContentType = requestBody?.type;
+		}
+		// No schema and unknown type → fall through to `none`.
+
+		// Pre-statements: FormData / URLSearchParams construction.
+		const preStatements: Statement[] = [];
+		if (bodyKind === 'form-data') {
+			preStatements.push(
+				...Generator.toFormDataStatement(
+					parametersShouldPutInFormData,
+					requestBody?.schema
+				)
+			);
+		} else if (bodyKind === 'urlencoded') {
+			preStatements.push(
+				...Generator.toURLSearchParamsStatement(
+					parametersShouldNotPutInFormData,
+					requestBody?.schema
+				)
+			);
+		}
 
 		return t.createBlock([
-			...(shouldPutParametersOrBodyInFormData
-				? Generator.toFormDataStatement(
-						parametersShouldPutInFormData,
-						requestBody?.schema
-					)
-				: []),
+			...preStatements,
 			...adapter.client(
 				uri,
 				method,
@@ -751,7 +950,8 @@ export class Generator {
 				requestBody,
 				response,
 				adapter,
-				shouldPutParametersOrBodyInFormData,
+				bodyKind,
+				bodyContentType,
 				shouldParseResponseToJSON
 			),
 		]);
@@ -841,7 +1041,7 @@ export class Generator {
 						reserveUnique(
 							Base.pathToFnName(uri, method, operationId) +
 								(shouldAddExtraMethodNameSuffix
-									? Base.camelCase(Base.normalize(req.type.split('/')[1]))
+									? Base.mediaTypeToSuffix(req.type)
 									: '')
 						),
 						undefined,

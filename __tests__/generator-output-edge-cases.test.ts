@@ -99,10 +99,14 @@ describe('codeGen output edge cases', () => {
 				},
 			})
 		);
-		// Locks current behavior: media-type suffix is camelCase (lowercase "json"),
-		// not UpperCamelCase. So the function is named `...Postjson` not `...PostJson`.
-		expect(code).toMatch(/createPetUsingPostjson/);
-		expect(code).toMatch(/createPetUsingPostxml/);
+		// Media-type suffix is UpperCamelCase so `...PostJson`, `...PostXml`
+		// are emitted (not `...Postjson` / `...Postxml`). Previously this was
+		// a regression — `x-www-form-urlencoded` produced `...X-www-form-...`
+		// which is an illegal identifier. The mapping (`Json`, `Xml`,
+		// `FormData`, `FormUrlencoded`, ...) is defined in
+		// `Base.mediaTypeToSuffix`.
+		expect(code).toMatch(/createPetUsingPostJson/);
+		expect(code).toMatch(/createPetUsingPostXml/);
 	});
 
 	it('deduplicates same operationId + same method + same path (no mediaType diff)', async () => {

@@ -82,7 +82,7 @@ pnpm add -D @moccona/apicodegen
 |---------|---------|--------------|
 | `typescript` | v5 | Type checking generated code |
 | `prettier` | v3 | Formatting output |
-| `vite` | v7 | Vite plugin only |
+| `vite` | v7 / v8 | Vite plugin only (optional) |
 
 ---
 
@@ -449,6 +449,17 @@ See [docs/roadmap.md](docs/roadmap.md) for detailed future plans:
 
 Issues and Pull Requests are welcome!
 
+- 📘 [Contributing Guide](./CONTRIBUTING.md) — dev setup, code style, PR process
+- 📜 [Code of Conduct](./CODE_OF_CONDUCT.md) — community norms & engineering standards
+- 🔒 [Security Policy](./SECURITY.md) — how to report vulnerabilities privately
+- 💬 [GitHub Discussions](https://github.com/freemode1614/api-codegen/discussions) — questions & ideas
+
+When opening an issue, you'll be guided through **Bug Report**, **Feature Request**,
+**Documentation**, or **Question** templates so we can help you faster.
+
+By participating in this project you agree to abide by the [Code of Conduct](./CODE_OF_CONDUCT.md).
+
 ---
 
-*Questions or suggestions? [Open an issue](https://github.com/freemode1614/api-codegen/issues)*
+*Questions or suggestions? [Start a discussion](https://github.com/freemode1614/api-codegen/discussions)
+or [open an issue](https://github.com/freemode1614/api-codegen/issues).*

@@ -1,3 +1,4 @@
+import { readFile } from 'node:fs/promises';
 import { createScopedLogger } from '@moccona/logger';
 import type { OpenAPI, OpenAPIV2, OpenAPIV3, OpenAPIV3_1 } from 'openapi-types';
 import type {
@@ -10,6 +11,7 @@ import {
 	AxiosAdapter,
 	Adaptors as ads,
 	Base,
+	createErrors,
 	FetchAdapter,
 	Generator,
 	Provider,
@@ -101,10 +103,35 @@ export async function codeGen(
 
 	logger.info(`Fetch document from ${initOptions.docURL}`);
 
-	const doc = await Base.fetchDoc(
-		initOptions.docURL,
-		initOptions.requestOptions
-	);
+	const { transport, source } = Base.resolveSpecURL(initOptions.docURL);
+	const doc =
+		transport === 'file'
+			? await (async () => {
+					let raw: string;
+					try {
+						raw = await readFile(source, 'utf8');
+					} catch (error) {
+						if ((error as NodeJS.ErrnoException)?.code === 'ENOENT') {
+							throw createErrors.specNotFound(source, error as Error);
+						}
+						throw new Error(
+							`Failed to read OpenAPI spec from ${source}: ${
+								error instanceof Error ? error.message : String(error)
+							}`
+						);
+					}
+					try {
+						return JSON.parse(raw) as unknown;
+					} catch (error) {
+						throw createErrors.specParseFailed(
+							source,
+							undefined,
+							undefined,
+							error as Error
+						);
+					}
+				})()
+			: await Base.fetchDoc(source, initOptions.requestOptions);
 
 	const provider = new OpenAPIProvider(initOptions, doc);
 	const { enums, schemas, parameters, responses, requestBodies, apis } =

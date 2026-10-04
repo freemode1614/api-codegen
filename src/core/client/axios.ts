@@ -4,16 +4,20 @@
  * This adapter is responsible for generating code that uses the Axios HTTP client library.
  */
 
-import type { Statement, TypeReferenceNode } from 'typescript';
+import type {
+	PropertyAssignment,
+	Statement,
+	TypeReferenceNode,
+} from 'typescript';
 import { factory as t } from 'typescript';
-import { Adapter } from '../base/Adaptor.js';
+import { Adapter, type BodyKind } from '../base/Adaptor.js';
 import { Base } from '../base/Base.js';
 import { Generator } from '../generator/index.js';
 import type { MediaTypeObject, ParameterObject } from '../interface.js';
 
 /**
  * Adapter class implementing support for generating code that makes use of the Axios HTTP client library.
- * This class defines custom behavior and field mappings specific to the Axios client.
+ * This adapter defines custom behavior and field mappings specific to the Axios client.
  */
 export class AxiosAdapter extends Adapter {
 	/**
@@ -45,8 +49,6 @@ export class AxiosAdapter extends Adapter {
 	 * Method that should generate and return the client-specific configuration statements.
 	 *
 	 * @returns {Statement[]} An array of TypeScript statements that define the client configuration.
-	 *
-	 * @throws {Error} Indicates that the method is not yet implemented and needs to be filled in.
 	 */
 	public client(
 		uri: string,
@@ -55,7 +57,9 @@ export class AxiosAdapter extends Adapter {
 		requestBody: MediaTypeObject | undefined,
 		response: MediaTypeObject | undefined,
 		adapter: Adapter,
-		shouldUseFormData: boolean
+		bodyKind: BodyKind,
+		bodyContentType: string | undefined,
+		_shouldUseJSONResponse: boolean
 	): Statement[] {
 		const statements: Statement[] = [];
 
@@ -63,66 +67,77 @@ export class AxiosAdapter extends Adapter {
 		const inBody = parameters.filter((p) => !p.in || p.in === 'body');
 		const inHeader = parameters.filter((p) => p.in === 'header');
 
-		/**
-		 * Creates the literal object expression for fetch options
-		 * including method, headers, and body.
-		 * @returns - The constructed fetch options object
-		 */
 		const toLiterlExpression = () => {
-			return t.createObjectLiteralExpression(
-				[
-					// Set the HTTP method
+			const headerEntries: PropertyAssignment[] = [];
+			for (const p of inHeader) {
+				headerEntries.push(
 					t.createPropertyAssignment(
-						t.createIdentifier(adapter.methodFieldName),
-						t.createStringLiteral(method.toUpperCase())
-					),
-				]
-					.concat(
-						// Add headers if there are any
-						inHeader.length > 0
-							? t.createPropertyAssignment(
-									t.createIdentifier(adapter.headersFieldName),
-									t.createObjectLiteralExpression(
-										inHeader.map((p) =>
-											t.createPropertyAssignment(
-												t.createStringLiteral(p.name),
-												t.createCallExpression(
-													t.createIdentifier('encodeURIComponent'),
-													undefined,
-													[
-														t.createCallExpression(
-															t.createIdentifier('String'),
-															undefined,
-															[
-																t.createIdentifier(
-																	Base.camelCase(Base.normalize(p.name))
-																),
-															]
-														),
-													]
-												)
-											)
-										)
-									)
-								)
-							: []
+						t.createStringLiteral(p.name),
+						t.createCallExpression(
+							t.createIdentifier('encodeURIComponent'),
+							undefined,
+							[
+								t.createCallExpression(
+									t.createIdentifier('String'),
+									undefined,
+									[t.createIdentifier(Base.camelCase(Base.normalize(p.name)))]
+								),
+							]
+						)
 					)
-					.concat(
-						shouldUseFormData || inBody.length > 0 || requestBody?.schema
-							? t.createPropertyAssignment(
-									t.createIdentifier(adapter.bodyFieldName),
-									shouldUseFormData
-										? t.createIdentifier('fd')
-										: inBody.length > 0 ||
-												(requestBody?.schema &&
-													!Generator.isBinarySchema(requestBody.schema))
-											? t.createIdentifier('req')
-											: t.createIdentifier('req')
-								)
-							: []
-					),
-				true
-			);
+				);
+			}
+			if (bodyContentType !== undefined) {
+				headerEntries.push(
+					t.createPropertyAssignment(
+						t.createStringLiteral('Content-Type'),
+						t.createStringLiteral(bodyContentType)
+					)
+				);
+			}
+
+			const properties: PropertyAssignment[] = [
+				t.createPropertyAssignment(
+					t.createIdentifier(adapter.methodFieldName),
+					t.createStringLiteral(method.toUpperCase())
+				),
+			];
+
+			if (headerEntries.length > 0) {
+				properties.push(
+					t.createPropertyAssignment(
+						t.createIdentifier(adapter.headersFieldName),
+						t.createObjectLiteralExpression(headerEntries)
+					)
+				);
+			}
+
+			let bodyExpr: import('typescript').Expression | undefined;
+			switch (bodyKind) {
+				case 'form-data':
+					bodyExpr = t.createIdentifier('fd');
+					break;
+				case 'urlencoded':
+					bodyExpr = t.createIdentifier('sp');
+					break;
+				case 'json':
+				case 'binary':
+					bodyExpr = t.createIdentifier('req');
+					break;
+				case 'none':
+					break;
+			}
+
+			if (bodyExpr) {
+				properties.push(
+					t.createPropertyAssignment(
+						t.createIdentifier(adapter.bodyFieldName),
+						bodyExpr
+					)
+				);
+			}
+
+			return t.createObjectLiteralExpression(properties, true);
 		};
 
 		// Construct the fetch call and return statement
@@ -136,7 +151,13 @@ export class AxiosAdapter extends Adapter {
 									response.schema
 								) as unknown as TypeReferenceNode,
 							]
-						: undefined,
+						: // No schema declared — type the response as `unknown`
+							// so the function signature stays explicit.
+							[
+								t.createTypeReferenceNode(
+									t.createIdentifier('unknown')
+								) as unknown as TypeReferenceNode,
+							],
 					[Generator.toUrlTemplate(uri, parameters), toLiterlExpression()]
 				)
 			)

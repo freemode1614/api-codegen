@@ -1,0 +1,124 @@
+# Dependabot configuration for @moccona/apicodegen
+#
+# Tracks:
+#   - npm dependencies (package.json + pnpm-lock.yaml)
+#   - GitHub Actions versions (.github/workflows/*.yml)
+#
+# Design choices:
+#   - `groups` consolidate noisy minor/patch updates into a single PR per
+#     ecosystem, keeping the PR list scannable.
+#   - Major version updates are kept individual so reviewers can give them
+#     proper attention.
+#   - `cooldown` delays non-critical updates for 7 days so we don't churn on
+#     freshly-published versions that may later be unpublished / patched.
+#   - Weekly schedule (Monday) avoids weekend noise and aligns with our
+#     release cadence.
+#
+# Reference:
+#   https://docs.github.com/en/code-security/dependabot/dependabot-version-updates
+
+version: 2
+
+updates:
+  # ─────────────────────────────────────────────────────────────────────
+  # npm / pnpm dependencies
+  # ─────────────────────────────────────────────────────────────────────
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "Asia/Shanghai"
+    # Allow major updates from CI to surface, but our local CI gates
+    # (lint / typecheck / test / build) will catch breakage.
+    # Dependabot groups below further reduce churn.
+    groups:
+      # Routine minor & patch bumps for runtime + dev deps — single PR.
+      minor-and-patch:
+        applies-to: version-updates
+        update-types:
+          - "minor"
+          - "patch"
+        patterns:
+          - "*"
+        exclude-patterns:
+          - "@types/node"      # bumped together with the Node engine below
+      # Patch-only fast lane for security hygiene.
+      patch-security:
+        applies-to: version-updates
+        update-types:
+          - "patch"
+        patterns:
+          - "*"
+      # Keep peer-deps in lock-step (typescript / prettier / vite).
+      peer-sync:
+        applies-to: version-updates
+        update-types:
+          - "minor"
+          - "patch"
+        patterns:
+          - "typescript"
+          - "prettier"
+          - "vite"
+          - "vite-tsconfig-paths"
+    # Bump Node typings in lock-step with the engine, never ad-hoc.
+    ignore:
+      - dependency-name: "@types/node"
+        update-types:
+          - "version-update:semver-major"
+    # 7-day cooldown gives newly-released versions time to surface
+    # regressions before we pin them.
+    cooldown:
+      default-days: 7
+      semver-major-days: 14
+      semver-minor-days: 5
+      semver-patch-days: 2
+    # Conventional Commits-friendly prefix.
+    commit-message:
+      prefix: "deps"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "automated"
+    # Surface maintainers on PRs so they're not orphaned.
+    reviewers:
+      - "freemode1614"
+    # Open PRs against a working branch rather than main, to let CI run
+    # cleanly without blocking other merges.
+    target-branch: "main"
+    # Limit open Dependabot PRs to keep the queue manageable.
+    open-pull-requests-limit: 8
+    # Match the package manager declared in package.json.
+    versioning-strategy: "increase"
+
+  # ─────────────────────────────────────────────────────────────────────
+  # GitHub Actions
+  # ─────────────────────────────────────────────────────────────────────
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "Asia/Shanghai"
+    groups:
+      actions-minor-and-patch:
+        applies-to: version-updates
+        update-types:
+          - "minor"
+          - "patch"
+        patterns:
+          - "*"
+    commit-message:
+      prefix: "ci"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "ci"
+      - "automated"
+    reviewers:
+      - "freemode1614"
+    open-pull-requests-limit: 4
+    cooldown:
+      default-days: 7
