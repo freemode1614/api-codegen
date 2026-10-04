@@ -4,82 +4,82 @@ description: Report missing, wrong, or unclear content in README, docs/, JSDoc,
 title: "[Docs]: "
 labels: ["documentation", "needs-triage"]
 body:
-- type: markdown
-  attributes:
-    value: |
-      Documentation issues are just as important as code issues. Thank you!
+  - type: markdown
+    attributes:
+      value: |
+        Documentation issues are just as important as code issues. Thank you!
 
-- type: checkboxes
-  id: preliminaries
-  attributes:
-    label: Pre-flight checklist
-    options:
-    - label: I have searched the [existing 
-        issues](https://github.com/freemode1614/api-codegen/issues?q=is%3Aissue+label%3Adocumentation)
-        for documentation reports.
+  - type: checkboxes
+    id: preliminaries
+    attributes:
+      label: Pre-flight checklist
+      options:
+        - label: I have searched the [existing 
+            issues](https://github.com/freemode1614/api-codegen/issues?q=is%3Aissue+label%3Adocumentation)
+            for documentation reports.
+          required: true
+        - label: I am running the **latest published version**.
+          required: true
+
+  - type: dropdown
+    id: doc-type
+    attributes:
+      label: Where is the issue?
+      options:
+        - "README.md"
+        - "CHANGELOG.md"
+        - "docs/ (roadmap, plans, superpowers)"
+        - "JSDoc on a public API symbol"
+        - "CLI `--help` output"
+        - "Generated code comments"
+        - "Other (describe below)"
+    validations:
       required: true
-    - label: I am running the **latest published version**.
+
+  - type: dropdown
+    id: doc-issue
+    attributes:
+      label: What kind of issue?
+      options:
+        - "Incorrect / outdated information"
+        - "Missing documentation (undocumented API or flag)"
+        - "Confusing / ambiguous wording"
+        - "Broken link or example"
+        - "Typo or grammar"
+        - "Translation (中文 / English mismatch)"
+    validations:
       required: true
 
-- type: dropdown
-  id: doc-type
-  attributes:
-    label: Where is the issue?
-    options:
-    - "README.md"
-    - "CHANGELOG.md"
-    - "docs/ (roadmap, plans, superpowers)"
-    - "JSDoc on a public API symbol"
-    - "CLI `--help` output"
-    - "Generated code comments"
-    - "Other (describe below)"
-  validations:
-    required: true
+  - type: textarea
+    id: location
+    attributes:
+      label: Location
+      description: File path, section heading, or symbol name.
+      placeholder: |
+        `README.md` §"CLI Usage" → "Basic Options" table, row `--adaptor`
+    validations:
+      required: true
 
-- type: dropdown
-  id: doc-issue
-  attributes:
-    label: What kind of issue?
-    options:
-    - "Incorrect / outdated information"
-    - "Missing documentation (undocumented API or flag)"
-    - "Confusing / ambiguous wording"
-    - "Broken link or example"
-    - "Typo or grammar"
-    - "Translation (中文 / English mismatch)"
-  validations:
-    required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: What is wrong / missing?
+      description: Be specific. Quote the current text if applicable.
+    validations:
+      required: true
 
-- type: textarea
-  id: location
-  attributes:
-    label: Location
-    description: File path, section heading, or symbol name.
-    placeholder: |
-      `README.md` §"CLI Usage" → "Basic Options" table, row `--adaptor`
-  validations:
-    required: true
+  - type: textarea
+    id: suggested-fix
+    attributes:
+      label: Suggested fix
+      description: Propose the replacement wording or new section. Optional but 
+        appreciated.
+    validations:
+      required: false
 
-- type: textarea
-  id: description
-  attributes:
-    label: What is wrong / missing?
-    description: Be specific. Quote the current text if applicable.
-  validations:
-    required: true
-
-- type: textarea
-  id: suggested-fix
-  attributes:
-    label: Suggested fix
-    description: Propose the replacement wording or new section. Optional but 
-      appreciated.
-  validations:
-    required: false
-
-- type: checkboxes
-  id: contribution
-  attributes:
-    label: Willingness to contribute
-    options:
-    - label: I am willing to submit a PR with the fix.
+  - type: checkboxes
+    id: contribution
+    attributes:
+      label: Willingness to contribute
+      options:
+        - label: I am willing to submit a PR with the fix.
