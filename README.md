@@ -37,7 +37,7 @@ A powerful OpenAPI code generator that automatically generates TypeScript API cl
 | **Pluggable Adapters** | Register custom HTTP-client adapters (`ky`, `ofetch`, …) via the plugin API |
 | **Custom Providers** | Bring your own spec format (e.g. AsyncAPI 2.x) via the plugin API |
 | **Generator Hooks** | `beforeEmit`, `afterFormat`, `writeFile` — plugins intercept the generator pipeline; `writeFile` may return multiple files |
-| **Spec Hooks** | `transformSpec` — plugins can rewrite the raw spec doc before the provider parses it |
+| **Spec Hooks** | `transformSpec` — plugins can rewrite the raw spec doc before the provider parses it; `fetchSpec` — plugins can replace the spec loader (HTTP auth, custom stores, ...) |
 | **CLI Tool** | Simple command-line interface with retro ASCII banner |
 | **Vite Plugin** | Seamless integration into Vite build workflow |
 | **File Upload** | Native support for multipart/form-data file uploads |
@@ -215,7 +215,8 @@ export async function getPetById({ petId }: { petId: number }) {
 ## 🧩 Plugins
 
 > Status: **adapter registry (PR1) + provider registry (PR2) + generator
-> hooks (PR3) + `transformSpec` spec-loading hook (PR4) shipped**.
+> hooks (PR3) + `transformSpec` spec hook (PR4) + `fetchSpec` spec
+> loader (PR5) shipped**.
 
 `api-codegen` ships with two built-in HTTP-client adapters (`fetch`,
 `axios`) and one built-in spec-format provider (`openapi`). The plugin
@@ -307,6 +308,12 @@ const myPlugin: Plugin = {
 
   // Optional: rewrite the spec before the provider parses it (PR4)
   transformSpec: (_ctx, doc) => doc,
+
+  // Optional: replace the spec loader entirely (PR5)
+  fetchSpec: async ({ transport, source }) => {
+    if (transport === 'file') return; // opt out → built-in loader
+    // ... or return { body } / { doc } to take over.
+  },
 };
 ```
 
@@ -562,6 +569,60 @@ interface TransformSpecContext {
 
 See [`example/plugins/strip-vendor-extensions/`](example/plugins/strip-vendor-extensions/) for a runnable end-to-end example.
 
+### Spec loader
+
+`fetchSpec` is the most upstream hook — it runs BEFORE the spec is
+even loaded, on the source URL. Useful for injecting auth headers,
+reading the spec from a custom store, supporting YAML, or adding a
+cache layer.
+
+```js
+import { definePlugin } from '@moccona/apicodegen';
+
+export default definePlugin({
+  name: 'inject-auth-header',
+  fetchSpec: async ({ transport, source, requestOptions }) => {
+    if (transport === 'file') return; // opt out — built-in file loader takes over
+
+    // Take over the HTTP request and inject an Authorization header.
+    const { Base } = await import('@moccona/apicodegen');
+    const result = await Base.fetchDoc(source, {
+      ...requestOptions,
+      headers: {
+        ...requestOptions.headers,
+        Authorization: `Bearer ${process.env.MY_TOKEN}`,
+      },
+    });
+    return { doc: result };
+  },
+});
+```
+
+#### Spec-loader return shape
+
+A `fetchSpec` hook may return either:
+
+- `{ body: string }` — the framework will `JSON.parse` the body and
+  pass the result to the provider's factory. Use this when you have
+  a raw text response and want the framework to handle parsing.
+- `{ doc: unknown }` — the framework passes the value straight
+  through to the provider. Use this when you've already parsed the
+  spec yourself, or when you want to skip JSON.parse (e.g. for
+  YAML specs after you've converted them).
+
+#### Spec-loader ordering
+
+- **Exclusive**: the first plugin in `plugins[]` to return a
+  non-void result wins; later hooks are skipped. This avoids
+  double-fetching.
+- **Returning `void`/`undefined` opts out** and lets the next hook
+  (or the built-in `Base.fetchDoc`/`Base.readLocalDoc`) handle the
+  request.
+- If every hook opts out (or no plugin declares `fetchSpec`), the
+  built-in loader runs unchanged.
+
+See [`example/plugins/inject-auth-header/`](example/plugins/inject-auth-header/) for a runnable end-to-end example (local-file demo).
+
 ### Limitations
 
 - **No npm auto-discovery** — plugins are declared inline in your
@@ -583,6 +644,7 @@ See [`example/plugins/strip-vendor-extensions/`](example/plugins/strip-vendor-ex
 - [`example/plugins/banner-and-timestamp/`](example/plugins/banner-and-timestamp/) — runnable generator-hook example.
 - [`example/plugins/multi-file-output/`](example/plugins/multi-file-output/) — runnable multi-file-output example.
 - [`example/plugins/strip-vendor-extensions/`](example/plugins/strip-vendor-extensions/) — runnable `transformSpec` example.
+- [`example/plugins/inject-auth-header/`](example/plugins/inject-auth-header/) — runnable `fetchSpec` example.
 - [`src/core/plugin.ts`](src/core/plugin.ts) — the `Plugin` interface and `definePlugin`.
 - [`src/core/registry.ts`](src/core/registry.ts) — the adapter registry.
 - [`src/core/provider-registry.ts`](src/core/provider-registry.ts) — the provider registry.

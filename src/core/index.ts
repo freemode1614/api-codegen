@@ -5,6 +5,8 @@ export * from './client/index.js';
 export * from './config.js';
 export * from './ctx-freeze.js';
 export * from './errors.js';
+export { resolveFetchSpecHook } from './fetch-hook-runner.js';
+export * from './fetch-hooks.js';
 export * from './generator/index.js';
 export * from './generator-hooks.js';
 export {

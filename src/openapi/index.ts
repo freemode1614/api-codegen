@@ -111,34 +111,78 @@ export async function codeGen(
 	logger.info(`Fetch document from ${initOptions.docURL}`);
 
 	const { transport, source } = Base.resolveSpecURL(initOptions.docURL);
-	let doc =
-		transport === 'file'
-			? await (async () => {
-					let raw: string;
-					try {
-						raw = await readFile(source, 'utf8');
-					} catch (error) {
-						if ((error as NodeJS.ErrnoException)?.code === 'ENOENT') {
-							throw createErrors.specNotFound(source, error as Error);
+
+	// PR5: chain optional `fetchSpec` hooks. The first plugin in
+	// `plugins[]` to return a non-void FetchSpecResult wins. If every
+	// hook opts out (or none is declared), fall through to the
+	// built-in loader below.
+	let fetchResult:
+		| { body: string; headers?: Record<string, string> }
+		| { doc: unknown; headers?: Record<string, string> }
+		| undefined;
+	if (resolvedPlugins.some((p) => typeof p.fetchSpec === 'function')) {
+		const { resolveFetchSpecHook } = await import(
+			'../core/fetch-hook-runner.js'
+		);
+		fetchResult = await resolveFetchSpecHook(resolvedPlugins, {
+			initOptions: {
+				docURL: initOptions.docURL,
+				baseURL: initOptions.baseURL ?? '',
+				output: initOptions.output,
+			},
+			requestOptions: initOptions.requestOptions ?? {},
+			transport: transport === 'file' ? 'file' : 'http',
+			source,
+		});
+	}
+
+	let doc: unknown;
+	if (fetchResult) {
+		// Plugin returned either a pre-parsed doc or a raw body string.
+		if ('doc' in fetchResult) {
+			doc = fetchResult.doc;
+		} else {
+			try {
+				doc = JSON.parse(fetchResult.body);
+			} catch (error) {
+				throw createErrors.specParseFailed(
+					source,
+					undefined,
+					undefined,
+					error as Error
+				);
+			}
+		}
+	} else {
+		doc =
+			transport === 'file'
+				? await (async () => {
+						let raw: string;
+						try {
+							raw = await readFile(source, 'utf8');
+						} catch (error) {
+							if ((error as NodeJS.ErrnoException)?.code === 'ENOENT') {
+								throw createErrors.specNotFound(source, error as Error);
+							}
+							throw new Error(
+								`Failed to read OpenAPI spec from ${source}: ${
+									error instanceof Error ? error.message : String(error)
+								}`
+							);
 						}
-						throw new Error(
-							`Failed to read OpenAPI spec from ${source}: ${
-								error instanceof Error ? error.message : String(error)
-							}`
-						);
-					}
-					try {
-						return JSON.parse(raw) as unknown;
-					} catch (error) {
-						throw createErrors.specParseFailed(
-							source,
-							undefined,
-							undefined,
-							error as Error
-						);
-					}
-				})()
-			: await Base.fetchDoc(source, initOptions.requestOptions);
+						try {
+							return JSON.parse(raw) as unknown;
+						} catch (error) {
+							throw createErrors.specParseFailed(
+								source,
+								undefined,
+								undefined,
+								error as Error
+							);
+						}
+					})()
+				: await Base.fetchDoc(source, initOptions.requestOptions);
+	}
 
 	const specFormat = initOptions.specFormat ?? 'openapi';
 	const providerSpec = resolveProvider(specFormat);

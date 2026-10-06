@@ -12,6 +12,7 @@
  * - `afterFormat`    — post-process the formatted source string (PR3)
  * - `writeFile`      — replace the file writer (e.g. emit to multiple paths) (PR3)
  * - `transformSpec`  — mutate the raw spec doc before parsing (PR4)
+ * - `fetchSpec`      — replace the spec loader (HTTP/file/remote) (PR5)
  *
  * @example
  * ```ts
@@ -26,6 +27,7 @@
  */
 
 import type { Adapter } from './base/Adaptor.js';
+import type { FetchSpecHook } from './fetch-hooks.js';
 import type {
 	AfterFormatHook,
 	BeforeEmitHook,
@@ -158,6 +160,17 @@ export interface Plugin {
 	 * v3.0, normalize operationIds, inject `$ref` aliases, etc.
 	 */
 	transformSpec?: TransformSpecHook;
+	/**
+	 * Optional. Replace the spec loader entirely. The FIRST plugin in
+	 * the list to return a non-void `FetchSpecResult` wins; remaining
+	 * plugins' `fetchSpec` hooks are skipped. Returning `void` opts
+	 * out and lets the next hook (or the built-in loader) handle the
+	 * request.
+	 *
+	 * Use this to inject auth headers, read the spec from a private
+	 * artifact store, support YAML specs, cache responses, etc.
+	 */
+	fetchSpec?: FetchSpecHook;
 	/** Optional. Plugin version (free-form, surfaced in logs). */
 	version?: string;
 }
