@@ -1,6 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { createScopedLogger } from '@moccona/logger';
 import type { OpenAPI, OpenAPIV2, OpenAPIV3, OpenAPIV3_1 } from 'openapi-types';
+import { resolveWriteFileHook } from '../core/hook-runner.js';
 import type { ProviderInitOptions, ProviderInitResult } from '../core/index.js';
 import {
 	type Adapter,
@@ -101,9 +102,11 @@ export async function codeGen(
 		logger.setLevel('info');
 	}
 
-	// Apply user plugins (PR1: only `adapter` is wired). Must run before any
-	// adapter lookup so a user plugin can register its adapter in time.
-	await applyPlugins(initOptions.plugins);
+	// Apply user plugins (PR1+PR2: adapter + provider registries; PR3:
+	// hooks are also resolved from the same list below). Must run before
+	// any adapter/provider lookup so a user plugin can register them in
+	// time.
+	const resolvedPlugins = await applyPlugins(initOptions.plugins);
 
 	logger.info(`Fetch document from ${initOptions.docURL}`);
 
@@ -165,11 +168,39 @@ export async function codeGen(
 			apis,
 		},
 		initOptions,
-		adaptor
+		adaptor,
+		resolvedPlugins
 	);
 
 	if (initOptions.output) {
-		await Generator.write(code, initOptions.output);
+		const writeHook = resolveWriteFileHook(resolvedPlugins);
+		if (writeHook) {
+			// Use the same freezing discipline as the other hook runners so
+			// a plugin's writeFile hook cannot mutate upstream state.
+			// `deepFreeze` deep-clones plain data and shallow-freezes class
+			// instances (like `Adapter`); see `src/core/ctx-freeze.ts`.
+			const { deepFreeze, freezeStatements } = await import(
+				'../core/hook-runner.js'
+			);
+			await writeHook({
+				initOptions: deepFreeze(initOptions) as ProviderInitOptions,
+				schema: deepFreeze({
+					enums,
+					schemas,
+					parameters,
+					responses,
+					requestBodies,
+					apis,
+				}) as ProviderInitResult,
+				adapter: deepFreeze(adaptor) as Adapter,
+				output: initOptions.output,
+				statements: freezeStatements([]),
+				code,
+				kind: 'writeFile',
+			});
+		} else {
+			await Generator.write(code, initOptions.output);
+		}
 	}
 
 	const duration = Date.now() - startTime;

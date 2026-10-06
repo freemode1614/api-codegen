@@ -35,6 +35,7 @@ A powerful OpenAPI code generator that automatically generates TypeScript API cl
 | **Multiple Adaptors** | Built-in `fetch` and `axios` HTTP client support |
 | **Pluggable Adapters** | Register custom HTTP-client adapters (`ky`, `ofetch`, …) via the plugin API |
 | **Custom Providers** | Bring your own spec format (e.g. AsyncAPI 2.x) via the plugin API |
+| **Generator Hooks** | `beforeEmit`, `afterFormat`, `writeFile` — plugins intercept the generator pipeline |
 | **CLI Tool** | Simple command-line interface with retro ASCII banner |
 | **Vite Plugin** | Seamless integration into Vite build workflow |
 | **File Upload** | Native support for multipart/form-data file uploads |
@@ -260,8 +261,32 @@ export default {
 
 Run `apicodegen` and the generated `api.ts` will call `ky(uri, ...)` instead of the built-in `fetch(uri, ...)`.
 
-> Generator hooks (`beforeEmit`, `afterFormat`, `writeFile`) are reserved on
-> the `Plugin` interface and will ship in an upcoming release.
+### Generator hooks
+
+Hooks intercept the generator pipeline at three points. Hooks receive a
+deep-frozen snapshot of the run context, so plugins cannot accidentally
+mutate upstream state.
+
+```js
+import { definePlugin } from '@moccona/apicodegen';
+import { factory as t } from 'typescript';
+
+export default definePlugin({
+  name: 'banner-and-writeFile',
+  beforeEmit: ({ statements }) => [
+    ...statements,
+    t.createExpressionStatement(t.createStringLiteral('/* my banner */')),
+  ],
+  afterFormat: ({ code }) => `// @generated\n${code}`,
+  writeFile: async ({ code, output }) => {
+    const { writeFile } = await import('node:fs/promises');
+    await writeFile(output, code);
+  },
+});
+```
+
+See [`docs/plugins.md`](docs/plugins.md#generator-hooks-pr3) for the full
+hook contract, ordering rules, and pitfalls.
 
 ### Custom spec providers
 
@@ -503,9 +528,12 @@ src/
 │   ├── generator/      # TypeScript AST generation
 │   ├── client/         # fetch/axios adaptors
 │   ├── base/           # Base utilities
-│   ├── plugin.ts       # Plugin contract (PR1+PR2)
+│   ├── plugin.ts       # Plugin contract (PR1+PR2+PR3)
 │   ├── registry.ts     # Adapter registry
 │   ├── provider-registry.ts # Spec-format provider registry
+│   ├── generator-hooks.ts # Hook contracts (PR3)
+│   ├── hook-runner.ts  # Hook runner + frozen-ctx helpers
+│   ├── ctx-freeze.ts   # Deep-freeze utility for hook snapshots
 │   ├── plugin-loader.ts # applyPlugins()
 │   └── constants/      # Constants
 ├── openapi/            # OpenAPI spec parsing

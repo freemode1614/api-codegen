@@ -64,13 +64,16 @@ export class Generator {
 	 * @returns Formatted code as a string.
 	 * @throws {Error} If no valid statements are provided.
 	 */
-	static toCode(statements: Statement[]): string {
+	static toCode(statements: ReadonlyArray<Statement>): string {
 		if (statements.length === 0) {
 			return '// No api declaration found.';
 		}
 
+		// PR3: hooks may return a frozen array. `createSourceFile` accepts a
+		// readonly array; the second argument is the end-of-file token and
+		// the third is the source-file node flags.
 		const sourceFile = t.createSourceFile(
-			statements,
+			[...statements],
 			t.createToken(SyntaxKind.EndOfFileToken),
 			NodeFlags.None
 		);
@@ -1096,18 +1099,53 @@ export class Generator {
 	static async genCode(
 		schema: ProviderInitResult,
 		initOptions: ProviderInitOptions,
-		adaptor: Adapter
+		adaptor: Adapter,
+		plugins: ReadonlyArray<import('../plugin.js').Plugin> = []
 	) {
 		const { importClientSource } = initOptions;
-		const statements = Generator.schemaToStatemets(schema, adaptor, {
+		let statements = Generator.schemaToStatemets(schema, adaptor, {
 			baseURL: initOptions.baseURL ?? '',
 		});
+
+		// PR3: chain `beforeEmit` hooks.
+		if (plugins.some((p) => typeof p.beforeEmit === 'function')) {
+			const { runBeforeEmitHooks } = await import('../hook-runner.js');
+			statements = await runBeforeEmitHooks(
+				plugins,
+				{
+					initOptions,
+					schema,
+					adapter: adaptor,
+					output: initOptions.output,
+				},
+				statements
+			);
+		}
+
 		let code = Generator.toCode(statements);
 
 		if (importClientSource) {
 			code = importClientSource + '\n\n' + code;
 		}
 
-		return await Generator.prettier(code);
+		code = await Generator.prettier(code);
+
+		// PR3: chain `afterFormat` hooks.
+		if (plugins.some((p) => typeof p.afterFormat === 'function')) {
+			const { runAfterFormatHooks } = await import('../hook-runner.js');
+			code = await runAfterFormatHooks(
+				plugins,
+				{
+					initOptions,
+					schema,
+					adapter: adaptor,
+					output: initOptions.output,
+					statements,
+				},
+				code
+			);
+		}
+
+		return code;
 	}
 }

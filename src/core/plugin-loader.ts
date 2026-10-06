@@ -50,11 +50,16 @@ async function resolveEntry(
  * Each entry may be a {@link Plugin} object directly, or a (possibly async)
  * factory returning one. Factories are resolved in parallel.
  *
+ * Returns the resolved plugin list so the caller can iterate it again
+ * for hook execution (`codeGen()` needs the same list to run
+ * `beforeEmit` / `afterFormat` / `writeFile` hooks).
+ *
  * @param plugins - raw `plugins` value from `ApicodegenConfig`.
+ * @returns the resolved plugin list in the same order as the input.
  */
 export async function applyPlugins(
 	plugins: ReadonlyArray<Plugin | (() => Plugin | Promise<Plugin>)> | undefined
-): Promise<void> {
+): Promise<Plugin[]> {
 	// Always start from a clean slate: drop user adapters/providers from any
 	// previous run and (re-)seed built-ins. This is a no-op on first call.
 	clearUserAdapters();
@@ -62,7 +67,7 @@ export async function applyPlugins(
 	seedBuiltInAdapters();
 	seedBuiltInProviders();
 
-	if (!plugins || plugins.length === 0) return;
+	if (!plugins || plugins.length === 0) return [];
 
 	const resolved = await Promise.all(
 		plugins.map((entry, index) => resolveEntry(entry, index))
@@ -91,4 +96,6 @@ export async function applyPlugins(
 			registerProvider(plugin.provider);
 		}
 	}
+
+	return resolved;
 }

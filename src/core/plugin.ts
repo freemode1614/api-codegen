@@ -6,14 +6,14 @@
  * each capability is optional and looked up in the corresponding registry.
  *
  * Current capabilities:
- * - `adapter`  — register a new HTTP client adapter (PR1)
- * - `provider` — register a non-OpenAPI spec provider (PR2)
+ * - `adapter`     — register a new HTTP client adapter (PR1)
+ * - `provider`    — register a non-OpenAPI spec provider (PR2)
+ * - `beforeEmit`  — mutate generated Statement[] before printing (PR3)
+ * - `afterFormat` — post-process the formatted source string (PR3)
+ * - `writeFile`   — replace the file writer (e.g. emit to multiple paths) (PR3)
  *
  * Reserved for upcoming PRs (interface reserved, no runtime support yet):
  * - `transformSpec`   — mutate the raw spec doc before parsing
- * - `beforeEmit`      — mutate generated Statement[] before printing
- * - `afterFormat`     — post-process the formatted source string
- * - `writeFile`       — replace the file writer (e.g. emit to multiple paths)
  *
  * @example
  * ```ts
@@ -28,6 +28,11 @@
  */
 
 import type { Adapter } from './base/Adaptor.js';
+import type {
+	AfterFormatHook,
+	BeforeEmitHook,
+	WriteFileHook,
+} from './generator-hooks.js';
 import type { ProviderInitResult } from './interface.js';
 
 /**
@@ -115,8 +120,31 @@ export interface Plugin {
 	name: string;
 	/** Optional. Adapter this plugin contributes. */
 	adapter?: AdapterPluginSpec;
-	/** Reserved for PR2. Currently inert. */
+	/** Optional. Spec-format provider this plugin contributes. */
 	provider?: ProviderPluginSpec;
+	/**
+	 * Optional. Hook invoked after `schemaToStatemets` produces a
+	 * `Statement[]` but before it is printed.
+	 *
+	 * May return a new `Statement[]` (or the same one mutated) — the runner
+	 * feeds the returned array into the next hook / printer.
+	 */
+	beforeEmit?: BeforeEmitHook;
+	/**
+	 * Optional. Hook invoked after prettier has formatted the source.
+	 *
+	 * May return a new string; the runner feeds it to the next hook /
+	 * file writer.
+	 */
+	afterFormat?: AfterFormatHook;
+	/**
+	 * Optional. Replaces `Generator.write()`. The FIRST plugin in the list
+	 * to declare this hook wins; subsequent `writeFile` hooks are skipped.
+	 *
+	 * Use this to emit to multiple paths or post-process the file after
+	 * write (lint, git add, ...).
+	 */
+	writeFile?: WriteFileHook;
 	/** Optional. Plugin version (free-form, surfaced in logs). */
 	version?: string;
 }
