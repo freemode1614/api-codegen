@@ -163,6 +163,20 @@ export type ProviderInitOptions = {
 	requestOptions?: FetchDocRequestInit;
 	verbose?: boolean;
 	adaptor?: keyof typeof Adaptors;
+	/**
+	 * Optional plugin list. Each entry is either a {@link Plugin} object or a
+	 * factory returning one (sync or async).
+	 *
+	 * The plugin list is applied to the global registries at the start of
+	 * every `codeGen()` run; user-registered adapters are cleared between
+	 * runs so plugin state does not leak across invocations.
+	 */
+	plugins?: ReadonlyArray<
+		| import('./plugin.js').Plugin
+		| (() =>
+				| import('./plugin.js').Plugin
+				| Promise<import('./plugin.js').Plugin>)
+	>;
 };
 
 export interface ProviderInitResult {

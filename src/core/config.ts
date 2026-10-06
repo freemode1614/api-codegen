@@ -3,6 +3,7 @@ import fs from 'fs-extra';
 
 import type { FetchDocRequestInit } from './interface.js';
 import { Adaptors } from './interface.js';
+import type { Plugin } from './plugin.js';
 
 /**
  * Adaptor type for HTTP client
@@ -31,6 +32,15 @@ export interface ApicodegenConfig {
 	watch?: boolean;
 	/** Request options for fetching spec */
 	requestOptions?: FetchDocRequestInit;
+	/**
+	 * Plugin list. Each entry is either a {@link Plugin} object or a factory
+	 * returning one. Plugins registered via this list are applied to the
+	 * global registries at the start of every `codeGen()` run.
+	 *
+	 * Only meaningful in `apicodegen.config.{js,mjs}` and inline
+	 * `package.json#apicodegen` — JSON configs cannot declare factories.
+	 */
+	plugins?: ReadonlyArray<Plugin | (() => Plugin | Promise<Plugin>)>;
 }
 
 /**
@@ -98,7 +108,7 @@ function loadFromEnv(): Partial<ApicodegenConfig> {
 					// else: silently ignore invalid adaptor value.
 					break;
 				default:
-					config[configKey] = value;
+					(config as Record<string, unknown>)[configKey] = value;
 			}
 		}
 	}
@@ -321,5 +331,6 @@ export function toProviderOptions(config: ResolvedConfig) {
 		importClientSource: config.importClientSource,
 		verbose: config.verbose,
 		requestOptions: config.requestOptions,
+		plugins: config.plugins,
 	};
 }

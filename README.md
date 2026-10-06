@@ -33,6 +33,7 @@ A powerful OpenAPI code generator that automatically generates TypeScript API cl
 | **Multi-version Support** | Full support for OpenAPI 2.0, 3.0, and 3.1 |
 | **TypeScript First** | Generates complete type definitions and type-safe API functions |
 | **Multiple Adaptors** | Built-in `fetch` and `axios` HTTP client support |
+| **Pluggable Adapters** | Register custom HTTP-client adapters (`ky`, `ofetch`, …) via the plugin API |
 | **CLI Tool** | Simple command-line interface with retro ASCII banner |
 | **Vite Plugin** | Seamless integration into Vite build workflow |
 | **File Upload** | Native support for multipart/form-data file uploads |
@@ -204,6 +205,62 @@ export async function getPetById({ petId }: { petId: number }) {
   return apiClient(`/pets/${petId}`, { method: 'GET' });
 }
 ```
+
+---
+
+## 🧩 Plugins
+
+Register custom HTTP-client adapters (e.g. `ky`, `ofetch`) via the plugin API.
+See [docs/plugins.md](docs/plugins.md) for the full guide.
+
+```js
+// apicodegen.config.mjs
+import { Adapter, definePlugin } from '@moccona/apicodegen';
+import { factory as t } from 'typescript';
+
+class KyAdapter extends Adapter {
+  readonly name = 'ky';
+  readonly methodFieldName = 'method';
+  readonly bodyFieldName = 'body';
+  readonly headersFieldName = 'headers';
+  readonly queryFieldName = 'searchParams';
+
+  client(uri, method) {
+    return [
+      t.createReturnStatement(
+        t.createAwaitExpression(
+          t.createCallExpression(t.createIdentifier('ky'), [
+            t.createStringLiteral(uri),
+            t.createObjectLiteralExpression([
+              t.createPropertyAssignment(
+                'method',
+                t.createStringLiteral(method.toUpperCase())
+              ),
+            ]),
+          ])
+        )
+      ),
+    ];
+  }
+}
+
+export default {
+  spec: './openapi.json',
+  output: './src/api.ts',
+  adaptor: 'ky',
+  plugins: [
+    definePlugin({
+      name: 'ky-adapter',
+      adapter: { name: 'ky', factory: () => new KyAdapter() },
+    }),
+  ],
+};
+```
+
+Run `apicodegen` and the generated `api.ts` will call `ky(uri, ...)` instead of the built-in `fetch(uri, ...)`.
+
+> Provider registry and generator hooks (`beforeEmit`, `afterFormat`, …) are
+> reserved on the `Plugin` interface and will ship in upcoming releases.
 
 ---
 
@@ -419,6 +476,9 @@ src/
 │   ├── generator/      # TypeScript AST generation
 │   ├── client/         # fetch/axios adaptors
 │   ├── base/           # Base utilities
+│   ├── plugin.ts       # Plugin contract (PR1: adapter only)
+│   ├── registry.ts     # Adapter registry
+│   ├── plugin-loader.ts # applyPlugins()
 │   └── constants/      # Constants
 ├── openapi/            # OpenAPI spec parsing
 │   ├── V2.ts           # OpenAPI 2.0

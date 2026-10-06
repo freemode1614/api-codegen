@@ -1,21 +1,18 @@
 import { readFile } from 'node:fs/promises';
 import { createScopedLogger } from '@moccona/logger';
 import type { OpenAPI, OpenAPIV2, OpenAPIV3, OpenAPIV3_1 } from 'openapi-types';
-import type {
-	Adaptors,
-	ProviderInitOptions,
-	ProviderInitResult,
-} from '../core/index.js';
+import type { ProviderInitOptions, ProviderInitResult } from '../core/index.js';
 import {
 	type Adapter,
-	AxiosAdapter,
-	Adaptors as ads,
+	Adaptors,
 	Base,
 	createErrors,
-	FetchAdapter,
 	Generator,
+	listAdapters,
 	Provider,
+	resolveAdapter,
 } from '../core/index.js';
+import { applyPlugins } from '../core/plugin-loader.js';
 
 import { V2 } from './V2.js';
 import { V3 } from './V3.js';
@@ -72,12 +69,13 @@ export class OpenAPIProvider extends Provider {
 }
 
 function getAdaptor(type: keyof typeof Adaptors): Adapter {
-	switch (type) {
-		case ads.axios:
-			return new AxiosAdapter();
-		default:
-			return new FetchAdapter();
+	const spec = resolveAdapter(type);
+	if (!spec) {
+		throw new Error(
+			`[apicodegen] Unknown adaptor "${type}". Registered adapters: ${listAdapters().join(', ')}`
+		);
 	}
+	return spec.factory();
 }
 
 export interface CodeGenResult {
@@ -100,6 +98,10 @@ export async function codeGen(
 	} else {
 		logger.setLevel('info');
 	}
+
+	// Apply user plugins (PR1: only `adapter` is wired). Must run before any
+	// adapter lookup so a user plugin can register its adapter in time.
+	await applyPlugins(initOptions.plugins);
 
 	logger.info(`Fetch document from ${initOptions.docURL}`);
 
@@ -137,7 +139,7 @@ export async function codeGen(
 	const { enums, schemas, parameters, responses, requestBodies, apis } =
 		provider;
 
-	const adaptor = getAdaptor(initOptions.adaptor ?? ads.fetch);
+	const adaptor = getAdaptor(initOptions.adaptor ?? Adaptors.fetch);
 	const code = await Generator.genCode(
 		{
 			enums,
