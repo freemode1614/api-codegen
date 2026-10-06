@@ -17,6 +17,7 @@ A powerful OpenAPI code generator that automatically generates TypeScript API cl
 - [Installation](#-installation)
 - [CLI Usage](#-cli-usage)
 - [Vite Plugin](#-vite-plugin)
+- [Plugins](#-plugins)
 - [Generated Code](#-generated-code)
 - [Supported Features](#-supported-features)
 - [Examples](#-examples)
@@ -212,11 +213,22 @@ export async function getPetById({ petId }: { petId: number }) {
 
 ## 🧩 Plugins
 
-Register custom HTTP-client adapters (e.g. `ky`, `ofetch`) via the plugin API.
-See [docs/plugins.md](docs/plugins.md) for the full guide.
+> Status: **adapter registry (PR1) + provider registry (PR2) + generator
+> hooks (PR3) shipped**. All three plugin capabilities are wired through
+> `codeGen()`.
+
+`api-codegen` ships with two built-in HTTP-client adapters (`fetch`,
+`axios`) and one built-in spec-format provider (`openapi`). The plugin
+API lets you register additional adapters (e.g. `ky`, `ofetch`, a
+custom in-house client), custom spec providers (e.g. AsyncAPI 2.x), and
+hook into the generator pipeline at three points (`beforeEmit`,
+`afterFormat`, `writeFile`) — all without forking the generator.
+
+### Quick start
+
+In your `apicodegen.config.mjs`:
 
 ```js
-// apicodegen.config.mjs
 import { Adapter, definePlugin } from '@moccona/apicodegen';
 import { factory as t } from 'typescript';
 
@@ -253,6 +265,7 @@ export default {
   plugins: [
     definePlugin({
       name: 'ky-adapter',
+      version: '0.1.0',
       adapter: { name: 'ky', factory: () => new KyAdapter() },
     }),
   ],
@@ -261,23 +274,180 @@ export default {
 
 Run `apicodegen` and the generated `api.ts` will call `ky(uri, ...)` instead of the built-in `fetch(uri, ...)`.
 
+See [`example/plugins/ky-adapter/`](example/plugins/ky-adapter/) for the runnable source.
+
+### Plugin shape
+
+```ts
+import type { Plugin } from '@moccona/apicodegen';
+
+const myPlugin: Plugin = {
+  name: 'my-plugin',          // required, surfaced in logs
+  version: '0.1.0',           // optional
+
+  // Optional: register a custom HTTP-client adapter
+  adapter: {
+    name: 'ky',               // unique; collides with built-ins throw
+    factory: () => new KyAdapter(),
+  },
+
+  // Optional: register a custom spec-format provider
+  provider: {
+    name: 'asyncapi',
+    versions: ['2.6'],
+    factory: (_init, doc) => ({ /* ProviderInitResult */ }),
+  },
+
+  // Optional: hook the generator pipeline (PR3)
+  beforeEmit: ({ statements }) => [...statements],
+  afterFormat: ({ code }) => code,
+  writeFile: async ({ code, output }) => { /* write somewhere */ },
+};
+```
+
+`definePlugin(spec)` is a pure type helper — it returns `spec`
+unchanged. Use it for IDE completion and to keep the plugin author from
+accidentally omitting `name`.
+
+A plugin entry may also be a factory:
+
+```ts
+plugins: [
+  async () => {
+    const mod = await import('./my-remote-adapter.js');
+    return definePlugin({
+      name: 'remote',
+      adapter: { name: 'remote', factory: () => new mod.RemoteAdapter() },
+    });
+  },
+],
+```
+
+Factories can be sync or async; they're resolved in parallel at the
+start of every `codeGen()` run.
+
+### Lifecycle
+
+For each `codeGen()` invocation:
+
+1. Built-in adapters (`fetch`, `axios`) and the built-in `openapi`
+   provider are seeded.
+2. User adapters/providers from previous runs are cleared.
+3. Each entry in `plugins[]` is resolved (factory awaited if async).
+4. Resolved plugins register their adapters and providers.
+5. The adapter lookup `resolveAdapter(adaptor)` and provider lookup
+   `resolveProvider(specFormat)` pick the registered ones.
+
+State does not leak across runs: a plugin registered in run N is gone
+by run N+1 unless it's re-declared in the config.
+
+### Built-in name protection
+
+`fetch` and `axios` (adapters) and `openapi` (provider) are reserved.
+Attempting to register under one of these names throws:
+
+```
+[apicodegen] registerAdapter: "fetch" is a built-in adapter name and cannot be replaced
+[apicodegen] registerProvider: "openapi" is a built-in provider name and cannot be replaced
+```
+
+This prevents silent shadowing of documented built-ins.
+
+### Unknown adapter / provider
+
+If `adaptor: 'something'` does not match any registered name (built-in
+or plugin), `codeGen()` throws with the list of known adapters:
+
+```
+[apicodegen] Unknown adaptor "something". Registered adapters: fetch, axios, ky
+```
+
+Same for `specFormat` with the provider registry.
+
+### Custom spec providers
+
+Plugins can contribute a whole new spec format — most commonly an
+AsyncAPI 2.x reader. `codeGen()` looks up the provider by name
+(`specFormat` field) AFTER applying the plugin list, so a plugin can
+register a provider and have it used in the same run.
+
+```js
+// apicodegen.config.mjs
+import { definePlugin } from '@moccona/apicodegen';
+
+export default {
+  spec: './asyncapi.json',
+  output: './src/api.ts',
+  specFormat: 'asyncapi', // routes to the plugin below
+  plugins: [
+    definePlugin({
+      name: 'asyncapi-provider',
+      provider: {
+        name: 'asyncapi',
+        versions: ['2.0', '2.1', '2.2', '2.3', '2.4', '2.5', '2.6'],
+        factory: (_init, doc) => {
+          // parse `doc` and return a ProviderInitResult
+          return {
+            enums: [],
+            schemas: {},
+            parameters: {},
+            responses: {},
+            requestBodies: {},
+            apis: {
+              '/user/signedup': [
+                {
+                  method: 'get',
+                  operationId: 'onUserSignedup',
+                  summary: 'channel /user/signedup',
+                  responses: [],
+                },
+              ],
+            },
+          };
+        },
+      },
+    }),
+  ],
+};
+```
+
+A few things to note:
+
+- **Built-in name `openapi` is reserved** — attempting to register a
+  provider under that name throws.
+- **The factory receives a narrow view** of `ProviderInitOptions` (only
+  `docURL`, `baseURL`, `output`). Plugins do not see internal config
+  like `plugins` itself.
+- **Factories may be sync or async.** They're awaited at most once per
+  `codeGen()` run.
+
+See [`example/plugins/asyncapi-provider/`](example/plugins/asyncapi-provider/) for a runnable end-to-end example.
+
 ### Generator hooks
 
-Hooks intercept the generator pipeline at three points. Hooks receive a
-deep-frozen snapshot of the run context, so plugins cannot accidentally
-mutate upstream state.
+Hooks let plugins intercept the generator pipeline at three points.
+All hook slots are optional on the `Plugin` interface.
 
 ```js
 import { definePlugin } from '@moccona/apicodegen';
 import { factory as t } from 'typescript';
 
-export default definePlugin({
-  name: 'banner-and-writeFile',
+const hookPlugin = definePlugin({
+  name: 'banner-and-extra-method',
+  version: '0.1.0',
+
+  // (1) Before the printer runs — append an extra statement.
   beforeEmit: ({ statements }) => [
     ...statements,
-    t.createExpressionStatement(t.createStringLiteral('/* my banner */')),
+    t.createExpressionStatement(
+      t.createStringLiteral('/* Generated at ' + new Date().toISOString() + ' */')
+    ),
   ],
+
+  // (2) After prettier — prepend a banner.
   afterFormat: ({ code }) => `// @generated\n${code}`,
+
+  // (3) Replace the file writer entirely.
   writeFile: async ({ code, output }) => {
     const { writeFile } = await import('node:fs/promises');
     await writeFile(output, code);
@@ -285,34 +455,79 @@ export default definePlugin({
 });
 ```
 
-See [`docs/plugins.md`](docs/plugins.md#generator-hooks-pr3) for the full
-hook contract, ordering rules, and pitfalls.
+See [`example/plugins/banner-and-timestamp/`](example/plugins/banner-and-timestamp/) for a runnable end-to-end example.
 
-### Custom spec providers
+#### Hook context
 
-The plugin API also lets you register a new spec-format provider. Set
-`specFormat` in your config to route a generation through the plugin:
+Every hook receives a context object:
 
-```js
-export default {
-	spec: './asyncapi.json',
-	output: './src/api.ts',
-	specFormat: 'asyncapi',
-	plugins: [
-		definePlugin({
-			name: 'asyncapi-provider',
-			provider: {
-				name: 'asyncapi',
-				versions: ['2.6'],
-				factory: (_init, doc) => ({ /* ProviderInitResult */ }),
-			},
-		}),
-	],
-};
+```ts
+interface GeneratorHookContext<K> {
+  initOptions: ProviderInitOptions;        // frozen snapshot
+  schema: ProviderInitResult;              // frozen snapshot
+  adapter: Adapter;                        // shallow-frozen (methods still work)
+  output: string;                          // immutable
+  statements: ReadonlyArray<Statement>;    // array frozen; nodes untouched
+  code: string;                            // immutable
+  kind: K;                                 // 'beforeEmit' | 'afterFormat' | 'writeFile'
+}
 ```
 
-See [`example/plugins/asyncapi-provider/`](example/plugins/asyncapi-provider/) for a
-runnable end-to-end AsyncAPI example.
+**Important: hooks receive a deep-frozen snapshot.** Plain-data fields
+(`initOptions`, `schema`, `code`) are cloned at every level so a plugin
+cannot mutate upstream state. Class-instance fields (`adapter`,
+`ts.Node` statements) are shallow-frozen — new properties cannot be
+added, but methods remain callable and TypeScript compiler internals
+are preserved.
+
+#### Hook ordering
+
+- `beforeEmit` and `afterFormat` run in **plugin-list order**, and each
+  hook receives the previous hook's output.
+- `writeFile` is **exclusive**: the first plugin in `plugins[]` that
+  declares one wins. Subsequent `writeFile` hooks are skipped. To fall
+  back to the built-in writer, a plugin's `writeFile` can call
+  `Generator.write` directly (re-imported from `@moccona/apicodegen`).
+
+#### Pitfalls
+
+- **Always destructure the hook context.** Writing
+  `beforeEmit: (statements) => ...` does NOT work — the hook receives
+  a `ctx` object, so `statements` would be the `initOptions` field
+  (the first field of `ctx`) instead of `statements`. Use
+  `beforeEmit: ({ statements }) => ...`.
+- **`Statement` nodes are not frozen individually.** TypeScript's
+  compiler API mutates internal fields (`pos`, `end`, `flags`) during
+  printing; freezing a `ts.Node` would corrupt those invariants. The
+  array that holds them is frozen; node-level immutability relies on
+  plugins behaving themselves.
+
+### Limitations
+
+- **No npm auto-discovery** — plugins are declared inline in your
+  config. Package-based discovery (e.g. `apicodegen-plugin-*` in
+  `node_modules`) is intentionally out of scope until there's evidence
+  the ergonomics are worth it.
+- **No hot reload** — `codeGen()` runs to completion per invocation.
+  The Vite plugin watches and re-runs on config changes but does not
+  stream partial updates.
+- **No plugin ordering guarantees** — adapters/providers are looked
+  up by name, so registration order does not matter (except for
+  `beforeEmit`/`afterFormat` chaining and `writeFile` exclusivity, both
+  described above).
+
+### See also
+
+- [`example/plugins/ky-adapter/`](example/plugins/ky-adapter/) — runnable custom-adapter example.
+- [`example/plugins/asyncapi-provider/`](example/plugins/asyncapi-provider/) — runnable AsyncAPI provider.
+- [`example/plugins/banner-and-timestamp/`](example/plugins/banner-and-timestamp/) — runnable generator-hook example.
+- [`src/core/plugin.ts`](src/core/plugin.ts) — the `Plugin` interface and `definePlugin`.
+- [`src/core/registry.ts`](src/core/registry.ts) — the adapter registry.
+- [`src/core/provider-registry.ts`](src/core/provider-registry.ts) — the provider registry.
+- [`src/core/generator-hooks.ts`](src/core/generator-hooks.ts) — hook contracts.
+- [`src/core/hook-runner.ts`](src/core/hook-runner.ts) — hook runner with frozen-context guarantees.
+- [`src/core/ctx-freeze.ts`](src/core/ctx-freeze.ts) — deep-freeze helper for hook snapshots.
+- [`src/core/plugin-loader.ts`](src/core/plugin-loader.ts) — `applyPlugins()`.
 
 ---
 
