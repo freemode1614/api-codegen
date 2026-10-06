@@ -19,3 +19,5 @@ export * from './plugin.js';
 export { applyPlugins } from './plugin-loader.js';
 export * from './provider-registry.js';
 export * from './registry.js';
+export { runTransformSpecHooks } from './spec-hook-runner.js';
+export * from './spec-hooks.js';

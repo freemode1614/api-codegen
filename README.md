@@ -37,6 +37,7 @@ A powerful OpenAPI code generator that automatically generates TypeScript API cl
 | **Pluggable Adapters** | Register custom HTTP-client adapters (`ky`, `ofetch`, …) via the plugin API |
 | **Custom Providers** | Bring your own spec format (e.g. AsyncAPI 2.x) via the plugin API |
 | **Generator Hooks** | `beforeEmit`, `afterFormat`, `writeFile` — plugins intercept the generator pipeline; `writeFile` may return multiple files |
+| **Spec Hooks** | `transformSpec` — plugins can rewrite the raw spec doc before the provider parses it |
 | **CLI Tool** | Simple command-line interface with retro ASCII banner |
 | **Vite Plugin** | Seamless integration into Vite build workflow |
 | **File Upload** | Native support for multipart/form-data file uploads |
@@ -214,8 +215,7 @@ export async function getPetById({ petId }: { petId: number }) {
 ## 🧩 Plugins
 
 > Status: **adapter registry (PR1) + provider registry (PR2) + generator
-> hooks (PR3) shipped**. All three plugin capabilities are wired through
-> `codeGen()`.
+> hooks (PR3) + `transformSpec` spec-loading hook (PR4) shipped**.
 
 `api-codegen` ships with two built-in HTTP-client adapters (`fetch`,
 `axios`) and one built-in spec-format provider (`openapi`). The plugin
@@ -304,6 +304,9 @@ const myPlugin: Plugin = {
   // writeFile: return `void` to own output, or `Record<path, code>`
   // to emit multiple files via `Generator.writeMany`.
   writeFile: async ({ code }) => ({ './api.ts': code }),
+
+  // Optional: rewrite the spec before the provider parses it (PR4)
+  transformSpec: (_ctx, doc) => doc,
 };
 ```
 
@@ -512,6 +515,53 @@ are preserved.
   array that holds them is frozen; node-level immutability relies on
   plugins behaving themselves.
 
+### Spec hooks
+
+`transformSpec` is a separate hook slot that runs **before** the
+provider parses the spec, on the freshly-parsed JSON-like doc. Useful
+for stripping vendor extensions, downgrading OpenAPI versions,
+normalizing operationIds, injecting `$ref` aliases, etc.
+
+```js
+import { definePlugin } from '@moccona/apicodegen';
+
+export default definePlugin({
+  name: 'strip-vendor-x',
+  transformSpec: (_ctx, doc) => {
+    // Walk the doc and remove every `x-*` extension. Return the
+    // transformed value; the framework feeds it to the next hook.
+    return JSON.parse(JSON.stringify(doc), (key, value) =>
+      key.startsWith('x-') ? undefined : value
+    );
+  },
+});
+```
+
+#### Spec-hook context
+
+```ts
+interface TransformSpecContext {
+  initOptions: {                // frozen snapshot
+    docURL: string;
+    baseURL: string;
+    output: string;
+  };
+  specFormat: string;           // e.g. 'openapi', 'asyncapi'
+  kind: 'transformSpec';
+}
+```
+
+#### Spec-hook ordering
+
+- Hooks run in **plugin-list order**, and each hook receives the
+  previous hook's output. If no plugin declares a `transformSpec`
+  hook, the spec is handed to the provider unchanged.
+- The hook MUST return a value (mutating the input and returning it
+  is fine; returning a fresh object is also fine). Returning
+  `undefined` breaks the downstream provider.
+
+See [`example/plugins/strip-vendor-extensions/`](example/plugins/strip-vendor-extensions/) for a runnable end-to-end example.
+
 ### Limitations
 
 - **No npm auto-discovery** — plugins are declared inline in your
@@ -532,6 +582,7 @@ are preserved.
 - [`example/plugins/asyncapi-provider/`](example/plugins/asyncapi-provider/) — runnable AsyncAPI provider.
 - [`example/plugins/banner-and-timestamp/`](example/plugins/banner-and-timestamp/) — runnable generator-hook example.
 - [`example/plugins/multi-file-output/`](example/plugins/multi-file-output/) — runnable multi-file-output example.
+- [`example/plugins/strip-vendor-extensions/`](example/plugins/strip-vendor-extensions/) — runnable `transformSpec` example.
 - [`src/core/plugin.ts`](src/core/plugin.ts) — the `Plugin` interface and `definePlugin`.
 - [`src/core/registry.ts`](src/core/registry.ts) — the adapter registry.
 - [`src/core/provider-registry.ts`](src/core/provider-registry.ts) — the provider registry.

@@ -6,14 +6,12 @@
  * each capability is optional and looked up in the corresponding registry.
  *
  * Current capabilities:
- * - `adapter`     — register a new HTTP client adapter (PR1)
- * - `provider`    — register a non-OpenAPI spec provider (PR2)
- * - `beforeEmit`  — mutate generated Statement[] before printing (PR3)
- * - `afterFormat` — post-process the formatted source string (PR3)
- * - `writeFile`   — replace the file writer (e.g. emit to multiple paths) (PR3)
- *
- * Reserved for upcoming PRs (interface reserved, no runtime support yet):
- * - `transformSpec`   — mutate the raw spec doc before parsing
+ * - `adapter`        — register a new HTTP client adapter (PR1)
+ * - `provider`       — register a non-OpenAPI spec provider (PR2)
+ * - `beforeEmit`     — mutate generated Statement[] before printing (PR3)
+ * - `afterFormat`    — post-process the formatted source string (PR3)
+ * - `writeFile`      — replace the file writer (e.g. emit to multiple paths) (PR3)
+ * - `transformSpec`  — mutate the raw spec doc before parsing (PR4)
  *
  * @example
  * ```ts
@@ -34,6 +32,7 @@ import type {
 	WriteFileHook,
 } from './generator-hooks.js';
 import type { ProviderInitResult } from './interface.js';
+import type { TransformSpecHook } from './spec-hooks.js';
 
 /**
  * Adapter plugin spec.
@@ -145,6 +144,20 @@ export interface Plugin {
 	 * write (lint, git add, ...).
 	 */
 	writeFile?: WriteFileHook;
+	/**
+	 * Optional. Transform the raw spec doc before the provider parses it.
+	 *
+	 * Receives the freshly-parsed spec (the result of `JSON.parse` for
+	 * local files, or the parsed JSON body for remote URLs) plus a
+	 * frozen context (`{ initOptions, specFormat }`). MUST return a
+	 * transformed doc — the same value (mutated) is fine; a fresh
+	 * value is also fine. Runs in plugin-list order; each hook sees
+	 * the previous hook's output.
+	 *
+	 * Use this to strip vendor extensions, downgrade a v3.1 doc to
+	 * v3.0, normalize operationIds, inject `$ref` aliases, etc.
+	 */
+	transformSpec?: TransformSpecHook;
 	/** Optional. Plugin version (free-form, surfaced in logs). */
 	version?: string;
 }

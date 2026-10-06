@@ -111,7 +111,7 @@ export async function codeGen(
 	logger.info(`Fetch document from ${initOptions.docURL}`);
 
 	const { transport, source } = Base.resolveSpecURL(initOptions.docURL);
-	const doc =
+	let doc =
 		transport === 'file'
 			? await (async () => {
 					let raw: string;
@@ -147,6 +147,29 @@ export async function codeGen(
 			`[apicodegen] Unknown spec format "${specFormat}". Registered providers: ${listProviders().join(', ')}`
 		);
 	}
+
+	// PR4: chain `transformSpec` hooks BEFORE handing the doc to the
+	// provider factory. Each plugin in the resolved list can return a
+	// (possibly mutated, possibly fresh) doc; the framework feeds that
+	// into the next hook. Skips cleanly when no plugin declares the hook.
+	if (resolvedPlugins.some((p) => typeof p.transformSpec === 'function')) {
+		const { runTransformSpecHooks } = await import(
+			'../core/spec-hook-runner.js'
+		);
+		doc = await runTransformSpecHooks(
+			resolvedPlugins,
+			{
+				initOptions: {
+					docURL: initOptions.docURL,
+					baseURL: initOptions.baseURL ?? '',
+					output: initOptions.output,
+				},
+				specFormat,
+			},
+			doc
+		);
+	}
+
 	const { enums, schemas, parameters, responses, requestBodies, apis } =
 		await providerSpec.factory(
 			{
