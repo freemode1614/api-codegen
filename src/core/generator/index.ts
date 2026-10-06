@@ -1,7 +1,8 @@
 /* eslint-disable @typescript-eslint/no-unsafe-enum-comparison */
 /* eslint-disable no-case-declarations */
 
-import { writeFile } from 'node:fs/promises';
+import { mkdir, writeFile } from 'node:fs/promises';
+import { dirname } from 'node:path';
 import { format } from 'prettier';
 import type {
 	BindingElement,
@@ -64,13 +65,16 @@ export class Generator {
 	 * @returns Formatted code as a string.
 	 * @throws {Error} If no valid statements are provided.
 	 */
-	static toCode(statements: Statement[]): string {
+	static toCode(statements: ReadonlyArray<Statement>): string {
 		if (statements.length === 0) {
 			return '// No api declaration found.';
 		}
 
+		// PR3: hooks may return a frozen array. `createSourceFile` accepts a
+		// readonly array; the second argument is the end-of-file token and
+		// the third is the source-file node flags.
 		const sourceFile = t.createSourceFile(
-			statements,
+			[...statements],
 			t.createToken(SyntaxKind.EndOfFileToken),
 			NodeFlags.None
 		);
@@ -84,6 +88,38 @@ export class Generator {
 		} catch (error) {
 			console.error(error);
 		}
+	}
+
+	/**
+	 * Write multiple files in a single call. Used by `codeGen()` when a
+	 * `writeFile` plugin hook returns a `Record<path, code>`.
+	 *
+	 * Each entry is written independently — a failure on one path does
+	 * not abort the others (errors are logged to `console.error`, same
+	 * as the single-file `write()`). Paths are resolved by Node's
+	 * `fs.promises.writeFile`, which interprets them relative to
+	 * `process.cwd()` when not absolute. Unlike the single-file
+	 * `write()`, parent directories are auto-created (`mkdir -p`) — the
+	 * common multi-file split layout (`api.ts`, `types.ts`, `schemas.ts`
+	 * in `src/`) needs that to succeed.
+	 *
+	 * @param files - Map of output path → source code.
+	 */
+	static async writeMany(files: Readonly<Record<string, string>>) {
+		await Promise.all(
+			Object.entries(files).map(async ([filepath, code]) => {
+				const dir = dirname(filepath);
+				if (dir && dir !== '.') {
+					try {
+						await mkdir(dir, { recursive: true });
+					} catch {
+						// directory might already exist or be a file —
+						// let writeFile() raise the real error if any.
+					}
+				}
+				await Generator.write(code, filepath);
+			})
+		);
 	}
 
 	/**
@@ -1096,18 +1132,53 @@ export class Generator {
 	static async genCode(
 		schema: ProviderInitResult,
 		initOptions: ProviderInitOptions,
-		adaptor: Adapter
+		adaptor: Adapter,
+		plugins: ReadonlyArray<import('../plugin.js').Plugin> = []
 	) {
 		const { importClientSource } = initOptions;
-		const statements = Generator.schemaToStatemets(schema, adaptor, {
+		let statements = Generator.schemaToStatemets(schema, adaptor, {
 			baseURL: initOptions.baseURL ?? '',
 		});
+
+		// PR3: chain `beforeEmit` hooks.
+		if (plugins.some((p) => typeof p.beforeEmit === 'function')) {
+			const { runBeforeEmitHooks } = await import('../hook-runner.js');
+			statements = await runBeforeEmitHooks(
+				plugins,
+				{
+					initOptions,
+					schema,
+					adapter: adaptor,
+					output: initOptions.output,
+				},
+				statements
+			);
+		}
+
 		let code = Generator.toCode(statements);
 
 		if (importClientSource) {
 			code = importClientSource + '\n\n' + code;
 		}
 
-		return await Generator.prettier(code);
+		code = await Generator.prettier(code);
+
+		// PR3: chain `afterFormat` hooks.
+		if (plugins.some((p) => typeof p.afterFormat === 'function')) {
+			const { runAfterFormatHooks } = await import('../hook-runner.js');
+			code = await runAfterFormatHooks(
+				plugins,
+				{
+					initOptions,
+					schema,
+					adapter: adaptor,
+					output: initOptions.output,
+					statements,
+				},
+				code
+			);
+		}
+
+		return code;
 	}
 }

@@ -1,21 +1,21 @@
 import { readFile } from 'node:fs/promises';
 import { createScopedLogger } from '@moccona/logger';
 import type { OpenAPI, OpenAPIV2, OpenAPIV3, OpenAPIV3_1 } from 'openapi-types';
-import type {
-	Adaptors,
-	ProviderInitOptions,
-	ProviderInitResult,
-} from '../core/index.js';
+import { resolveWriteFileHook } from '../core/hook-runner.js';
+import type { ProviderInitOptions, ProviderInitResult } from '../core/index.js';
 import {
 	type Adapter,
-	AxiosAdapter,
-	Adaptors as ads,
+	Adaptors,
 	Base,
 	createErrors,
-	FetchAdapter,
 	Generator,
+	listAdapters,
+	listProviders,
 	Provider,
+	resolveAdapter,
+	resolveProvider,
 } from '../core/index.js';
+import { applyPlugins } from '../core/plugin-loader.js';
 
 import { V2 } from './V2.js';
 import { V3 } from './V3.js';
@@ -72,12 +72,13 @@ export class OpenAPIProvider extends Provider {
 }
 
 function getAdaptor(type: keyof typeof Adaptors): Adapter {
-	switch (type) {
-		case ads.axios:
-			return new AxiosAdapter();
-		default:
-			return new FetchAdapter();
+	const spec = resolveAdapter(type);
+	if (!spec) {
+		throw new Error(
+			`[apicodegen] Unknown adaptor "${type}". Registered adapters: ${listAdapters().join(', ')}`
+		);
 	}
+	return spec.factory();
 }
 
 export interface CodeGenResult {
@@ -101,43 +102,129 @@ export async function codeGen(
 		logger.setLevel('info');
 	}
 
+	// Apply user plugins (PR1+PR2: adapter + provider registries; PR3:
+	// hooks are also resolved from the same list below). Must run before
+	// any adapter/provider lookup so a user plugin can register them in
+	// time.
+	const resolvedPlugins = await applyPlugins(initOptions.plugins);
+
 	logger.info(`Fetch document from ${initOptions.docURL}`);
 
 	const { transport, source } = Base.resolveSpecURL(initOptions.docURL);
-	const doc =
-		transport === 'file'
-			? await (async () => {
-					let raw: string;
-					try {
-						raw = await readFile(source, 'utf8');
-					} catch (error) {
-						if ((error as NodeJS.ErrnoException)?.code === 'ENOENT') {
-							throw createErrors.specNotFound(source, error as Error);
+
+	// PR5: chain optional `fetchSpec` hooks. The first plugin in
+	// `plugins[]` to return a non-void FetchSpecResult wins. If every
+	// hook opts out (or none is declared), fall through to the
+	// built-in loader below.
+	let fetchResult:
+		| { body: string; headers?: Record<string, string> }
+		| { doc: unknown; headers?: Record<string, string> }
+		| undefined;
+	if (resolvedPlugins.some((p) => typeof p.fetchSpec === 'function')) {
+		const { resolveFetchSpecHook } = await import(
+			'../core/fetch-hook-runner.js'
+		);
+		fetchResult = await resolveFetchSpecHook(resolvedPlugins, {
+			initOptions: {
+				docURL: initOptions.docURL,
+				baseURL: initOptions.baseURL ?? '',
+				output: initOptions.output,
+			},
+			requestOptions: initOptions.requestOptions ?? {},
+			transport: transport === 'file' ? 'file' : 'http',
+			source,
+		});
+	}
+
+	let doc: unknown;
+	if (fetchResult) {
+		// Plugin returned either a pre-parsed doc or a raw body string.
+		if ('doc' in fetchResult) {
+			doc = fetchResult.doc;
+		} else {
+			try {
+				doc = JSON.parse(fetchResult.body);
+			} catch (error) {
+				throw createErrors.specParseFailed(
+					source,
+					undefined,
+					undefined,
+					error as Error
+				);
+			}
+		}
+	} else {
+		doc =
+			transport === 'file'
+				? await (async () => {
+						let raw: string;
+						try {
+							raw = await readFile(source, 'utf8');
+						} catch (error) {
+							if ((error as NodeJS.ErrnoException)?.code === 'ENOENT') {
+								throw createErrors.specNotFound(source, error as Error);
+							}
+							throw new Error(
+								`Failed to read OpenAPI spec from ${source}: ${
+									error instanceof Error ? error.message : String(error)
+								}`
+							);
 						}
-						throw new Error(
-							`Failed to read OpenAPI spec from ${source}: ${
-								error instanceof Error ? error.message : String(error)
-							}`
-						);
-					}
-					try {
-						return JSON.parse(raw) as unknown;
-					} catch (error) {
-						throw createErrors.specParseFailed(
-							source,
-							undefined,
-							undefined,
-							error as Error
-						);
-					}
-				})()
-			: await Base.fetchDoc(source, initOptions.requestOptions);
+						try {
+							return JSON.parse(raw) as unknown;
+						} catch (error) {
+							throw createErrors.specParseFailed(
+								source,
+								undefined,
+								undefined,
+								error as Error
+							);
+						}
+					})()
+				: await Base.fetchDoc(source, initOptions.requestOptions);
+	}
 
-	const provider = new OpenAPIProvider(initOptions, doc);
+	const specFormat = initOptions.specFormat ?? 'openapi';
+	const providerSpec = resolveProvider(specFormat);
+	if (!providerSpec) {
+		throw new Error(
+			`[apicodegen] Unknown spec format "${specFormat}". Registered providers: ${listProviders().join(', ')}`
+		);
+	}
+
+	// PR4: chain `transformSpec` hooks BEFORE handing the doc to the
+	// provider factory. Each plugin in the resolved list can return a
+	// (possibly mutated, possibly fresh) doc; the framework feeds that
+	// into the next hook. Skips cleanly when no plugin declares the hook.
+	if (resolvedPlugins.some((p) => typeof p.transformSpec === 'function')) {
+		const { runTransformSpecHooks } = await import(
+			'../core/spec-hook-runner.js'
+		);
+		doc = await runTransformSpecHooks(
+			resolvedPlugins,
+			{
+				initOptions: {
+					docURL: initOptions.docURL,
+					baseURL: initOptions.baseURL ?? '',
+					output: initOptions.output,
+				},
+				specFormat,
+			},
+			doc
+		);
+	}
+
 	const { enums, schemas, parameters, responses, requestBodies, apis } =
-		provider;
+		await providerSpec.factory(
+			{
+				docURL: initOptions.docURL,
+				baseURL: initOptions.baseURL ?? '',
+				output: initOptions.output,
+			},
+			doc
+		);
 
-	const adaptor = getAdaptor(initOptions.adaptor ?? ads.fetch);
+	const adaptor = getAdaptor(initOptions.adaptor ?? Adaptors.fetch);
 	const code = await Generator.genCode(
 		{
 			enums,
@@ -148,11 +235,47 @@ export async function codeGen(
 			apis,
 		},
 		initOptions,
-		adaptor
+		adaptor,
+		resolvedPlugins
 	);
 
 	if (initOptions.output) {
-		await Generator.write(code, initOptions.output);
+		const writeHook = resolveWriteFileHook(resolvedPlugins);
+		if (writeHook) {
+			// Use the same freezing discipline as the other hook runners so
+			// a plugin's writeFile hook cannot mutate upstream state.
+			// `deepFreeze` deep-clones plain data and shallow-freezes class
+			// instances (like `Adapter`); see `src/core/ctx-freeze.ts`.
+			const { deepFreeze, freezeStatements } = await import(
+				'../core/hook-runner.js'
+			);
+			const result = await writeHook({
+				initOptions: deepFreeze(initOptions) as ProviderInitOptions,
+				schema: deepFreeze({
+					enums,
+					schemas,
+					parameters,
+					responses,
+					requestBodies,
+					apis,
+				}) as ProviderInitResult,
+				adapter: deepFreeze(adaptor) as Adapter,
+				output: initOptions.output,
+				statements: freezeStatements([]),
+				code,
+				kind: 'writeFile',
+			});
+			// Returning a `Record<path, code>` makes the plugin own all
+			// output. Returning void means the plugin already wrote what
+			// it wanted (e.g. called `Generator.write` itself, or wrote
+			// to a non-standard location) — do NOT fall through to the
+			// built-in writer or we would clobber the plugin's output.
+			if (result) {
+				await Generator.writeMany(result);
+			}
+		} else {
+			await Generator.write(code, initOptions.output);
+		}
 	}
 
 	const duration = Date.now() - startTime;

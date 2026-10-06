@@ -132,9 +132,18 @@ dist
 
 # build
 npm
+bin/
 output.ts
+out.ts
 __tests__/apis/
 
 # Local docs (design specs, plans)
 docs/
 !.gitkeep
+
+# OS / editor detritus
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+!.vscode/settings.json.example
