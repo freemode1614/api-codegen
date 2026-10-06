@@ -36,7 +36,7 @@ A powerful OpenAPI code generator that automatically generates TypeScript API cl
 | **Multiple Adaptors** | Built-in `fetch` and `axios` HTTP client support |
 | **Pluggable Adapters** | Register custom HTTP-client adapters (`ky`, `ofetch`, …) via the plugin API |
 | **Custom Providers** | Bring your own spec format (e.g. AsyncAPI 2.x) via the plugin API |
-| **Generator Hooks** | `beforeEmit`, `afterFormat`, `writeFile` — plugins intercept the generator pipeline |
+| **Generator Hooks** | `beforeEmit`, `afterFormat`, `writeFile` — plugins intercept the generator pipeline; `writeFile` may return multiple files |
 | **CLI Tool** | Simple command-line interface with retro ASCII banner |
 | **Vite Plugin** | Seamless integration into Vite build workflow |
 | **File Upload** | Native support for multipart/form-data file uploads |
@@ -301,7 +301,9 @@ const myPlugin: Plugin = {
   // Optional: hook the generator pipeline (PR3)
   beforeEmit: ({ statements }) => [...statements],
   afterFormat: ({ code }) => code,
-  writeFile: async ({ code, output }) => { /* write somewhere */ },
+  // writeFile: return `void` to own output, or `Record<path, code>`
+  // to emit multiple files via `Generator.writeMany`.
+  writeFile: async ({ code }) => ({ './api.ts': code }),
 };
 ```
 
@@ -485,9 +487,17 @@ are preserved.
 - `beforeEmit` and `afterFormat` run in **plugin-list order**, and each
   hook receives the previous hook's output.
 - `writeFile` is **exclusive**: the first plugin in `plugins[]` that
-  declares one wins. Subsequent `writeFile` hooks are skipped. To fall
-  back to the built-in writer, a plugin's `writeFile` can call
-  `Generator.write` directly (re-imported from `@moccona/apicodegen`).
+  declares one wins. Subsequent `writeFile` hooks are skipped. The
+  hook's return value controls what gets written:
+  - **Return `void`/`undefined`** → the plugin owns output. The framework
+    does NOT fall through to the built-in `Generator.write` (that would
+    clobber whatever the plugin already wrote). The hook may call
+    `Generator.write` itself to fall back to the built-in writer.
+  - **Return `Record<path, code>`** → the framework calls
+    `Generator.writeMany()` to write each entry. Parent directories are
+    auto-created (`mkdir -p`). This is how a plugin emits multiple
+    files (e.g. `api.ts` + `types.ts` + `schemas.ts`). See
+    [`example/plugins/multi-file-output/`](example/plugins/multi-file-output/).
 
 #### Pitfalls
 
@@ -521,6 +531,7 @@ are preserved.
 - [`example/plugins/ky-adapter/`](example/plugins/ky-adapter/) — runnable custom-adapter example.
 - [`example/plugins/asyncapi-provider/`](example/plugins/asyncapi-provider/) — runnable AsyncAPI provider.
 - [`example/plugins/banner-and-timestamp/`](example/plugins/banner-and-timestamp/) — runnable generator-hook example.
+- [`example/plugins/multi-file-output/`](example/plugins/multi-file-output/) — runnable multi-file-output example.
 - [`src/core/plugin.ts`](src/core/plugin.ts) — the `Plugin` interface and `definePlugin`.
 - [`src/core/registry.ts`](src/core/registry.ts) — the adapter registry.
 - [`src/core/provider-registry.ts`](src/core/provider-registry.ts) — the provider registry.

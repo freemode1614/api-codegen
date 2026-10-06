@@ -1,7 +1,8 @@
 /* eslint-disable @typescript-eslint/no-unsafe-enum-comparison */
 /* eslint-disable no-case-declarations */
 
-import { writeFile } from 'node:fs/promises';
+import { mkdir, writeFile } from 'node:fs/promises';
+import { dirname } from 'node:path';
 import { format } from 'prettier';
 import type {
 	BindingElement,
@@ -87,6 +88,38 @@ export class Generator {
 		} catch (error) {
 			console.error(error);
 		}
+	}
+
+	/**
+	 * Write multiple files in a single call. Used by `codeGen()` when a
+	 * `writeFile` plugin hook returns a `Record<path, code>`.
+	 *
+	 * Each entry is written independently — a failure on one path does
+	 * not abort the others (errors are logged to `console.error`, same
+	 * as the single-file `write()`). Paths are resolved by Node's
+	 * `fs.promises.writeFile`, which interprets them relative to
+	 * `process.cwd()` when not absolute. Unlike the single-file
+	 * `write()`, parent directories are auto-created (`mkdir -p`) — the
+	 * common multi-file split layout (`api.ts`, `types.ts`, `schemas.ts`
+	 * in `src/`) needs that to succeed.
+	 *
+	 * @param files - Map of output path → source code.
+	 */
+	static async writeMany(files: Readonly<Record<string, string>>) {
+		await Promise.all(
+			Object.entries(files).map(async ([filepath, code]) => {
+				const dir = dirname(filepath);
+				if (dir && dir !== '.') {
+					try {
+						await mkdir(dir, { recursive: true });
+					} catch {
+						// directory might already exist or be a file —
+						// let writeFile() raise the real error if any.
+					}
+				}
+				await Generator.write(code, filepath);
+			})
+		);
 	}
 
 	/**

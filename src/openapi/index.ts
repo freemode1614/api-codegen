@@ -182,7 +182,7 @@ export async function codeGen(
 			const { deepFreeze, freezeStatements } = await import(
 				'../core/hook-runner.js'
 			);
-			await writeHook({
+			const result = await writeHook({
 				initOptions: deepFreeze(initOptions) as ProviderInitOptions,
 				schema: deepFreeze({
 					enums,
@@ -198,6 +198,14 @@ export async function codeGen(
 				code,
 				kind: 'writeFile',
 			});
+			// Returning a `Record<path, code>` makes the plugin own all
+			// output. Returning void means the plugin already wrote what
+			// it wanted (e.g. called `Generator.write` itself, or wrote
+			// to a non-standard location) — do NOT fall through to the
+			// built-in writer or we would clobber the plugin's output.
+			if (result) {
+				await Generator.writeMany(result);
+			}
 		} else {
 			await Generator.write(code, initOptions.output);
 		}

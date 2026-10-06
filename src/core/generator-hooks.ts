@@ -15,9 +15,15 @@
  *                   for last-mile rewrites (e.g. license header injection).
  * - `writeFile`   — replaces `Generator.write`. The FIRST plugin that
  *                   declares this hook wins; remaining plugins' `writeFile`
- *                   hooks are skipped. Use this to emit to multiple paths
- *                   (a plugin may call `Generator.write` internally to
- *                   fall back to the built-in writer).
+ *                   hooks are skipped.
+ *                   - Return `void`/`undefined` to fall through to the
+ *                     built-in writer (writes `ctx.code` to `ctx.output`).
+ *                     This is the easiest path for single-file plugins.
+ *                   - Return `Record<path, code>` to emit multiple files.
+ *                     Each entry is written to `path` (resolved relative
+ *                     to `process.cwd()`). This enables split-output
+ *                     plugins (e.g. `api.ts` + `types.ts` + `schemas.ts`).
+ *                     See `example/plugins/multi-file-output/`.
  */
 
 import type { Statement } from 'typescript';
@@ -53,6 +59,16 @@ export interface GeneratorHookContext<K extends HookKind> {
 export type HookKind = 'beforeEmit' | 'afterFormat' | 'writeFile';
 
 /**
+ * Map of output path → source code returned by a `writeFile` hook to
+ * emit multiple files in a single run.
+ *
+ * Paths are resolved relative to `process.cwd()`. Use absolute paths
+ * to write outside the project root. If `ctx.output` is also present,
+ * the plugin is free to include it in the map or skip it.
+ */
+export type WriteFileOutput = Readonly<Record<string, string>>;
+
+/**
  * Hook signatures. All return their modified input; the runner feeds the
  * returned value into the next stage.
  */
@@ -64,9 +80,13 @@ export type AfterFormatHook = (
 	ctx: GeneratorHookContext<'afterFormat'>
 ) => string | Promise<string>;
 
+/**
+ * Replace the file writer. See file-level JSDoc for the two return
+ * shapes (`void` → fall through; `Record<path, code>` → multi-file).
+ */
 export type WriteFileHook = (
 	ctx: GeneratorHookContext<'writeFile'>
-) => Promise<void>;
+) => WriteFileOutput | void | Promise<WriteFileOutput | void>;
 
 /**
  * Compile-time sanity check: every hook receives a context where the

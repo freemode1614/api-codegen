@@ -12,6 +12,7 @@ import type { Statement } from 'typescript';
 import { factory as t } from 'typescript';
 import { codeGen } from '../src/openapi/index.js';
 import { definePlugin } from '../src/core/plugin.js';
+import { Generator } from '../src/core/generator/index.js';
 
 function tinySpec() {
 	return {
@@ -331,5 +332,93 @@ describe('generator hooks (PR3)', () => {
 			},
 		});
 		await codeGen({ docURL: specPath, output: outputPath, plugins: [plugin] });
+	});
+
+	// ----- Multi-file writeFile (PR4 extension) --------------------------
+
+	it('writeFile returning Record<path, code> writes multiple files', async () => {
+		const specPath = await writeSpec(tmpRoot);
+		const apiPath = path.join(tmpRoot, 'split', 'api.ts');
+		const typesPath = path.join(tmpRoot, 'split', 'types.ts');
+		const schemasPath = path.join(tmpRoot, 'split', 'schemas.ts');
+
+		const plugin = definePlugin({
+			name: 'multi-file-splitter',
+			writeFile: ({ code }) => ({
+				[apiPath]: `// API\n${code}`,
+				[typesPath]: '// TYPES\nexport type Marker = "split";\n',
+				[schemasPath]: '// SCHEMAS\nexport {};\n',
+			}),
+		});
+
+		await codeGen({
+			docURL: specPath,
+			output: apiPath,
+			plugins: [plugin],
+		});
+
+		const apiContents = await fs.readFile(apiPath, 'utf8');
+		const typesContents = await fs.readFile(typesPath, 'utf8');
+		const schemasContents = await fs.readFile(schemasPath, 'utf8');
+
+		expect(apiContents.startsWith('// API')).toBe(true);
+		expect(apiContents).toContain('export async function');
+		expect(typesContents).toContain('Marker');
+		expect(schemasContents).toContain('SCHEMAS');
+	});
+
+	it('writeFile returning void does NOT fall through to built-in writer', async () => {
+		const specPath = await writeSpec(tmpRoot);
+		const outputPath = path.join(tmpRoot, 'no-fallthrough.ts');
+
+		const plugin = definePlugin({
+			name: 'writes-nothing-extra',
+			async writeFile() {
+				// Returns void on purpose — must NOT trigger the built-in
+				// writer after this hook returns, otherwise we'd get a
+				// double-write.
+			},
+		});
+
+		await codeGen({
+			docURL: specPath,
+			output: outputPath,
+			plugins: [plugin],
+		});
+
+		// The file should NOT exist — the hook took ownership and wrote
+		// nothing. If the framework fell through to Generator.write, the
+		// file would now contain the formatted source.
+		await expect(fs.access(outputPath)).rejects.toThrow();
+	});
+
+	it('writeFile may call Generator.write itself and return void', async () => {
+		const specPath = await writeSpec(tmpRoot);
+		const outputPath = path.join(tmpRoot, 'self-write.ts');
+
+		const plugin = definePlugin({
+			name: 'self-write-then-void',
+			async writeFile({ code }) {
+				await Generator.write(`// self-write\n${code}`, outputPath);
+				// Returning void signals "I handled it, don't fall through".
+			},
+		});
+
+		await codeGen({
+			docURL: specPath,
+			output: outputPath,
+			plugins: [plugin],
+		});
+
+		const contents = await fs.readFile(outputPath, 'utf8');
+		expect(contents.startsWith('// self-write')).toBe(true);
+	});
+
+	it('Generator.writeMany writes each entry independently', async () => {
+		const a = path.join(tmpRoot, 'many-a.ts');
+		const b = path.join(tmpRoot, 'many-b.ts');
+		await Generator.writeMany({ [a]: 'A', [b]: 'B' });
+		expect(await fs.readFile(a, 'utf8')).toBe('A');
+		expect(await fs.readFile(b, 'utf8')).toBe('B');
 	});
 });
