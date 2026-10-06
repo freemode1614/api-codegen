@@ -1,13 +1,18 @@
 /**
  * @file Apply a list of {@link Plugin} entries to the registries.
  *
- * Used by `codeGen()` between two runs: it clears user adapters, then
- * re-applies the plugin list from the current config so successive runs
+ * Used by `codeGen()` between two runs: it clears user adapters and providers,
+ * then re-applies the plugin list from the current config so successive runs
  * do not accumulate state.
  */
 
 import { createScopedLogger } from '@moccona/logger';
 import type { Plugin } from './plugin.js';
+import {
+	clearUserProviders,
+	registerProvider,
+	seedBuiltInProviders,
+} from './provider-registry.js';
 import {
 	clearUserAdapters,
 	registerAdapter,
@@ -45,19 +50,17 @@ async function resolveEntry(
  * Each entry may be a {@link Plugin} object directly, or a (possibly async)
  * factory returning one. Factories are resolved in parallel.
  *
- * Unknown plugin fields (e.g. `provider` before PR2) are logged at debug
- * level and ignored — this lets us ship additive capabilities without
- * breaking older plugin files.
- *
  * @param plugins - raw `plugins` value from `ApicodegenConfig`.
  */
 export async function applyPlugins(
 	plugins: ReadonlyArray<Plugin | (() => Plugin | Promise<Plugin>)> | undefined
 ): Promise<void> {
-	// Always start from a clean slate: drop user adapters from any previous run
-	// and (re-)seed built-ins. This is a no-op on first call.
+	// Always start from a clean slate: drop user adapters/providers from any
+	// previous run and (re-)seed built-ins. This is a no-op on first call.
 	clearUserAdapters();
+	clearUserProviders();
 	seedBuiltInAdapters();
+	seedBuiltInProviders();
 
 	if (!plugins || plugins.length === 0) return;
 
@@ -84,13 +87,8 @@ export async function applyPlugins(
 			registerAdapter(plugin.adapter);
 		}
 
-		// Reserved capabilities — present in the type so plugins can declare
-		// them today, but no runtime wiring yet. Logged at debug so authors
-		// know why their capability has no effect yet.
 		if (plugin.provider) {
-			logger.debug(
-				`plugin "${plugin.name}" declares "provider" — not yet supported, ignored`
-			);
+			registerProvider(plugin.provider);
 		}
 	}
 }

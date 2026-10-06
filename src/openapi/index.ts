@@ -9,8 +9,10 @@ import {
 	createErrors,
 	Generator,
 	listAdapters,
+	listProviders,
 	Provider,
 	resolveAdapter,
+	resolveProvider,
 } from '../core/index.js';
 import { applyPlugins } from '../core/plugin-loader.js';
 
@@ -135,9 +137,22 @@ export async function codeGen(
 				})()
 			: await Base.fetchDoc(source, initOptions.requestOptions);
 
-	const provider = new OpenAPIProvider(initOptions, doc);
+	const specFormat = initOptions.specFormat ?? 'openapi';
+	const providerSpec = resolveProvider(specFormat);
+	if (!providerSpec) {
+		throw new Error(
+			`[apicodegen] Unknown spec format "${specFormat}". Registered providers: ${listProviders().join(', ')}`
+		);
+	}
 	const { enums, schemas, parameters, responses, requestBodies, apis } =
-		provider;
+		await providerSpec.factory(
+			{
+				docURL: initOptions.docURL,
+				baseURL: initOptions.baseURL ?? '',
+				output: initOptions.output,
+			},
+			doc
+		);
 
 	const adaptor = getAdaptor(initOptions.adaptor ?? Adaptors.fetch);
 	const code = await Generator.genCode(

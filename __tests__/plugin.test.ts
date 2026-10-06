@@ -14,6 +14,7 @@ import {
 	resolveAdapter,
 	seedBuiltInAdapters,
 } from '../src/core/registry.js';
+import { hasProvider } from '../src/core/provider-registry.js';
 
 // Minimal adapter used across these tests. Field names mirror `FetchAdapter`
 // so it can stand in as a real adapter in `codeGen()` end-to-end tests.
@@ -167,15 +168,48 @@ describe('applyPlugins', () => {
 		).rejects.toThrow(/plugins\[0\] factory threw: boom/);
 	});
 
-	it('ignores reserved capabilities (provider) without throwing', async () => {
-		await expect(
-			applyPlugins([
-				definePlugin({
-					name: 'reserved',
-					// @ts-expect-error — intentionally declaring the reserved field
-					provider: {},
-				}),
-			])
-		).resolves.toBeUndefined();
+	it('registers providers when a plugin declares one (PR2)', async () => {
+		// PR2: provider is now wired. A plugin declaring `provider` should
+		// land in the provider registry.
+		await applyPlugins([
+			definePlugin({
+				name: 'asyncapi-plugin',
+				provider: {
+					name: 'asyncapi',
+					versions: ['2.6'],
+					factory: () => ({
+						enums: [],
+						schemas: {},
+						parameters: {},
+						responses: {},
+						requestBodies: {},
+						apis: {},
+					}),
+				},
+			}),
+		]);
+		expect(hasProvider('asyncapi')).toBe(true);
+	});
+
+	it('clears user providers between runs', async () => {
+		await applyPlugins([
+			definePlugin({
+				name: 'first',
+				provider: {
+					name: 'firstprov',
+					factory: () => ({
+						enums: [],
+						schemas: {},
+						parameters: {},
+						responses: {},
+						requestBodies: {},
+						apis: {},
+					}),
+				},
+			}),
+		]);
+		expect(hasProvider('firstprov')).toBe(true);
+		await applyPlugins([]);
+		expect(hasProvider('firstprov')).toBe(false);
 	});
 });

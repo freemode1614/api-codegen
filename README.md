@@ -34,6 +34,7 @@ A powerful OpenAPI code generator that automatically generates TypeScript API cl
 | **TypeScript First** | Generates complete type definitions and type-safe API functions |
 | **Multiple Adaptors** | Built-in `fetch` and `axios` HTTP client support |
 | **Pluggable Adapters** | Register custom HTTP-client adapters (`ky`, `ofetch`, …) via the plugin API |
+| **Custom Providers** | Bring your own spec format (e.g. AsyncAPI 2.x) via the plugin API |
 | **CLI Tool** | Simple command-line interface with retro ASCII banner |
 | **Vite Plugin** | Seamless integration into Vite build workflow |
 | **File Upload** | Native support for multipart/form-data file uploads |
@@ -259,8 +260,34 @@ export default {
 
 Run `apicodegen` and the generated `api.ts` will call `ky(uri, ...)` instead of the built-in `fetch(uri, ...)`.
 
-> Provider registry and generator hooks (`beforeEmit`, `afterFormat`, …) are
-> reserved on the `Plugin` interface and will ship in upcoming releases.
+> Generator hooks (`beforeEmit`, `afterFormat`, `writeFile`) are reserved on
+> the `Plugin` interface and will ship in an upcoming release.
+
+### Custom spec providers
+
+The plugin API also lets you register a new spec-format provider. Set
+`specFormat` in your config to route a generation through the plugin:
+
+```js
+export default {
+	spec: './asyncapi.json',
+	output: './src/api.ts',
+	specFormat: 'asyncapi',
+	plugins: [
+		definePlugin({
+			name: 'asyncapi-provider',
+			provider: {
+				name: 'asyncapi',
+				versions: ['2.6'],
+				factory: (_init, doc) => ({ /* ProviderInitResult */ }),
+			},
+		}),
+	],
+};
+```
+
+See [`example/plugins/asyncapi-provider/`](example/plugins/asyncapi-provider/) for a
+runnable end-to-end AsyncAPI example.
 
 ---
 
@@ -476,8 +503,9 @@ src/
 │   ├── generator/      # TypeScript AST generation
 │   ├── client/         # fetch/axios adaptors
 │   ├── base/           # Base utilities
-│   ├── plugin.ts       # Plugin contract (PR1: adapter only)
+│   ├── plugin.ts       # Plugin contract (PR1+PR2)
 │   ├── registry.ts     # Adapter registry
+│   ├── provider-registry.ts # Spec-format provider registry
 │   ├── plugin-loader.ts # applyPlugins()
 │   └── constants/      # Constants
 ├── openapi/            # OpenAPI spec parsing

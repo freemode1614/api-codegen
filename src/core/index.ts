@@ -8,4 +8,5 @@ export * from './generator/index.js';
 export * from './interface.js';
 export * from './plugin.js';
 export { applyPlugins } from './plugin-loader.js';
+export * from './provider-registry.js';
 export * from './registry.js';

@@ -164,12 +164,21 @@ export type ProviderInitOptions = {
 	verbose?: boolean;
 	adaptor?: keyof typeof Adaptors;
 	/**
+	 * Optional. Spec format identifier (e.g. `'openapi'` (built-in default),
+	 * `'asyncapi'` if a plugin provides one).
+	 *
+	 * Looked up in the provider registry; defaults to `'openapi'` when
+	 * omitted. The lookup happens AFTER `applyPlugins()` runs so a plugin
+	 * that registers a provider under the desired name is honored.
+	 */
+	specFormat?: string;
+	/**
 	 * Optional plugin list. Each entry is either a {@link Plugin} object or a
 	 * factory returning one (sync or async).
 	 *
 	 * The plugin list is applied to the global registries at the start of
-	 * every `codeGen()` run; user-registered adapters are cleared between
-	 * runs so plugin state does not leak across invocations.
+	 * every `codeGen()` run; user-registered adapters/providers are cleared
+	 * between runs so plugin state does not leak across invocations.
 	 */
 	plugins?: ReadonlyArray<
 		| import('./plugin.js').Plugin
