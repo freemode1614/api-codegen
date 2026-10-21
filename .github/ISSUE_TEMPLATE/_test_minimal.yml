@@ -1,0 +1,6 @@
+name: Test Minimal
+description: The simplest possible issue form to verify GitHub detection.
+body:
+  - type: textarea
+    attributes:
+      label: Say something

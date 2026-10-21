@@ -1,5 +1,6 @@
 name: ❓ Question / Help
-description: Ask a usage question. For bugs and feature ideas, please use the other templates.
+description: Ask a usage question. For bugs and feature ideas, please use the 
+  other templates.
 title: "[Question]: "
 labels: ["question"]
 body:
@@ -29,24 +30,26 @@ body:
         - "OpenAPI spec interpretation"
         - "TypeScript / TS-config setup"
         - "Other (describe below)"
-      validations:
-        required: true
+    validations:
+      required: true
 
   - type: textarea
     id: question
     attributes:
       label: Your question
-      description: Be specific. Include code snippets, config files, or command output as needed.
-      validations:
-        required: true
+      description: Be specific. Include code snippets, config files, or command 
+        output as needed.
+    validations:
+      required: true
 
   - type: textarea
     id: attempted
     attributes:
       label: What have you tried?
-      description: List the workarounds or work-in-progress approaches you've attempted.
-      validations:
-        required: false
+      description: List the workarounds or work-in-progress approaches you've 
+        attempted.
+    validations:
+      required: false
 
   - type: textarea
     id: environment
@@ -54,10 +57,10 @@ body:
       label: Environment
       description: |
         Versions and platform.
-      value: |
+      render: markdown
+      placeholder: |
         - `@moccona/apicodegen` version:
         - Node.js (`node -v`):
         - OS:
-      render: markdown
-      validations:
-        required: false
+    validations:
+      required: false
