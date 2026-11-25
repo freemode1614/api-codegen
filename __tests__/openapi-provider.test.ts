@@ -112,7 +112,6 @@ describe('getAdaptor (indirect via codeGen with adaptor=axios)', () => {
 		} as never);
 
 		const result = await codeGen({
-			spec: 'x',
 			output: 'out.ts',
 			docURL: 'https://example.com/spec.json',
 			adaptor: Adaptors.axios,
@@ -129,7 +128,6 @@ describe('getAdaptor (indirect via codeGen with adaptor=axios)', () => {
 		} as never);
 
 		const result = await codeGen({
-			spec: 'x',
 			output: 'out.ts',
 			docURL: 'https://example.com/spec.json',
 			verbose: true,

@@ -40,7 +40,6 @@ const generate = async (spec: OpenAPIV3.Document): Promise<string> => {
 	} as never);
 
 	const result = await codeGen({
-		spec: 'x',
 		output: '',
 		docURL: 'https://example.com/spec.json',
 		adaptor: Adaptors.fetch,

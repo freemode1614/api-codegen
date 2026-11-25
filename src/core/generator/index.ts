@@ -307,6 +307,9 @@ export class Generator {
 				}
 
 				const props = Object.keys(schema.properties);
+				// A property is required only when listed in the parent
+				// schema's `required` array (#44).
+				const required = Array.isArray(schema.required) ? schema.required : [];
 
 				return t.createTypeLiteralNode(
 					props.map((propKey) => {
@@ -314,7 +317,7 @@ export class Generator {
 						return t.createPropertySignature(
 							undefined,
 							t.createStringLiteral(propKey),
-							schema.required || schema.ref || Generator.isBinarySchema(schema)
+							required.includes(propKey)
 								? undefined
 								: t.createToken(SyntaxKind.QuestionToken),
 							Generator.toTypeNode(propSchema)

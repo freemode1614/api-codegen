@@ -46,7 +46,7 @@ describe('config', () => {
 		});
 
 		it('should handle empty sources', () => {
-			const base = { spec: 'base' };
+			const base = { spec: 'base', output: 'output.ts' };
 
 			const result = mergeConfigs(base, undefined, {}, undefined);
 
