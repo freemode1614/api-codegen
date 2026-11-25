@@ -1,5 +1,49 @@
 # @moccona/apicodegen
 
+## 0.1.2
+
+### Patch Changes
+
+- 1f52f98: Align the public types with what the generator actually supports:
+  - `MediaTypeObject.type` now accepts real media types
+    (`multipart/form-data`, `application/x-www-form-urlencoded`, `application/xml`,
+    ...) instead of only the five `MediaTypes` values. Known types keep their
+    autocomplete.
+  - `ParameterObject.in` is optional — a parameter without `in` has always been
+    treated as a body parameter by the generator and the adapters.
+
+- 1f52f98: Fix generated object types ignoring the schema `required` array. A property is
+  now emitted as optional (`?`) unless it is listed in the parent schema's
+  `required` array; previously every property of an object schema was emitted as
+  required, so request bodies of specs that mark optional fields (e.g.
+  FastAPI/Pydantic models, where `Optional[...] = None` fields are simply absent
+  from `required`) failed to type-check at the call site. (#44)
+- 4b1cc7a: Fix 10 known issues in v0.1.1:
+  - **Local spec paths**: CLI and Vite plugin no longer wrap local paths in
+    `file://`. Generated `Base.resolveSpecURL()` classifier routes local
+    files through `readFile` and remote URLs through undici. (#1)
+  - **Petstore 3.1 generation**: `application/x-www-form-urlencoded` and other
+    media types now map to UpperCamelCase function-name suffixes
+    (`FormUrlencoded`, `FormData`, `Json`, `Xml`, ...) instead of the
+    previous illegal `X-www-form-urlencoded`. (#2)
+  - **Content-Type headers**: `application/json`, `application/x-www-form-urlencoded`
+    and other media types now emit an explicit `Content-Type` header. Fixes
+    415 errors on real APIs. (#3)
+  - **multipart/form-data bodies**: 3.x multipart bodies with file fields
+    now correctly emit `FormData` instead of `JSON.stringify`. (#4)
+  - **x-www-form-urlencoded bodies**: now built via `URLSearchParams`
+    (with `if (req[k] != null)` guards) instead of `JSON.stringify`. (#5, #8)
+  - **operationId**: function names use `operationId` when present (verified
+    via end-to-end test). (#6)
+  - **Response type**: untyped responses now emit `as unknown` (fetch) /
+    `<unknown>` generic (axios) instead of implicit any. (#7)
+  - **Vite plugin caching**: new `cache` option (default `true`) caches
+    generated code at `node_modules/.cache/apicodegen/<hash>.json`; cache
+    invalidates on spec mtime/content change. Remote specs are not cached.
+    (#9)
+  - **Vite peer dependency**: bumped from `^7` to `^7 || ^8` to silence
+    install warnings on vite 8 projects. (#10)
+
 ## 0.1.1
 
 ### Patch Changes
