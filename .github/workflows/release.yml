@@ -36,7 +36,22 @@ jobs:
       - name: Build
         run: pnpm build
 
-      - name: Create Release
-        run: pnpm run publish
+      # Publish with npm, not `changeset publish`: changesets detects pnpm
+      # and spawns `pnpm publish --json`, which uploaded the tarball fine but
+      # then failed to parse its own JSON output ("ELIFECYCLE undefined").
+      # changesets treated that as a failure and retried, so the retry hit
+      # its own upload and died with E409 — a red run for a publish that had
+      # actually succeeded. `npm publish` exits 0 on success and never
+      # publishes twice on its own.
+      - name: Publish to npm
+        run: |
+          set -euo pipefail
+          version="$(node -p "require('./package.json').version")"
+          if npm view "@moccona/apicodegen@${version}" version >/dev/null 2>&1; then
+            echo "::notice::@moccona/apicodegen@${version} is already on the registry, skipping"
+            exit 0
+          fi
+          echo "Publishing @moccona/apicodegen@${version}"
+          npm publish --provenance
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
