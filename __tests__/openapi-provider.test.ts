@@ -1,4 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 
 vi.mock('undici', async () => {
 	const actual = await vi.importActual<typeof import('undici')>('undici');
@@ -112,7 +114,7 @@ describe('getAdaptor (indirect via codeGen with adaptor=axios)', () => {
 		} as never);
 
 		const result = await codeGen({
-			output: 'out.ts',
+			output: join(tmpdir(), 'apicodegen-out.ts'),
 			docURL: 'https://example.com/spec.json',
 			adaptor: Adaptors.axios,
 		});
@@ -128,7 +130,7 @@ describe('getAdaptor (indirect via codeGen with adaptor=axios)', () => {
 		} as never);
 
 		const result = await codeGen({
-			output: 'out.ts',
+			output: join(tmpdir(), 'apicodegen-out.ts'),
 			docURL: 'https://example.com/spec.json',
 			verbose: true,
 			adaptor: Adaptors.fetch,

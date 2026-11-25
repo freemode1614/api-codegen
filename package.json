@@ -7,7 +7,7 @@
     "node": ">=24"
   },
   "bin": {
-    "apicodegen": "./bin/cli.cjs"
+    "apicodegen": "bin/cli.cjs"
   },
   "scripts": {
     "dev": "tsdown --watch",
@@ -22,7 +22,7 @@
     "typecheck": "tsc --noEmit",
     "typecheck:src": "tsc --noEmit -p tsconfig.src.json",
     "version": "changeset version",
-    "publish": "changeset publish"
+    "publish": "npm publish"
   },
   "exports": {
     "./package.json": "./package.json",
@@ -46,7 +46,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/freemode1614/api-codegen"
+    "url": "git+https://github.com/freemode1614/api-codegen.git"
   },
   "author": "freemode",
   "license": "MIT",
