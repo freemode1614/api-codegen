@@ -87,7 +87,8 @@ export type SchemaObject = SingleTypeSchemaObject | ArrayTypeSchemaObject;
 
 export type ParameterObject = {
 	name: string;
-	in: keyof typeof ParameterIn;
+	/** Where the parameter is sent. A missing `in` is treated as a body parameter. */
+	in?: keyof typeof ParameterIn;
 	schema?: SchemaObject;
 	required?: boolean;
 	description?: string;
@@ -104,7 +105,12 @@ export enum MediaTypes {
 }
 
 export type MediaTypeObject = {
-	type: MediaTypes | keyof typeof MediaTypes;
+	/**
+	 * Media type of the payload, e.g. `application/json`,
+	 * `multipart/form-data`. Known types keep autocomplete, any other media
+	 * type is accepted.
+	 */
+	type: MediaTypes | `${MediaTypes}` | (string & {});
 	schema?: SchemaObject;
 };
 

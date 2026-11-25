@@ -27,7 +27,6 @@ const generate = async (spec: unknown): Promise<string> => {
 	} as never);
 
 	const result = await codeGen({
-		spec: 'x',
 		output: '',
 		docURL: 'https://example.com/spec.json',
 		adaptor: Adaptors.fetch,
