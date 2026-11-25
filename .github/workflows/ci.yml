@@ -4,6 +4,10 @@ on:
   pull_request:
     types: [opened, synchronize, reopened]
 
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   lint:
     name: Lint
@@ -21,7 +25,7 @@ jobs:
       - run: pnpm lint
 
   typecheck:
-    name: Typecheck (src only)
+    name: Typecheck
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -33,27 +37,10 @@ jobs:
           node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      # Block PRs on src/ type regressions. The repository's full
-      # `pnpm typecheck` covers __tests__/ too, but those files have
-      # pre-existing type errors that are unrelated to this PR and
-      # tracked separately. Splitting the CI here keeps PR gating
-      # honest without papering over the repo-wide debt.
-      - run: npx tsc --noEmit -p tsconfig.src.json
-
-  typecheck-full:
-    name: Typecheck (full repo, advisory)
-    runs-on: ubuntu-latest
-    continue-on-error: true
-    steps:
-      - uses: actions/checkout@v6
-      - uses: pnpm/action-setup@v6
-        with:
-          version: 10.9.0
-      - uses: actions/setup-node@v6
-        with:
-          node-version: 24
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
+      # `pnpm typecheck` covers src/ + __tests__/. This used to be split into
+      # a required "src only" job and an advisory "full repo" job because
+      # __tests__/ carried pre-existing type errors; those are fixed, so the
+      # full check is the gate now (and matches CONTRIBUTING.md).
       - run: pnpm typecheck
 
   test:
@@ -69,7 +56,13 @@ jobs:
           node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm test
+      - run: pnpm exec vitest run --coverage
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-${{ github.run_id }}
+          path: coverage/
+          if-no-files-found: ignore
 
   build:
     name: Build

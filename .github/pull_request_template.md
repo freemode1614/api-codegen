@@ -104,15 +104,13 @@ After pushing, paste the green check URLs from the Checks section
 so reviewers can navigate quickly. The required jobs are:
 
 - `Lint`
-- `Typecheck (src only)` — must be green
-- `Typecheck (full repo, advisory)` — may be red for legacy reasons; explain if so
+- `Typecheck`
 - `Test`
 - `Build`
 -->
 
 - Lint:
-- Typecheck (src only):
-- Typecheck (full repo):
+- Typecheck:
 - Test:
 - Build:
 
